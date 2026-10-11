@@ -1,0 +1,1 @@
+We're designing a home air-quality monitor (measures CO2, PM2.5, VOC, humidity) with a companion mobile app. Design the end-to-end experience from unboxing through the first week of use, including what belongs on the device itself versus in the app.

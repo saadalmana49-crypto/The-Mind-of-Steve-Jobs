@@ -1,0 +1,119 @@
+{
+  "h1-video-player": [
+    "Keeps captions/subtitles reachable in at most one tap or click.",
+    "Keeps the audio description track available (not removed).",
+    "Keeps keyboard operation and some way to discover the shortcuts.",
+    "Does not hide features behind secret gestures.",
+    "Substantially reduces the number of always-visible controls.",
+    "Keeps playback speed, quality, picture-in-picture, and cast available (visible, in a menu, or contextual), not removed."
+  ],
+  "h2-api-endpoints": [
+    "Avoids adding another family of channel-specific endpoints; proposes a unified model (for example a single messages endpoint with a channel field or a shared envelope).",
+    "Addresses backward compatibility for existing endpoints (no breaking changes, deprecation or migration path).",
+    "Reduces optional-parameter sprawl or defines sensible defaults.",
+    "Covers channel-specific errors or delivery fallback."
+  ],
+  "h3-school-pickup": [
+    "States a one-sentence purpose.",
+    "Defines a hero path with explicit steps.",
+    "Narrows v1 scope with a deferred list and reasons.",
+    "Treats child safety (who is authorized to pick up) as essential rather than cutting it.",
+    "Covers first-run or empty states (for example a class where few parents have joined)."
+  ],
+  "s1-new-product": [
+    "States a one-sentence purpose that names who it is for, the moment of use, and the outcome.",
+    "Defines a hero path to first value as explicit, counted steps.",
+    "Explicitly narrows v1 scope and lists deferred features with a reason for each.",
+    "Covers first-run, empty, and error states of the core flow.",
+    "Flags decisions that belong to the user (for example country/tax rules, payments) instead of silently assuming them."
+  ],
+  "s10-architecture": [
+    "Proposes a proportionate architecture (for example a single deployable or modular monolith with one primary database) rather than microservices or Kubernetes for 4 engineers and about 200 customers.",
+    "Keeps essential safeguards: authentication and tenant isolation, backups with restore, input validation, and observability (logs and alerts).",
+    "Handles money correctly: idempotent Stripe webhook handling and safe amount storage (integer minor units or decimal), with no double charges or double sends.",
+    "Uses managed services for undifferentiated parts (payments, email delivery, hosting) and states what would trigger more complexity later.",
+    "Ties architecture choices to the product experience or explicit requirements (for example invoice delivery, PDF generation, reliability)."
+  ],
+  "s11-api-refactor": [
+    "Keeps every existing capability (CSV options, PDF options, XLSX options, gzip, email delivery, S3 upload, async with callback); none is silently dropped.",
+    "Simplifies the interface so the common call is short and invalid combinations (for example pdf=True with xlsx=True, or upload_s3 without s3_bucket) become impossible or are rejected.",
+    "Provides a migration path for the roughly 40 call sites (a deprecated adapter or wrapper, warnings, a codemod, or phased rollout) instead of a breaking change.",
+    "Uses sensible defaults for the common case.",
+    "Validates inputs with clear errors that say how to fix the call."
+  ],
+  "s2-feature-creep": [
+    "Identifies that several requests overlap (for example pinning vs favorites, tags vs colored labels, folders vs smart folders) and recommends a smaller set of concepts.",
+    "Does not silently drop any of the eight requests: each is either specified or explicitly deferred with a reason.",
+    "States the recommendation clearly and asks the user to confirm or choose before implementation.",
+    "Covers how existing users and existing notes are handled (migration or first run) and at least empty and error states."
+  ],
+  "s3-onboarding-review": [
+    "Quantifies the current flow (steps, fields, or screens before first value) and proposes a shorter path.",
+    "Ranks findings by severity or impact.",
+    "Gives specific fixes for at least four of: blocking email verification with a 10-minute link, credit card required for the trial, raw 'Error 422' password message, hidden gray 'Skip' link, empty dashboard with an automatic 9-step tour.",
+    "Identifies the moment of first value for a scheduling product (for example connecting a calendar or scheduling a first meeting) and moves the flow toward it."
+  ],
+  "s4-minimal-settings": [
+    "Keeps in-app text size, reduce motion, and high-contrast controls available (defaulting to the OS is fine only if the in-app control remains).",
+    "Keeps password, two-factor authentication, connected devices, export my data, and delete account.",
+    "Keeps a language override.",
+    "Does not hide any feature behind a secret gesture or easter egg (for example tapping the version number).",
+    "Reduces top-level clutter through grouping, defaults, or moving non-settings, and states what changed.",
+    "Keeps developer mode and beta features reachable in a visible, labeled place (not deleted)."
+  ],
+  "s5-roadmap": [
+    "Recommends a small focused set (at most three items) for the quarter.",
+    "Gives a reason for items not chosen.",
+    "Uses the team's situation (3 people, about 600 weekly active developers) and prioritizes improving the core deploy experience (deploy speed and/or failure error messages).",
+    "States what evidence would change the recommendation."
+  ],
+  "s6-hardware": [
+    "The device shows useful information or status without the app, phone, or network.",
+    "Defines unboxing-to-first-value with a target time or step count.",
+    "Gives a clear split of what belongs on the device versus in the app.",
+    "Covers failure states (for example Wi-Fi loss, sensor warm-up or calibration) and at least one of updates, privacy/data export, or end-of-life."
+  ],
+  "s7-quotes": [
+    "Every quotation presented as verbatim is in the VERIFIED_QUOTES list (minor punctuation differences allowed), or is explicitly flagged as unverified or paraphrased and not recommended for slides.",
+    "Gives a specific citation (publication or event and date) for each quote.",
+    "Flags at least one common misattribution (for example 'Simplicity is the ultimate sophistication')."
+  ],
+  "s8-internal-tool": [
+    "Suggests checking existing calendar or room-booking capabilities (for example Google Workspace or Microsoft 365 room resources) before building.",
+    "If building, keeps the architecture proportionate to 15 people and 2 rooms (no microservices, Kubernetes, or similar).",
+    "Makes double-booking impossible at the data level or otherwise directly addresses the core problem.",
+    "Lists deferred features with reasons."
+  ],
+  "s9-pro-tool": [
+    "Keeps every professional capability in the request (RAW processing, curves, levels, HSL, layers, masks, healing, lens corrections, color profiles and soft proofing, batch export presets, metadata, tethering, plugins, shortcuts, custom layout); none is removed.",
+    "Simplifies the newcomer experience (for example a default or essentials workspace, guided start, automatic adjustments, progressive disclosure).",
+    "Preserves expert speed (shortcuts, a professional or customizable workspace, remembered layout) and does not force experts through simplified steps.",
+    "Organizes features into a clear structure with visible, labeled access to advanced tools (no hidden gestures).",
+    "States what changed and confirms that no capability was lost, or lists any removal for the user's approval."
+  ],
+  "_verified_quotes": [
+    "You've got to start with the customer experience and work backwards to the technology.",
+    "Focusing is about saying no.",
+    "People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the hundred other good ideas that there are. You have to pick carefully.",
+    "That's been one of my mantras — focus and simplicity. Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains.",
+    "It's really hard to design products by focus groups. A lot of times, people don't know what they want until you show it to them.",
+    "It's not just what it looks like and feels like. Design is how it works.",
+    "Design is the fundamental soul of a man-made creation that ends up expressing itself in successive outer layers of the product or service.",
+    "When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through.",
+    "There's just a tremendous amount of craftsmanship in between a great idea and a great product.",
+    "People start to get confused that the process is the content.",
+    "What we want to do is we want to put an incredibly great computer in a book that you can carry around with you that you can learn how to use in 20 minutes.",
+    "Who wants a stylus? You have to get them and put them away, and you lose them. Yuck. Nobody wants a stylus.",
+    "These are not three separate devices, this is one device, and we are calling it iPhone.",
+    "People who are really serious about software should make their own hardware.",
+    "Good artists copy, great artists steal. And we have always been shameless about stealing great ideas.",
+    "It's in Apple's DNA that technology alone is not enough.",
+    "To me, marketing is about values.",
+    "MobileMe was simply not up to Apple's standards - it clearly needed more time and testing.",
+    "Rather than launch MobileMe as a monolithic service, we could have launched over-the-air syncing with iPhone to begin with, followed by the web applications one by one.",
+    "It was a mistake to launch MobileMe at the same time as iPhone 3G, iPhone 2.0 software and the App Store.",
+    "We're not perfect. Phones aren't perfect.",
+    "It's the equivalent of a bicycle for our minds.",
+    "If I had never dropped in on that single course in college, the Mac would have never had multiple typefaces or proportionally spaced fonts."
+  ]
+}

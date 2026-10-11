@@ -1,0 +1,1 @@
+Our notes app (web + iOS, about 40k users) currently has a flat list of notes plus search. The top feature requests from users are: folders, nested folders, tags, colored labels, emoji icons for notes, pinning, smart folders (saved searches), and favorites. Write the spec for the new sidebar that adds these.

@@ -1,0 +1,1 @@
+Our 15-person office has two meeting rooms and people keep double-booking them. We want to build an internal booking tool next week. Propose the architecture and the feature set.

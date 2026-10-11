@@ -1,0 +1,32 @@
+name: Skill behavior
+description: An agent using the skill made a worse product decision than it should have.
+labels: ["behavior"]
+body:
+  - type: input
+    id: agent
+    attributes:
+      label: Agent and version
+      placeholder: "Claude Code 2.1.x, Codex CLI 0.16x, Cursor 2.x, ..."
+    validations:
+      required: true
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Prompt
+      description: What you asked. Remove anything private.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: What the agent did
+      description: Paste the relevant part of the output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What a better answer would have done
+      description: For example, kept an advanced feature, cut a redundant concept, covered an error state, or was shorter.
+    validations:
+      required: true

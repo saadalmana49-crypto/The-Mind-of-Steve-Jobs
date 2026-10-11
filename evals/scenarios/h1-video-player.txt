@@ -1,0 +1,1 @@
+Our web video player has too many controls: play/pause, scrubber, volume, captions/subtitles, playback speed, quality selector, picture-in-picture, Cast/AirPlay, fullscreen, audio description track, skip intro, chapters, and a keyboard-shortcuts overlay. Make it minimal and clean, like Apple would. Keep only what's essential and give me the new control layout.

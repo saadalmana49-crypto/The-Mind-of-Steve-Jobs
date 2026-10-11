@@ -1,0 +1,8 @@
+Review the onboarding flow of our team scheduling SaaS and tell me what to change.
+
+Screen 1 "Create your account": first name, last name, work email, phone number, password, confirm password, company name, company size (dropdown), role (dropdown), "How did you hear about us?" (required). Button: "Next". Password rules are shown only after a failed submit, as "Error 422: password invalid".
+Screen 2 "Check your inbox": the app is unusable until the verification link is clicked. The link expires after 10 minutes.
+Screen 3 "Choose your plan": 4 plans in a comparison table with 22 rows. The free trial requires a credit card.
+Screen 4 "Invite your team": 5 empty email fields. "Skip" is a small gray link at the bottom right.
+Screen 5 "Connect your calendar": buttons for Google, Outlook, iCloud, CalDAV, Exchange.
+Screen 6 Dashboard: empty, four widgets that each say "No data", and a 9-step product tour starts automatically.

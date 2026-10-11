@@ -1,0 +1,15 @@
+{
+  "name": "insanely-great",
+  "description": "Insanely Great: product judgment for AI agents, inspired by Steve Jobs' philosophy of simplicity, product excellence, and thoughtful design.",
+  "owner": {
+    "name": "saadalmana49-crypto",
+    "url": "https://github.com/saadalmana49-crypto"
+  },
+  "plugins": [
+    {
+      "name": "insanely-great",
+      "source": "./",
+      "description": "Build technology products that are powerful underneath and effortless to use. Inspired by Steve Jobs."
+    }
+  ]
+}

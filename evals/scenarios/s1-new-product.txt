@@ -1,0 +1,1 @@
+I want to build a web app for freelancers to manage their money: tracking income, expenses, invoices, taxes, that kind of thing. Before we write any code, give me the product plan: what we're building, the features, and the main screens.

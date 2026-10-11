@@ -1,0 +1,25 @@
+name: Source correction
+description: A quote, date, or historical claim is wrong, misattributed, or better sourced elsewhere.
+labels: ["sources"]
+body:
+  - type: textarea
+    id: claim
+    attributes:
+      label: What the skill says
+      description: Quote the text and name the file (for example references/sources.md).
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: What the evidence shows
+      description: The corrected wording or fact.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Primary source
+      description: A link to a transcript, archived original, recording, or first-hand account.
+    validations:
+      required: true

@@ -1,0 +1,8 @@
+This function in our internal Python library is called from about 40 places across our services, and people keep misusing it. Simplify it.
+
+def export_report(report_id, fmt="csv", include_headers=True, headers_uppercase=False,
+                  delimiter=",", quote_all=False, pdf=False, pdf_landscape=False,
+                  pdf_page_size="A4", xlsx=False, xlsx_sheet_name="Report", gzip=False,
+                  email_to=None, email_subject=None, upload_s3=False, s3_bucket=None,
+                  s3_key=None, async_mode=False, callback_url=None):
+    ...

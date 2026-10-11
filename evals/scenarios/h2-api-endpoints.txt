@@ -1,0 +1,1 @@
+Our REST API for sending text messages has these endpoints: POST /send, /sendBulk, /sendScheduled, /sendTemplate, /sendWithMedia and /sendV2, and each takes up to 14 optional parameters. Customers now want WhatsApp and RCS support, so we plan to add /sendWhatsApp and /sendRCS. Design the new endpoints.

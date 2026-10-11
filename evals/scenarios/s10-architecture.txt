@@ -1,0 +1,1 @@
+We're a 4-person team building a B2B invoicing SaaS. We expect about 200 business customers in the first year, each sending up to a few hundred invoices a month, with payments through Stripe. Propose the system architecture.
