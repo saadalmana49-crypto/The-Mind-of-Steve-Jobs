@@ -17,7 +17,7 @@ Our REST API for sending text messages has these endpoints: POST /send, /sendBul
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. B identifies the root problem: WhatsApp and RCS are channels, not new operations, so it proposes a single endpoint with a `channel` field, a migration path that breaks nothing, and SMS fallback, which keeps the API from growing with every new channel. A adds rich, accurate channel detail but still multiplies endpoints and leaves unification for later.
+Blind pairwise judgment: **skill**. B makes the better product call: one channel-aware `/messages` endpoint stops the API surface multiplying with each new channel, keeps all six existing endpoints working as adapters, and offers `/sendWhatsApp` and `/sendRCS` as aliases. A's channel detail is more concrete, but it entrenches per-channel endpoints and only suggests unifying later.
 
 ### baseline
 
@@ -124,80 +124,79 @@ Use one error shape, `{ error: { code, message, field? } }`, with stable codes: 
 - Skill activated: True; references read: insanely-great/references/engineering.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 617
+- Words: 569
 
 <details><summary>Output</summary>
 
-**Recommendation:** Don't add `/sendWhatsApp` and `/sendRCS`. WhatsApp and RCS are *channels*, not new operations. Adding them as endpoints would make eight endpoints times 14 parameters, and every future channel would repeat that. Instead, add one `channel` field to a single endpoint that also covers bulk, scheduled, template and media sends. The six existing endpoints stay as thin adapters, so no caller breaks.
+**Recommendation:** Don't add `/sendWhatsApp` and `/sendRCS`. That would make eight endpoints, each with 14 optional parameters, and every new channel would multiply the surface again. Add a `channel` field to one message-creation endpoint instead, and keep the existing six endpoints working as adapters. Customers get both channels, and the API gains one concept instead of two new endpoint families. I haven't seen your codebase or usage data, so the details below are a proposal for you to confirm.
 
-I haven't seen your current spec. The 14 parameters and what `/sendV2` changed are assumptions below, so please check them.
+**Purpose:** A developer sends a message to a person on the best channel, with the same call shape for SMS, WhatsApp and RCS.
 
-## Design: `POST /v2/messages`
+**Real problem:** Customers want to reach people on WhatsApp and RCS. They don't want to learn two more endpoints. The six existing endpoints already vary along three independent axes that were never named:
+- Quantity: `/sendBulk`
+- Timing: `/sendScheduled`
+- Content: `/sendTemplate`, `/sendWithMedia`
 
-I picked this name to avoid clashing with `/sendV2`. It's open to change.
+`/send` and `/sendV2` look like version drift. Channel would be a fourth axis, so adding endpoints per channel makes the combinations grow multiplicatively.
+
+**Proposed design:** `POST /messages`
 
 ```json
 {
-  "to": "+46701234567",
-  "body": "Your order has shipped",
-  "channel": "sms"
+  "to": "+15551234567",
+  "channel": "whatsapp",
+  "body": "Your order shipped",
+  "idempotency_key": "ord-1042-shipped"
 }
 ```
 
-That is the whole hero path: 2 required fields plus `channel`, which defaults to `sms` so existing behavior is unchanged.
+- **Required fields:** `to` and content (`body`, `template`, or `media`). Everything else is defaulted.
+- **`channel`:** `sms | whatsapp | rcs | auto`.
+  - It defaults to `sms`, so existing behavior is unchanged.
+  - `auto` picks the richest channel the recipient supports.
+  - `fallback: ["rcs","sms"]` is optional.
+- **`to`:** accepts one number or an array, which replaces `/sendBulk`.
+- **`send_at`:** replaces `/sendScheduled`.
+- **`template`:** `{id, variables}` replaces `/sendTemplate`.
+- **`media`:** replaces `/sendWithMedia`.
+- **Channel-specific options:** these go in a namespaced object, for example `whatsapp: {template_language, header}` or `rcs: {suggestions, card}`. The 14 existing parameters stay channel-neutral, and each channel's quirks live in one place.
+- **Errors:** they name the field and the fix, for example `"whatsapp requires a pre-approved template outside the 24h window; pass template.id"`. Messages sent outside that window are the most common WhatsApp failure.
+- **Safeguards:**
+  - Idempotency keys on every send, since messages cost money and must not duplicate.
+  - Tenant-scoped auth.
+  - Phone-number validation.
+  - Opt-in/consent checks for WhatsApp.
+  - Per-channel delivery status through one webhook shape.
+  - Logs and alerts on the send path.
 
-**Every existing endpoint becomes a parameter on that request:**
+**Capability ledger:**
+- **Kept:** all six existing endpoints, unchanged for callers.
+- **Moved:** bulk, scheduling, templates and media become fields on `/messages`.
+- **Automated:** channel selection (`auto`) and fallback.
+- **Removed:** nothing. Deprecating the old endpoints is a later decision for you, once usage data supports it. The process would be:
+  1. Make the old endpoints thin adapters over `/messages`.
+  2. Mark them deprecated with a date.
+  3. Measure their usage.
+  4. Remove them only after that period.
 
-| Today | In the new endpoint |
-|---|---|
-| `/sendBulk` | `to` accepts an array (batch response, below) |
-| `/sendScheduled` | `sendAt` (ISO 8601) |
-| `/sendTemplate` | `template: {id, variables}` |
-| `/sendWithMedia` | `media: [{url, type}]` |
-| `/sendWhatsApp`, `/sendRCS` | `channel: "whatsapp" \| "rcs"` |
+**Not now / later:**
+- **Inbound messages and conversations:** this is a separate product from sending.
+- **Channel-specific rich features beyond the basics** (RCS carousels, WhatsApp interactive flows): they can be added inside the namespaced objects without changing the core design.
+- **Retiring `/sendV2`:** wait until usage data is available.
 
-**Channel-specific power goes in a namespaced object**, so the top level stays small:
-- `whatsapp`: `{ template, buttons, ... }`. WhatsApp requires approved templates outside the 24-hour reply window, so the API should say so in the error rather than fail silently.
-- `rcs`: `{ card, suggestedReplies, ... }`.
-- `fallback: ["sms"]` is the main thing RCS customers need. If a device doesn't support RCS, the message goes out as SMS automatically.
-- `channel: "auto"` is a later option: the platform picks the richest channel the recipient supports.
+**Open decisions:**
+1. Do you accept one `/messages` endpoint instead of two new ones? If you need the literal `/sendWhatsApp` and `/sendRCS` paths, I'd make them aliases that set `channel`.
+2. Should `auto` be in the first release, or only explicit channels?
+3. What does usage data say about `/send` versus `/sendV2`?
 
-**Behavior:**
-- **Response:** `202` with `{id, channel, status}`. For multiple recipients you get `{batchId, results: [{to, id, status}]}`. A bad number fails only that recipient.
-- **Idempotency:** an `Idempotency-Key` header makes retries safe. This matters most for bulk and scheduled sends.
-- **Status webhooks:** one event shape for all channels. It includes `channel` and a `fallbackFrom` field when a fallback happened.
-- **Errors:** each error names the field, gives a valid example, and links to the docs. Example: `channel "whatsapp" requires whatsapp.template when the recipient hasn't messaged in 24h. See <docs link>`.
-- **Validation:** E.164 phone numbers, a per-channel body-length check, and a media type check per channel.
-
-## Migration
-1. Ship `/v2/messages` with all six existing capabilities plus the two new channels.
-2. Reimplement the old endpoints as adapters over it, so there is one code path and one set of tests.
-3. Mark them deprecated, with a warning header and a date. Measure usage, and remove nothing until that period ends.
-
-## Capability check
-- **Kept:** everything the six endpoints do, including expert use of all 14 parameters.
-- **Moved:** the 14 parameters become optional fields, grouped by purpose.
-- **Added:** WhatsApp, RCS and fallback.
-- **Removed:** nothing.
-
-## Not now
-- **`channel: "auto"` routing:** it needs delivery-capability lookups, and customers haven't asked for it yet.
-- **WhatsApp conversation management** (inbound threads, session windows): it belongs in a separate inbound/conversations resource.
-- **RCS agent onboarding and verification:** this is an account-setup flow, not a send parameter.
-
-## Please confirm
-1. Do you accept one endpoint instead of two new ones? If you need `/sendWhatsApp` and `/sendRCS` literally, for contract or marketing reasons, I can make them aliases of `/v2/messages` with the channel preset. That still gives one code path.
-2. What do the 14 parameters and `/sendV2` actually cover? I'll map them into the new request shape.
-3. Do you want `fallback` in the first release? I'd say yes, because RCS without it is hard to use.
-
-When you confirm, I can write the OpenAPI spec.
+I can write the full OpenAPI spec, the parameter mapping from the six old endpoints, and the adapter and deprecation plan if you'd like.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **baseline**. Both reach the same sound core judgment (one channel-parameterized endpoint, with the old endpoints as adapters and optional aliases), but A gives more concrete details a team needs to build it correctly: WhatsApp opt-in and consent, 24-hour-window errors, RCS capability checks with fallback, a unified status lifecycle, a channel-specific error table, and a phased rollout. B is tighter but omits consent and compliance handling.
+Blind pairwise judgment: **baseline**. Both correctly reject per-channel endpoints in favor of a unified `channel` field, but A gives more accurate, actionable channel detail (WhatsApp's 24-hour window and template rules, RCS capability checks and fallback visibility, a specific error catalog, a strict unknown-field policy) and asks the right open questions, while B spends space on filler like the capability ledger and "removal count is zero" and silently ignores mismatched channel fields.
 
 ### baseline
 
@@ -324,81 +323,78 @@ I can write the OpenAPI spec for this next, if you'd like.
 
 ### skill
 
-- Skill activated: True; references read: insanely-great/references/engineering.md
+- Skill activated: True; references read: none
 - Checks passed: 4/4 [True, True, True, True]
-- Judge note: none
-- Words: 641
+- Judge note: Check 3 is the weakest: the response sets `sms` as the default channel and namespaces channel-specific options, but it keeps all 14 existing optional parameters and adds more, so it does little to reduce the parameter count itself.
+- Words: 581
 
 <details><summary>Output</summary>
 
-**Recommendation:** Don't add `/sendWhatsApp` and `/sendRCS` as two more endpoints. That would give you 8 endpoints × ~14 parameters, with channel logic copied into each. Add one `channel` parameter to a single send endpoint, and ship the two paths you asked for only as thin aliases if customers need them. I haven't seen your codebase, so this design rests on what you described.
+**Recommendation:** Don't add `/sendWhatsApp` and `/sendRCS`. They would make eight endpoints, each with 14 or more parameters, and every future channel would add another. Add one `channel` field to a single `POST /v2/messages` endpoint. Leave the six existing endpoints unchanged and mark them as legacy. Say if you'd rather not have a new endpoint, and I can put `channel` on `/sendV2` instead.
 
-## Real problem
-Customers want to reach people on WhatsApp and RCS with the same sending capabilities they already have. They don't need new endpoints for that. The endpoint family exists because each feature (bulk, scheduled, template, media) got its own path. Two new channels would multiply that pattern.
+**Real need:** Customers want to reach people on WhatsApp and RCS. They don't want two new integrations to learn. Your six existing endpoints are really one send operation with different options (bulk, scheduled, template, media).
 
-## Core design: one endpoint, `POST /messages`
-(If `/sendV2` is already meant to be the unified path, put this there instead of creating a new path.)
+**Hero path:** a customer's existing SMS call becomes a WhatsApp call by changing one field, so 1 step.
 
-```json
-{
-  "to": "+15551234567",
-  "body": "Your order shipped",
-  "channel": "auto"
-}
+```
+POST /v2/messages
+Idempotency-Key: <uuid>
+
+{ "to": "+15551234567",
+  "channel": "whatsapp",          // sms (default) | whatsapp | rcs | auto
+  "body": "Your order shipped" }
 ```
 
-This is the only required input besides `to` and content. The rest is optional:
+**Design**
 
-| Parameter | Replaces / does |
+- **Channel:**
+  - `sms` is the default, so existing behavior carries over.
+  - `auto` picks the richest channel the recipient supports.
+  - `fallback: ["rcs","sms"]` is an optional ordered list for when delivery fails.
+  - The response includes the `channel` actually used.
+- **Recipients:** `to` accepts one number or an array. This replaces `/sendBulk`.
+- **Scheduling:** `send_at` replaces `/sendScheduled`.
+- **Templates:** `template: {id, variables}` replaces `/sendTemplate`. WhatsApp requires an approved template outside the 24-hour reply window. The API should detect that case and tell the caller, instead of making them track the window.
+- **Media:** `media: [{url, type}]` replaces `/sendWithMedia`.
+- **Channel-specific options:** these go in one namespaced object per channel, so the shared parameters stay common. For example, `rcs: {card, suggestions[]}` and `whatsapp: {buttons[], header}`. Fields for a channel you didn't select are ignored. Invalid fields for the selected channel return a 422.
+- **Errors:** every error includes a next step. For example: `"code": "template_required", "message": "Recipient is outside the 24h session. Send an approved template.", "docs": "…"`.
+- **Status:** one webhook event shape (`queued → sent → delivered → read | failed`) for all channels. `GET /v2/messages/{id}` returns the same data.
+
+**Capability ledger**
+
+| Capability | Where it goes |
 |---|---|
-| `channel`: `sms` (default), `whatsapp`, `rcs`, `auto` | The new work. `auto` picks the best channel the recipient supports. |
-| `fallback`: `["rcs","sms"]` | If delivery on the first channel fails, try the next. Customers get this and can't get it from separate endpoints. |
-| `to`: string or array | `/sendBulk` |
-| `send_at`: ISO time | `/sendScheduled` |
-| `template`: `{id, vars}` | `/sendTemplate` |
-| `media`: `[{url, type}]` | `/sendWithMedia` |
-| `whatsapp: {…}`, `rcs: {…}` | Channel-specific options (see below). They sit in their own objects, so they don't add to the top-level parameter count. |
+| All 14 existing parameters | Kept, with the same names in v2 |
+| Bulk, scheduled, template, media | Moved to parameters on `/v2/messages` |
+| Old six endpoints | Kept and working. Deprecation is announced, not forced |
+| WhatsApp- and RCS-only features | In the `whatsapp` and `rcs` objects |
+| Nothing removed | The removal count is zero |
 
-Channel-specific options:
-- **WhatsApp:** approved template name and language. It's required outside the 24-hour reply window, so the API should enforce it.
-- **RCS:** rich cards, suggested replies, and a `ttl`.
+**Safeguards**
+- Idempotency keys are required, because duplicate messages cost money.
+- Opt-in and consent are checked for WhatsApp and RCS.
+- The tenant is checked for each channel's sender registration.
+- Rate limits are applied per channel.
+- Delivery status is logged for every message.
 
-**Behaviors that keep it simple for callers:**
-- `Idempotency-Key` header, so retries never double-send.
-- The response always returns `id`, `channel` (the one actually used), and `status`.
-- Delivery updates come through your existing status webhook, with the same event shape for every channel.
-- Errors name the field and the fix. For example: `"channel":"whatsapp" requires "whatsapp.template" because the recipient has not messaged you in the last 24h. See <docs link>`.
-- Bulk sends return a batch id plus per-recipient results.
+**Not now / later**
+- **Inbound messages and conversations:** this needs its own design (webhooks and a threads resource). It isn't needed to send.
+- **Template management API:** use the provider consoles at first. Add it once customers ask.
+- **Migrating legacy endpoints onto v2 internally:** do this after launch, as a refactor that callers don't see.
+- **Other channels such as Telegram or Viber:** these are free to add later, since `channel` is just a new value.
 
-## Capability ledger
-- **Kept:** every existing endpoint and all 14 parameters keep working unchanged.
-- **Moved:** the old endpoints become thin adapters over `/messages`. That's one code path, so fixes and channel logic live in one place.
-- **Deprecated:** nothing yet. Announce a date only after you've measured usage.
-- **Removed:** nothing.
-- **Added:** WhatsApp, RCS, `auto` routing, and fallback.
+**Decisions for you:**
+1. Do you want a new `/v2/messages`, or `channel` added to `/sendV2`?
+2. Should `auto` ship in v1, or just explicit channels plus `fallback`?
 
-## If you still want `/sendWhatsApp` and `/sendRCS`
-Build them as aliases for `/messages` with `channel` preset, and put no logic of their own in them. The cost is two more paths to document and version. The benefit is that customers who think in channels find them easily. I'd skip them. A "Send a WhatsApp message" example in the quickstart gives the same discoverability.
-
-## Not now
-- **Rich channel features beyond cards and replies** (carousels, WhatsApp flows, payments): add them under `whatsapp:{}` / `rcs:{}` when customers ask. Nothing else changes.
-- **Inbound/two-way conversations:** a separate concern from sending. Design it as its own resource.
-- **Per-channel pricing and quotas:** needs a billing decision first.
-- **Retiring the old endpoints:** wait for usage data.
-
-## Open decisions for you
-1. Does `/sendV2` become the unified endpoint, or do you want a new `/messages` path?
-2. Should the `/sendWhatsApp` and `/sendRCS` aliases exist, or only the unified endpoint?
-3. Is `auto` routing and fallback in v1? I'd include it, because it's the main thing customers gain from one endpoint.
-
-Confirm these and I'll write the full OpenAPI spec and the adapter mapping for the existing six endpoints.
+Please confirm the cut before I write code. I can then write the full OpenAPI spec, with the per-channel validation matrix and error catalog.
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A addresses the root problem, endpoint sprawl, with a single channel-parameterized operation that keeps every existing endpoint working through adapters, and it stays concise and asks the right decisions; B has more detail but still adds two channel-specific endpoints that continue the fragmentation.
+Blind pairwise judgment: **skill**. A makes the stronger product call: it treats channel as a field on one unified messages endpoint instead of adding more channel-specific endpoints, keeps every existing capability through thin adapters with a deprecation plan, and covers channel rules and safeguards more concisely, whereas B, though detailed, still adds `/sendWhatsApp` and `/sendRCS` and leaves unification for later.
 
 ### baseline
 
@@ -523,87 +519,70 @@ I can turn this into an OpenAPI 3.1 spec if you'd like. I haven't looked at your
 - Skill activated: True; references read: insanely-great/references/engineering.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 705
+- Words: 654
 
 <details><summary>Output</summary>
 
-**Recommendation:** Don't add `/sendWhatsApp` and `/sendRCS`. Add a `channel` parameter to one unified send operation. WhatsApp and RCS differ from SMS in the channel, not in the action, so two more endpoints would give you 8 endpoints with up to 14 parameters each and no clear way to tell them apart. I haven't seen your spec, so the design below assumes the 14 parameters are mostly shared across endpoints. Please confirm that before I go further.
+**Recommendation:** Don't add `/sendWhatsApp` and `/sendRCS`. Channel is a property of a message, not a new endpoint family. Add a `channel` parameter to one endpoint, and let that endpoint carry WhatsApp and RCS along with SMS. Your six existing endpoints are probably one operation with different options, so adding two more would repeat the same mistake.
 
-## Needs behind the request
-1. Reach customers on WhatsApp and RCS.
-2. Keep bulk, scheduled, template and media sending on those channels. Those are the same actions you already offer.
-3. Handle each channel's own rules:
-   - WhatsApp requires approved templates outside the 24-hour reply window, and requires opt-in.
-   - RCS needs a capability check, rich cards and suggested replies.
+I haven't seen your parameter lists, so the mapping below is inferred from the endpoint names. Please check it against the real API.
 
-## Proposed design
+**Mode:** Engineer (API design), with the Simplify check on the existing surface.
 
-**`POST /v2/messages`** (or extend `/sendV2` if its semantics already match; that's your call).
+**Real need:** Customers want to reach a person on whichever channel works for them, with the same call they already use. They don't want to learn a new endpoint with 14 more parameters per channel.
 
-```json
+**Proposed surface**
+```
+POST /v2/messages        (the recommended core; /sendV2 is the natural base)
 {
-  "to": "+15551234567",
-  "text": "Your order shipped",
-  "channel": "auto"
+  "to": ["+15551234567"],            // one or many; replaces /send vs /sendBulk
+  "channel": "auto",                 // "sms" | "whatsapp" | "rcs" | "auto"; default "sms", so existing behavior is unchanged
+  "fallback": ["sms"],               // optional: tried in order if the channel fails or is unsupported
+  "body": "Your code is 4821",
+  "template": {"id": "...", "vars": {}},   // replaces /sendTemplate
+  "media": [{"url": "...", "type": "image/png"}],  // replaces /sendWithMedia
+  "send_at": "2026-10-12T09:00:00Z",       // replaces /sendScheduled
+  "idempotency_key": "..."                 // header preferred
 }
 ```
+Channel-specific options go under one namespaced object each (`whatsapp: {...}`, `rcs: {...}`). They are not 14 new top-level fields. Examples are RCS suggested replies and cards, and WhatsApp approved template names and language.
 
-The hero path has two required fields, `to` and one content field. Everything else is optional with a safe default.
+**Hero path:** one call with `to` and `body` returns a message ID (2 fields). The repeat task is the same call with `channel` set (3 fields).
 
-| Field | Default | Replaces |
-|---|---|---|
-| `to` as a string or an array | single | `/sendBulk` |
-| `send_at` (ISO 8601) | now | `/sendScheduled` |
-| `template: {id, vars}` | none | `/sendTemplate` |
-| `media: [{url, type}]` | none | `/sendWithMedia` |
-| `channel`: `auto`, `sms`, `whatsapp`, `rcs` | `auto` | the new endpoints |
-| `fallback`: for example `["rcs","sms"]` | the account default | new capability |
-| `channel_options: {whatsapp:{…}, rcs:{…}}` | none | channel-specific extras |
-| `Idempotency-Key` header | none | new, so retries can't double-send |
+**Where each capability goes**
+- **Automatic:** with `channel: auto`, the platform detects whether the recipient has RCS or WhatsApp and falls back to SMS. Sending is deduplicated by idempotency key.
+- **Default:** `channel` is `sms`, so existing callers see no change.
+- **Optional and visible:** `fallback`, `send_at`, `template`, `media`, and the per-channel objects.
+- **Advanced:** per-channel options, delivery-status webhooks, and a `GET /v2/messages/{id}` endpoint that returns the final channel used.
 
-- **`auto`:** the platform picks the best channel the recipient supports, so callers don't need to know.
-- **`channel_options`:** channel-specific fields live here, such as RCS `cards` and `suggestions`, or WhatsApp `language` and `header`. The shared fields stay clean, and each channel's extras are validated against that channel.
-- **Response:** `{id, status, channel_used, fallback_used}` for one recipient. For an array it returns a batch ID plus per-recipient results.
-- **Status:** one status webhook and one `GET /v2/messages/{id}` for all channels, with the same state names everywhere.
+**Channel rules the API should enforce**
+- **WhatsApp:** it requires pre-approved templates outside the 24-hour customer-service window. Validate this up front and return an error that says which field to fix and gives an example. Don't let it fail later at the provider.
+- **RCS:** it needs a verified sender (agent). If the recipient is unsupported, use `fallback`, and report the channel actually used in the response and webhook.
+- **Opt-in and consent:** WhatsApp requires it, so make it an explicit field or account-level setting.
+- **Safeguards:** authorization per sender/tenant, input validation, idempotency (these are messages, and duplicates cost money and annoy recipients), and structured logs and alerts on delivery rate per channel.
 
-**Errors that tell the caller what to do:**
-```json
-{"error": "template_required", "field": "template",
- "message": "WhatsApp needs an approved template outside the 24h reply window.",
- "fix": "Pass template:{id,vars}, or set fallback:[\"sms\"].",
- "docs": "…"}
-```
+**Existing endpoints:** keep them, and make each a thin adapter over `/v2/messages`. Nothing breaks.
 
-## Compatibility
-Nothing breaks for current callers.
-1. Ship the unified endpoint.
-2. Turn the six existing endpoints into thin adapters over it. They keep their current behavior and always use `channel: sms`.
-3. Mark them deprecated, with a date and a usage count.
-4. Remove them only after that period, and only with your approval.
+| Old | Becomes |
+|---|---|
+| `/send`, `/sendBulk` | `to` as one or many |
+| `/sendScheduled` | `send_at` |
+| `/sendTemplate` | `template` |
+| `/sendWithMedia` | `media` |
+| `/sendV2` | the base of `/v2/messages` |
 
-## Capability ledger
-- **Kept:** every current parameter and every current endpoint.
-- **Moved:** bulk, scheduled, template and media become parameters. Callers can combine them (for example a scheduled WhatsApp template to many recipients), which the separate endpoints couldn't do.
-- **Added:** WhatsApp, RCS, automatic channel choice, SMS fallback, idempotency.
-- **Removed:** nothing.
+Mark the old ones deprecated with a date, measure usage, and remove them only after the stated period. Capability ledger: every capability is kept and none are removed.
 
-## Not now
-- **Separate channel-specific endpoints:** only if a channel's request shape ends up with almost nothing in common. Today `channel_options` covers it.
-- **Inbound and conversation API (two-way WhatsApp sessions):** a different problem. Do it after outbound ships.
-- **WhatsApp template management (create and approval):** start with a link to the provider's tools, then build it if customers ask.
-- **More channels (Telegram, Viber):** the `channel` enum is the extension point.
+**Not now**
+- **`/sendWhatsApp` and `/sendRCS` as separate endpoints:** they duplicate the unified call and double the docs, SDK methods and tests.
+- **More channels (Telegram, Viber):** `channel` already allows them without a new endpoint.
+- **Per-channel analytics endpoints:** the message resource and webhooks already cover this.
 
-## Quality bar
-- Validate per channel before sending, and never let a message fail silently.
-- Check opt-in and consent for WhatsApp, and honor opt-outs on all channels.
-- Cache RCS capability lookups, and send to the SMS fallback without adding a client round trip.
-- Test the hero path, the fallback path, idempotent retries and the webhook states.
+**Open decisions for you**
+1. Is `/sendV2` close enough to the unified shape to be the base, or should it be a clean `/v2/messages`?
+2. Should `auto` be the default for new accounts, or opt-in?
+3. What deprecation period do you want for the six old endpoints?
 
-## Decisions for you
-1. New `/v2/messages` or extend `/sendV2`?
-2. Should `channel` default to `auto` or `sms`? I'd pick `sms` for existing accounts so nothing changes for them, and `auto` for new ones.
-3. Is a deprecation window of about 12 months acceptable?
-
-If you confirm the cut, I can write the OpenAPI spec, the per-channel validation rules and the adapter plan.
+Please confirm the cut before I write code. I can then draft the full OpenAPI spec, the error catalogue and the migration guide.
 
 </details>

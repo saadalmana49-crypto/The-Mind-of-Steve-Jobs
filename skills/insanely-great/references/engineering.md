@@ -29,7 +29,7 @@ These numbers decide the design. Anything they don't require is a candidate for 
 - **Write down the triggers for more complexity** ("add a read replica above 500 queries/second"), so the simple design isn't replaced by guesswork later.
 
 **Never simplified away**, whatever the size of the team:
-- authentication and authorization,
+- authentication and authorization, including tenant isolation in multi-tenant products,
 - input validation,
 - backups that have actually been restored in a test,
 - reversible migrations,

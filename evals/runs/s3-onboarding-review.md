@@ -24,7 +24,7 @@ Screen 6 Dashboard: empty, four widgets that each say "No data", and a 9-step pr
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. Both catch the same core problems, but A pairs each fix with evidence and keeps what people still need: it moves rather than removes capabilities and flags stakeholder tradeoffs such as sales relying on the referral and company-size fields and the card possibly being a fraud control, which is better product judgment than B's broader but more generic list.
+Blind pairwise judgment: **baseline**. B covers the same core fixes but also keeps what users need: it addresses accessibility (the low-contrast Skip link, color-only errors), recovery (don't clear the form, resumable progress, a back button, a calendar skip path), permission transparency, and a measurement plan with an honest caveat. A has internal inconsistencies (a '1-step' versus '3-item' checklist, merging two gates 'into none') and puts invented-precision numbers up front.
 
 ### baseline
 
@@ -117,85 +117,82 @@ Track step-by-step funnel drop-off, time to first scheduled event, the verificat
 - Skill activated: True; references read: insanely-great/references/review.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 1023
+- Words: 924
 
 <details><summary>Output</summary>
 
-**Verdict:** I'm assuming the flow exists to get a team scheduling together fast. Right now it gates value behind about 6 screens, 10 required fields, a mandatory email round trip and a credit card, and it ends on an empty dashboard with a 9-step tour. The fix is to move value earlier and ask for everything else later, without losing any capability.
+**Verdict:** I'm assuming the purpose is to get a team scheduling in under 10 minutes. The flow doesn't deliver that. Value is buried behind about 10 fields, an email gate, a plan decision, a card, and an empty dashboard. Several steps also work against the user: the hidden skip link, the card-required trial, and the raw error code.
 
-**Numbers (first value = a connected calendar and a visible schedule):**
-
-| | Now | Proposed |
-|---|---|---|
-| Screens before value | 5 | 2–3 |
-| Required fields | 10 | 3 (email, password, name) |
-| Blocking waits | 1 (email, 10-minute expiry) | 0 |
-| Decisions | about 20 or more (plan: 4 plans × 22 rows; invites, 5 fields; calendar, 5 providers; tour, 9 steps) | about 4 |
+**Numbers (screens 1–6 → proposed):**
+- Fields before value: 10 → 3 (name, work email, password).
+- Blocking waits: 1, on the 10-minute email link → 0.
+- Plan decisions: 4 plans × 22 rows → 0 upfront.
+- Tour steps: 9 → 0, replaced by a 1-step checklist.
+- Time to first value: never, because the dashboard is empty → a first real calendar view.
 
 **Findings**
 
-- **[Blocker] The app is unusable until the email link is clicked, and the link expires in 10 minutes.**
-  Evidence: Screen 2. Anyone who checks mail late, or whose mail is delayed or filtered, is locked out.
-  Fix: Let people in immediately and verify in the background. Gate only sensitive actions, such as inviting people or sending notifications, on verification. Extend expiry to 24 hours or more. Add resend and "change email" on the screen, and have the link sign them in on any device.
+- **[Blocker] The app is unusable until the email link is clicked, and the link expires after 10 minutes.**
+  - Evidence: Screen 2. A user who is slow or whose email is delayed is locked out.
+  - Fix: Let people in straight away and verify in the background. Gate only invites, billing and sharing on verification. Extend the expiry to 24 hours and add a "Resend" button and a "Change email" link.
 
 - **[Blocker] Password rules appear only after a failed submit, as "Error 422: password invalid".**
-  Evidence: Screen 1. The message shows an HTTP code and no next step.
-  Fix: Show the rules before typing, with a live checklist. If the error still fires, say "Use at least 12 characters", with no code. Add a show-password toggle and allow password managers and paste.
+  - Evidence: Screen 1. The message exposes the implementation and gives no next step.
+  - Fix: Show the rules inline while the user types, with a show/hide toggle. Remove the confirm-password field. Write errors in plain words, for example "Use at least 12 characters."
 
-- **[Major] Screen 1 asks for 10 fields, and the form has no clear purpose.**
-  Evidence: Phone, last name, company size, role, "How did you hear about us?" (required) and confirm password don't help someone schedule.
-  Fix: Ask for work email, name and password. Drop confirm password in favor of a show toggle, or offer a Google/Microsoft sign-in. Ask company name when they first create or invite a team. Infer company from the email domain. Make phone optional and ask for it only if you add SMS reminders. Make "How did you hear about us?" optional and move it after first value. Keep company size and role as optional questions later, since sales and segmentation need them.
+- **[Major] Screen 1 asks for 10 fields.**
+  - Evidence: Phone, company size, role and a required "How did you hear about us?" aren't needed to schedule anything.
+  - Fix: Ask only for name, work email and password, and offer "Continue with Google/Microsoft". Ask for company name later, in context. Infer the company from the email domain. Make the attribution question optional and move it after first value. Drop the phone number unless you use it for SMS reminders, and then ask when the user turns those on.
 
-- **[Major] The free trial requires a credit card, and the plan screen shows 22 rows × 4 plans before the user has seen the product.**
-  Evidence: Screen 3. This is forced card capture at the point of least trust.
-  Fix: Start the trial on the top plan with no card, and ask for payment when the trial ends or on first use of a paid feature. Reach the plan comparison from Billing and from in-context upgrade prompts. If you keep a plan screen, show 3 plans and 5–6 differentiating rows, with a "Compare all features" link for the full 22. State what happens at trial end.
+- **[Major] The free trial requires a credit card, and it comes before the user has seen the product.**
+  - Evidence: Screen 3. This is forced card capture at the point of least trust.
+  - Fix: Start everyone on the trial with no card. Ask for a card when the trial ends or when the user picks a paid feature, and send a reminder email before it ends.
 
-- **[Major] "Invite your team" shows 5 empty fields and a small gray "Skip" at the bottom right.**
-  Evidence: Screen 4. The skip is hard to see and the fields add effort.
-  Fix: Make Skip a visible secondary button, such as "I'll do this later". Use one field that adds rows as needed, plus a shareable invite link, and offer to import from the connected calendar or directory. Better, move this step after calendar connection, when invites have something to show.
+- **[Major] The plan choice is a 22-row, 4-plan comparison table, shown before the user has any context.**
+  - Evidence: Screen 3.
+  - Fix: Remove it from onboarding. Show it in Settings → Billing and when a user reaches a limit. Keep the full table there, with a "Compare all features" link.
 
-- **[Major] The dashboard is empty, with four "No data" widgets, and a 9-step tour starts automatically.**
-  Evidence: Screen 6. A tour that explains an empty screen is covering for a UI that doesn't guide.
-  Fix: Replace the widgets with one next action, such as "Share your availability link". Show sample data, labeled as sample, or a checklist of 3 setup steps. Cut the tour to 2–3 contextual tips that appear when the user reaches each feature. Make it dismissible and replayable from Help.
+- **[Major] The "Skip" link on the invite screen is small, gray and in the bottom-right corner.**
+  - Evidence: Screen 4. The five empty fields also imply that inviting is mandatory.
+  - Fix: Make "Skip for now" a clearly visible secondary button. Show one email field, with "Add another" and "Paste a list." Offer an invite link to copy. Show this screen after the calendar is connected, once the user can see what the team would get.
 
-- **[Minor] Calendar connection offers five providers equally.**
-  Evidence: Screen 5. CalDAV and Exchange are expert choices.
-  Fix: Show Google and Outlook as primary buttons, detect the provider from the email domain and pre-highlight it, and put iCloud, Exchange and CalDAV under "Other calendars". Every provider stays reachable. This step should come before invites and the plan choice, because it is the first real value.
+- **[Major] Screen 5 offers five equal buttons for connecting a calendar.**
+  - Evidence: Google, Outlook, iCloud, CalDAV and Exchange all get the same weight.
+  - Fix: Detect the provider from the email domain and show that one as the primary button. Put the rest under "Other calendars". Keep all five available.
 
-- **[Minor] No progress indicator, and "Next" says nothing about what happens.**
-  Fix: Show step count (for example "Step 2 of 4") and use specific button labels like "Create account" and "Connect Google Calendar".
+- **[Major] The dashboard is empty, has four "No data" widgets, and starts a 9-step tour automatically.**
+  - Evidence: Screen 6. The tour is explaining an empty UI.
+  - Fix: Fill the dashboard with the user's real calendar after connecting, or with sample data labeled as such. Replace each "No data" with one action ("Connect a calendar", "Invite a teammate"). Remove the auto-start tour and use a 3-item checklist. Keep a "Take the tour" option in the Help menu.
 
-**Simplify (proposed order):**
-1. Sign up (3 fields)
-2. Connect calendar (provider auto-detected)
-3. Dashboard with a real schedule or availability link, and one next action. Invites, plan and profile questions come later, in context.
+- **[Minor] Each screen asks a different kind of question, and the order is wrong.**
+  - Fix: Order the flow as account → calendar → value → invite → plan. Show a progress indicator.
 
-**Capability check:** Nothing is removed. These moves are proposed:
-- Company, role, size and referral data move to optional or later prompts.
-- Email verification becomes background verification.
-- The full plan comparison moves to Billing and upgrade prompts.
-- Invites move to after calendar connection.
-- CalDAV, Exchange and iCloud move under "Other calendars".
-- The tour becomes in-context tips.
+- **[Polish] The "Next" button is generic.**
+  - Fix: Name the action, for example "Create account".
 
-I'd confirm with sales and marketing before cutting the required referral and company-size fields, since they may rely on that data. Also check whether the card requirement is a deliberate fraud or abuse control. If it is, consider a lighter alternative, such as verified work email or phone only when abuse signals appear.
+**Simplify:** Remove the confirm-password field, the phone number, company size and role, the upfront plan table, and the auto-start tour. Merge the two separate gates (email verification and card) into none.
 
-**Keep:**
-- The idea of a plan and invite step during setup. Only the timing and weight change.
-- Support for many calendar providers, which suits a team product.
-- A skip option on invites. Make it visible.
-- Email verification itself, as a security measure. Change when it blocks.
+**Capability check**
+- **Kept:** all five calendar integrations, the full plan comparison, team invites, the product tour, and email verification.
+- **Moved:**
+  - The plan table goes to Billing and to the points where users hit limits.
+  - Company and role questions go in context, later.
+  - The tour goes to the Help menu.
+  - Less common calendars go under "Other calendars".
+- **At risk:** If sales or analytics use company size, role or phone, collect them later, or infer them from the email domain. Tell me if a team depends on them.
 
-**Accessibility and trust checks to run:** contrast on the gray Skip link, and error messages linked to their fields for screen readers. Also confirm the trial-to-paid terms are stated before any card is entered.
+**Keep:** the idea of offering all five calendar types, including CalDAV and Exchange (enterprise buyers need them), the team-invite step itself, and the comparison table as a reference page.
 
-If it helps, I can draft the new screen-by-screen copy or a checklist-style dashboard empty state next.
+**Proposed flow:** (1) Create account in 3 fields → (2) Connect calendar → (3) See a real schedule → (4) Optional invite → (5) Plan only when needed.
+
+I can write per-screen copy and layouts, or a metrics plan to measure drop-off at each step, if you want either.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. A is tighter and better prioritized: it cuts the flow to 3 screens, explicitly checks that nothing needed is lost (all calendar integrations kept, accessibility of the Skip link, abuse and rate limits for unverified accounts), and avoids B's invented details such as a 'free-text' marketing question and a still-6-step proposed flow.
+Blind pairwise judgment: **skill**. A gives a tighter, severity-ranked review with concrete fixes, quantified before/after targets, and an explicit check on what might be lost (sales-routing fields, phone for 2FA, card-for-conversion), while B is solid but slightly looser, re-adds an 'about you' step, and assumes the 'How did you hear' field is free-text, which the request never said.
 
 ### baseline
 
@@ -272,60 +269,72 @@ I reviewed this from your description only. I haven't seen the actual screens, y
 
 ### skill
 
-- Skill activated: True; references read: none
+- Skill activated: True; references read: insanely-great/references/review.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 880
+- Words: 1003
 
 <details><summary>Output</summary>
 
-**Verdict:** The flow asks for a lot before it shows any value. Scheduling software proves itself when a calendar is connected and a team member sees availability, but that doesn't happen until screen 5 of 6. Most of the problems below are accidental complexity, so fixing them removes steps without removing capability.
+**Verdict:** Assuming the purpose is "a team lead gets their team's shared schedule working in minutes", the flow doesn't deliver it. Every screen asks for something before showing any value, and the first real value (a calendar with events) only arrives at screen 5. Screens 2 and 3 are the worst. The product is locked until email is verified, and the trial then demands a credit card after a 22-row decision.
 
-**Numbers (before first value):** 6 screens → 3. 10 account fields → 2 (or one SSO click). Mandatory blockers (email verification, credit card) → 0. Tour steps: 9 → at most 3 contextual tips.
+**Numbers (before first value):**
+- Screens: 6 → 3 (account, connect calendar, dashboard with data)
+- Required fields: 10 + card details → 3 (work email, password, calendar connection)
+- Decisions: about 14 plus a 4-plan choice → 2 (password, which calendar)
+- Tour: 9 steps → 0 forced, with optional contextual hints
 
 **Findings**
 
-- **[Blocker] Verification gates the whole app.** The link expires in 10 minutes, and people leave to check email and don't come back.
-  - Fix: let them in right away. Verify in the background with a banner, and only gate sensitive actions such as inviting people or sending booking links. Make the link valid for 24 hours and add a "Resend" button and a "Wrong email?" edit.
-- **[Blocker] The free trial requires a credit card.** This is a conversion and trust barrier before the user has seen anything.
-  - Fix: start the trial with no card and ask for one near the trial's end. If you must collect it up front, say when the first charge happens and how to cancel.
-- **[Blocker] Password rules appear only after a failed submit, as "Error 422: password invalid".** The error shows a status code and gives no next step.
-  - Fix: show the rules inline as the user types, and use a show/hide toggle instead of a confirm field. Write errors in plain words, for example "Add one number (needs 8+ characters, 1 number)".
-- **[Major] Screen 1 has 10 fields.** Phone, company size, role, and "How did you hear about us?" don't help anyone get started, and the last one is required.
-  - Fix: ask for work email and password only, or offer "Continue with Google/Microsoft". Take the name from SSO or ask for it later. Move company, size, and role to an optional prompt after first use. Make "How did you hear" optional, or ask it after activation. Drop phone unless you need it for SMS reminders, and then ask in context.
-- **[Major] The plan table has 4 plans and 22 rows, shown before the user has any context.**
-  - Fix: auto-start the trial on one default plan. Move the full comparison to a "Compare plans" link and the billing page, trimmed to about 8 rows of real differences. Show it when the user hits a limit or the trial nears its end.
-- **[Major] Calendar connection comes last, but it is the hero step.** Everything before it is setup, and the dashboard is useless without it.
-  - Fix: make it step 2, right after signup. Show Google and Outlook (and iCloud if you have many users on it) as primary buttons. Put CalDAV and Exchange under "Other calendars", where they stay visible, labeled, and one click away.
-- **[Major] The empty dashboard shows four "No data" widgets, and a 9-step tour starts automatically.** The tour explains a UI that has nothing in it yet.
-  - Fix: show one empty state with one next action ("Connect a calendar", then "Share your booking link"). Replace the tour with a short checklist and 2–3 tips that appear when the user first reaches each feature. Keep a "Replay tour" option in Help.
-- **[Minor] The invite screen has 5 empty fields and a small gray "Skip" at the bottom right.** That's hard to see and is a contrast and target-size accessibility problem.
-  - Fix: start with one field plus "Add another", and offer "Copy invite link" and "Import from contacts/directory". Make "Skip for now" a normal-sized secondary button. Better still, move invites to after the first calendar is connected, when the user can see why teammates matter.
-- **[Polish]** "Next" on screen 1 could say "Create account". Add a progress indicator and a back button. Keep the order autosaved so a refresh doesn't wipe the form.
+[Blocker] The app is unusable until the verification link is clicked, and the link expires in 10 minutes.
+Evidence: Screen 2. Anyone who switches tabs, waits for a slow email, or hits spam is locked out. The expired-link path isn't described at all.
+Fix: Let people in right away and verify in the background with a banner. Gate only sending invites and billing on verification. Make the link valid for 24 hours or more, and add "Resend" and "Wrong email?" controls. Also offer a magic-link or Google/Microsoft sign-in so there is no verification step at all.
 
-**Proposed flow**
-1. Email + password (or SSO), inline password rules.
-2. Connect your calendar.
-3. Dashboard with a real next action (a booking link or a view of availability), with "Invite your team" offered here.
+[Blocker] Password rules appear only after a failed submit, as "Error 422: password invalid".
+Evidence: Screen 1. This is an HTTP code with no next step. A confirm-password field adds a second way to fail.
+Fix: Show the rules up front, with live checks as the person types. Add a show-password toggle and drop "confirm password". Keep the entered values after an error. Write the message as "Use at least 12 characters" (or whatever your rule is).
 
-**Simplify:** Merge confirm password into show/hide. Merge plan choice into the trial start. Remove the mandatory marketing question and the auto-start tour.
+[Major] Screen 1 asks 10 fields, and most of them aren't needed to start.
+Evidence: Phone, company size, role, and "How did you hear about us?" (marked required) serve sales and marketing rather than the user.
+Fix: Ask for work email and password only. Take the name from the calendar connection or ask it later. Infer the company from the email domain. Move role and company size to an optional post-value prompt. Make "How did you hear" optional, or ask it on the dashboard. Drop phone unless you use SMS.
+
+[Major] The credit card is required for the free trial, and 4 plans are shown in a 22-row table before the person has seen the product.
+Evidence: Screen 3. A card up front and a plan choice before any value is a trust cost and a drop-off point.
+Fix: Start a trial with no card on the top plan, and show pricing only when the trial ends or when someone asks. If the card is a business requirement, say so plainly with "You won't be charged until [date]. Cancel anytime", and send a reminder before the charge. Cut the table to about 5 differentiating rows, and make "Compare all features" a link to the full list.
+
+[Major] "Skip" is a small gray link at the bottom right of the invite screen, below 5 empty email fields.
+Evidence: Screen 4. This is a hidden-skip dark pattern, and teammates who haven't been invited yet have no schedule to join.
+Fix: Make "Skip for now" a normal secondary button next to the primary one. Move invites after the first schedule exists, where they make sense. Offer "Copy invite link" and a CSV or bulk paste as the depth.
+
+[Major] The dashboard opens empty, with four "No data" widgets and a 9-step tour that starts on its own.
+Evidence: Screen 6. The tour is explaining an interface that has nothing in it yet.
+Fix: Replace each "No data" with one action, such as "Connect a calendar to see your week". Show sample data if the calendar isn't connected. Make the tour opt-in ("Take a 1-minute tour") and cut it to 3 steps at most. Fix the empty state first, since tours often paper over it.
+
+[Minor] Five calendar buttons carry equal weight on screen 5, and CalDAV and Exchange are expert options.
+Fix: Show Google and Outlook as primary (detect from the email domain, so a Gmail address shows Google first). Put iCloud, Exchange, and CalDAV under "Other calendars". Keep all five reachable.
+
+[Minor] "Next" on screen 1 doesn't say what happens next.
+Fix: Use "Create account", and show a short line like "Takes about 2 minutes".
+
+[Polish] Add a progress indicator only if you keep more than 3 steps. Add autofocus and correct input types (email, tel) and autocomplete attributes.
+
+**Simplify:** Merge screens 1 and 2 into a single step, with verification happening in the background. Move screen 3 (plans) out of onboarding and into the trial end. Move screen 4 (invites) to after the first schedule exists. Replace the forced tour with empty states that act as the tour.
 
 **Capability check:**
-- **Kept:** all five calendar integrations, team invites, the full plan comparison, the product tour, and company/role/size data.
-- **Moved:** invites, plan comparison, and company details move to later, in context. CalDAV and Exchange move one level down.
-- **At risk:** if you need company size and role for sales routing, collect them later in the session, or enrich the data from the email domain. Delaying verification also needs rate limits and abuse checks so unverified accounts can't send email.
-- **Removed:** nothing, except the 422 error text and the confirm-password field.
+- Kept: all 5 calendar integrations (CalDAV and Exchange move under "Other calendars"), all plan comparison detail (moves to a link), team invites (move to after the first schedule), and the product tour (becomes optional).
+- At risk: role and company size may feed your sales routing or plan recommendation. Confirm who uses them before deferring, and ask for them later in context. Phone may be needed for 2FA or SMS reminders, so ask for it where it's used. Also check whether your sales team needs the card up front for trial-to-paid conversion, and test the no-card trial rather than assuming.
+- Removed: confirm-password (replaced by show-password) and the "No data" placeholders. I'd recommend both, and they're your call.
 
-**Keep:** the idea of offering many calendar providers, since that's a real strength for teams with mixed tools. Also keep invite-your-team as a concept and the trial itself.
+**Keep:** the calendar-connection step itself, since it's the real first value. Also keep the breadth of integrations, the trial itself, and the email verification as a security step (just not as a lock on the whole app).
 
-I'd verify two things with your data: where users drop off today, and whether sales actually uses the signup fields. If you'd like, I can draft the new screen copy or a measurement plan for the funnel changes.
+Do you want me to go to the next level of detail, such as a screen-by-screen redesign with copy, or a test plan to measure the drop-off at each step?
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **baseline**. B covers the same core fixes more concisely, adds recovery features A misses (a Back button, a step indicator and saved progress), and says plainly that it reviewed only the description, while A's precise before/after counts (for example "10 → 2 required fields") overstate what the request actually says.
+Blind pairwise judgment: **baseline**. Both reach the same core fixes, but B adds recovery and transparency items A omits (Back button, saved progress, a calendar 'Skip for now', a note on what calendar access is used for, and a plan to measure drop-off), while A invents unsupported numbers ('about 20 decisions') and miscounts its own capability check ('all four calendar types' when five providers were listed).
 
 ### baseline
 
@@ -407,68 +416,63 @@ I reviewed the description only, not analytics. Before and after the changes, me
 - Skill activated: True; references read: insanely-great/references/review.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 939
+- Words: 866
 
 <details><summary>Output</summary>
 
-**Verdict:** I'm assuming the flow exists to get a team scheduling together as fast as possible. As described, it makes people pay for that in forms, waiting and decisions before they see anything useful. The fixes are mostly cuts and reordering, so no capability is lost.
+**Verdict:** The flow is meant to get a team scheduling together fast. Today it puts about 6 screens, 10+ fields, an email wait and a credit card in front of the first useful moment, and the dashboard that follows is empty. The fix is to ask for less, let people in sooner, and move the calendar connection earlier, because it's the step that makes the product useful.
 
 **Numbers (before first value):**
-- Screens: 5 → 3 (account, connect calendar, dashboard with a real first view).
-- Required fields: 10 → 2 (work email, password).
-- Blocking waits: 1 (email verification, which stops everything) → 0.
-- Decisions: about 25 (10 fields, a 4-plan choice, 5 invites, 5 calendar providers, a card, a 9-step tour) → about 4.
+- **Screens:** 6 → 3 (account, calendar, dashboard with a real schedule).
+- **Required fields:** 10 on screen 1 → 3 (work email, password, first name).
+- **Decisions:** about 20 → about 5.
+- **Blocking waits:** email verification (10-minute expiry) → none.
 
-**Findings**
+**Findings:**
 
-1. **[Blocker] Verification stops all use, and the link expires after 10 minutes.**
-   - Evidence: Screen 2. A user who checks email late, or whose message is delayed, is locked out.
-   - Fix: Let people into the app right away. Gate only sensitive actions (inviting people, billing) on verification. Make the link valid for 24 hours or more. Add "Resend" and "Change email", and a banner that says what is still locked.
+1. **[Blocker] Verification gates the whole app.**
+   - Evidence: Screen 2 blocks everything, and the link expires after 10 minutes. A person who checks email late gets locked out, and many will drop off there.
+   - Fix: Let people in right away and verify in the background. Show a dismissible banner, and require verification only before inviting others or sending invites. Make the link last 24 hours or more, and add a "resend" button.
 
 2. **[Blocker] Password rules appear only after a failed submit, as "Error 422: password invalid".**
-   - Evidence: Screen 1. It shows a code, doesn't say what to fix, and the user has to guess.
-   - Fix: Show the rules inline before typing and check them live. Say what's wrong, for example "Add at least 1 number". Keep what the user already typed. Add a show/hide toggle, and allow paste and password managers.
+   - Evidence: Screen 1. The message is an HTTP status code with no next step.
+   - Fix: Show the rules before the person types, with live checks as they type. Keep their input on error. Add a show/hide toggle, which also makes the "confirm password" field unnecessary.
 
-3. **[Major] The signup form asks for 10 fields.**
-   - Evidence: Screen 1. Last name, phone, confirm password, company size, role and "How did you hear about us?" aren't needed to start, and the last one is required.
-   - Fix: Ask only for work email and password, or offer Google/Microsoft sign-in. Drop confirm password in favor of show/hide. Infer the company from the email domain. Ask phone, size, role and source later, optionally, in context. If sales needs them, put them in a one-question skippable step after the first value. Make "How did you hear about us?" optional.
+3. **[Major] Screen 1 asks for too much.**
+   - Evidence: There are 10 fields, including phone, last name, company size, role and a required "How did you hear about us?".
+   - Fix: Ask for work email, password and first name. Ask for company name later. Use "Continue with Google/Microsoft" as the fastest option, which also gives you the calendar connection. Make the referral question optional and move it to after first value. Ask for phone only if you need it for SMS reminders. Infer company from the email domain, and ask for size and role later, or only if they change the experience.
 
-4. **[Major] The free trial requires a credit card, and the plan table comes before any value.**
-   - Evidence: Screen 3. Four plans with 22 rows, asked before the user has seen the product.
-   - Fix: Start everyone on a full trial with no card and put them straight into the product. Show a plan picker with 3 to 5 key differences once they've seen value, such as day 10 of the trial or on hitting a limit. Keep the full 22-row comparison on a "Compare all features" link. If a card is a business requirement, say so plainly ("You won't be charged until [date]. Cancel anytime.") and send a reminder email before the charge.
+4. **[Major] The trial requires a credit card, and the plan table has 22 rows across 4 plans.**
+   - Evidence: Screen 3. This asks for a commitment before the person has seen any value, and a 4×22 grid is a hard comparison to make.
+   - Fix: Start everyone on the full-featured trial with no card. Ask for a plan only when the trial nears its end or when they hit a paid limit. If you keep a plan screen, show 3 plans with about 5 differentiators, and put the full 22-row table behind a "Compare all features" link.
 
-5. **[Major] The invite screen hides its Skip option.**
-   - Evidence: Screen 4. "Skip" is a small gray link at the bottom right, below five empty fields.
-   - Fix: Make "Skip for now" a proper secondary button. Replace the five fields with one field that takes comma-separated or pasted emails, plus a shareable invite link. Better still, move invites to after the user has their own calendar connected and has seen the product. Add "Import from contacts/calendar" later.
+5. **[Major] The calendar step comes too late, and it lists 5 providers with equal weight.**
+   - Evidence: Screen 5 comes after the plan and invite screens. Without a calendar, the dashboard has nothing to show, so it ends up empty.
+   - Fix: Make it the second step. Lead with the one or two providers detected from the email domain, such as Google or Microsoft. Put iCloud, CalDAV and Exchange under "Other calendars". They stay available for the people who need them.
 
-6. **[Major] The dashboard is empty and a 9-step tour starts automatically.**
-   - Evidence: Screen 6. Four widgets each say "No data", and then a tour explains them.
-   - Fix: Replace the empty widgets with one next action ("Create your first availability / meeting link"). Show sample data that is clearly labeled as sample. Cut the tour to at most 3 steps, make it dismissible and replayable, and prefer inline hints at the moment they apply. A tour that explains an empty UI means the UI needs fixing.
+6. **[Major] The dashboard is empty, and a 9-step tour starts automatically.**
+   - Evidence: Screen 6 has 4 widgets that each say "No data". A tour that explains an empty screen teaches nothing.
+   - Fix: Show the person's real upcoming events from the connected calendar. Replace each "No data" with one action, such as "Invite a teammate to see shared availability". Replace the auto-start tour with a short checklist of 3 tasks, and offer the tour as an optional "Take a tour" button.
 
-7. **[Minor] The calendar screen offers 5 equal buttons.**
-   - Evidence: Screen 5. Google, Outlook, iCloud, CalDAV and Exchange all look the same.
-   - Fix: Detect the provider from the signup email and make that button primary. Put iCloud, CalDAV and Exchange under "Other calendars". Don't delete them, since admins and some teams depend on them. Explain what access is requested and that it's read-only for availability, if that's true. Show a "Skip" and a "Connected" success state.
+7. **[Major] The invite screen hides its exit.**
+   - Evidence: Screen 4 has 5 empty fields, and "Skip" is a small gray link at the bottom right. That reads as a dark pattern.
+   - Fix: Make "Skip for now" a normal secondary button. Show one email field with "Add another" and a copyable invite link. Move the screen to after the first scheduling result, when inviting has an obvious payoff.
 
-8. **[Minor] Ordering is backwards.** Plan, then invites, then calendar means value arrives last. Calendar connection is the activation moment for a scheduling product, so it should come first.
+**Simplify:**
+- Merge "Create account" and "Check your inbox" into one step with background verification.
+- Merge the plan choice into the trial (a "Choose plan" prompt at trial end).
+- Drop "confirm password" in favor of a show/hide toggle.
 
-**Proposed flow:** (1) email and password, or SSO → (2) connect calendar, with the provider auto-detected → (3) dashboard showing the user's real availability or a first meeting link. Verification happens in the background. Invites, plan and profile questions come in context afterward.
-
-**Capability check:** Nothing is removed.
-- Phone, company size, role and source: moved to later, optional.
-- The 22-row plan table: moved one level down, behind a link.
-- Multiple invite fields: replaced by a paste field and an invite link.
-- iCloud, CalDAV and Exchange: moved under "Other calendars".
-- The product tour: shortened but still replayable.
-- Credit card capture: moved to conversion time.
+**Capability check:**
+- **Kept:** all four calendar types, with the less common ones under "Other calendars". The full plan comparison stays behind a link. Team invites stay in the flow, just later.
+- **Moved:** company size, role, phone and the referral question go to Settings or a later, optional prompt.
+- **Needs your decision:** whether you really need phone, size or role at signup. If sales needs them, collect them after first value.
 
 **Keep:**
-- A work-email-based account. It lets you infer the company.
-- Offering Google, Outlook and the other providers, so no team is excluded.
-- A plan comparison for buyers who want detail.
-- Team invites as an early growth lever. Only the timing and the Skip control change.
+- Asking for a work email suits a team product.
+- Offering many calendar providers is a real strength for team scheduling.
+- Team invites as part of onboarding are the right idea. Only the timing and the Skip treatment need to change.
 
-**Measure:** Track signup completion, time to calendar connected, trial-to-paid conversion and invites sent. A/B the card-free trial, because it lifts signups but may lower the share who convert.
-
-I can sketch wireframes or write the copy for the revised screens if that would help.
+Do you want a per-screen redesign with copy for the new 3-screen flow, or a prioritized plan to ship these changes in stages?
 
 </details>

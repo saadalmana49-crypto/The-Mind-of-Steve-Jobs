@@ -31,8 +31,8 @@ Last checked: October 2026.
 All checks ran on macOS on 11 October 2026, in throwaway directories so the maintainer's own settings were not involved.
 
 - **Claude Code 2.1.296.**
-  - Copied the skill into a project's `.claude/skills/`. Ran 42 headless sessions across 14 scenarios (see [`evals/`](../evals/)). Claude invoked the skill on its own in 40 of them. The two misses were architecture prompts.
-  - Installed it as a plugin from this repository's marketplace: `claude plugin marketplace add`, then `claude plugin install insanely-great@insanely-great`. `claude plugin details` listed the skill, at about 190 tokens always-on and about 3.1k when invoked.
+  - Copied the skill into a project's `.claude/skills/`. Ran 42 headless sessions across 14 scenarios (see [`evals/`](../evals/)). Claude invoked the skill on its own in all 42.
+  - Installed it as a plugin from this repository's marketplace: `claude plugin marketplace add`, then `claude plugin install insanely-great@insanely-great`. `claude plugin details` listed the skill, at about 240 tokens always-on and about 4.4k when invoked.
   - `claude plugin validate .` passes.
 - **Codex CLI 0.162.1.**
   - With the skill in a repository's `.agents/skills/`, `codex debug prompt-input` showed it in the model-visible skill list, with its full description.

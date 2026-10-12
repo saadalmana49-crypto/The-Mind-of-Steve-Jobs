@@ -18,7 +18,7 @@ I want to build a web app for freelancers to manage their money: tracking income
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A makes sharper product judgments: a clear hero path, a tight five-tab navigation, and a reasoned 'not now' list. It also explicitly preserves accessibility (WCAG AA, keyboard), security (2FA, audit log, immutable invoices), and recovery (export, deletion, tested backups), and it stays concise, while B is broader but longer, sprawls to 12 screens, and omits accessibility.
+Blind pairwise judgment: **skill**. A gives sharper product judgment, with three must-win jobs, a hero path, a lean four-tab structure and a reasoned 'not now' list, and it explicitly covers accessibility, security, error/empty states and data export/deletion; B is solid but broader and less prioritized, with twelve screens, a feature-list approach and no accessibility coverage.
 
 ### baseline
 
@@ -190,93 +190,127 @@ Once you answer these, I can turn this into a detailed spec for the MVP (data sc
 - Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
 - Checks passed: 5/5 [True, True, True, True, True]
 - Judge note: none
-- Words: 803
+- Words: 1132
 
 <details><summary>Output</summary>
 
-**Recommendation:** Build a calm money companion that answers three questions: *What did I earn? Who owes me? What should I set aside for tax?* Invoicing, income and expense tracking, and tax estimates are all in v1. Tax is the differentiator, so build it as a running set-aside number and not as a form. The biggest unknown is which country's tax rules we target first.
+# Product plan: a money app for freelancers
 
-## Product brief
+I'm calling it **Ledgerly** as a placeholder. This plan covers what it is, what's in the first release, and the screens. It comes before any technology choices.
 
-**Purpose:** A freelancer, between client jobs, opens it and sees what they're owed, what they've earned, and what to keep for tax, without doing any bookkeeping.
+## Purpose
 
-**Real problem:** Freelancers don't need accounting software. They need to get paid on time and not be surprised by a tax bill. Today they use a spreadsheet, a Word or Canva invoice template, and a vague dread in the fourth quarter.
+When a freelancer finishes a job, they should be able to invoice, get paid, and see what's actually safe to spend. They shouldn't have to keep a spreadsheet, a bank app, and an invoicing tool in sync.
 
-**Hero path (first value, 5 steps):**
-1. Sign up.
-2. Answer two questions: country and business type.
-3. Import a bank CSV or connect a bank.
-4. Review the auto-categorized transactions in one batch.
-5. See "Set aside $X for tax" on Home.
+**Real problem:** A freelancer has no paycheck. The pain isn't a lack of charts. It's three questions they can't answer quickly:
+- Who owes me money?
+- How much of what's in my account is really mine after tax?
+- Am I ready for tax time?
 
-**Repeat task, sending an invoice (3 steps):** pick the client, confirm the pre-filled lines from last time, send.
+**What they do today:** a spreadsheet, a separate invoicing tool, a folder of receipts, and a surprise bill in April. The app has to beat that on the everyday path, not on feature count.
 
-**Brilliant at:**
-1. **Getting paid.** Invoices are fast to send, include a pay link, and chase themselves.
-2. **Tax without surprises.** A live set-aside estimate and the next deadline.
-3. **Effortless capture.** Transactions arrive and categorize themselves, and you only confirm.
+## It must be brilliant at three things
 
-**Depth (where each lives):**
-- Auto-categorization, recurring invoices, and invoice-to-income matching: automatic.
-- Currency, tax year, and invoice numbering: defaults.
-- Receipt attachments and mileage: in context, on a transaction.
-- Client history, categories, and rules: one level down.
-- Bulk edit, CSV/PDF export, accountant share link, and API/webhooks: advanced, in a labeled area.
+1. **Getting paid.** Invoicing takes under a minute. The client gets a clean pay page, and reminders are automatic.
+2. **A "safe to spend" number.** Income, minus expenses, minus a tax set-aside that updates itself. It's the first thing you see.
+3. **Bookkeeping that does itself.** Bank transactions arrive already categorized, and receipts attach with one drop. Tax time is a review, not a project.
 
-**Not now:**
-- Tax filing: liability, and rules vary by country. We estimate only.
-- Payroll and employees: a different product.
-- Double-entry bookkeeping: it adds complexity for a user who doesn't need it.
-- Time tracking and proposals: they don't serve the money questions.
-- Multi-currency: valuable, but it complicates the tax math. Revisit after v1.
-- Native mobile app: the web app is responsive first.
+## Hero path
 
-**States:**
-- *First run:* a guided import, not an empty dashboard.
-- *Empty:* "No invoices yet. Create your first one."
-- *Loading:* skeletons with no layout jump.
-- *Partial:* a bank sync that fails for one account says so plainly.
-- *Error:* nothing typed is ever lost.
-- *Scale:* 0 clients, 1 client, and 500 transactions all look right.
+- **First value, 4 steps:** sign up → choose country and business type → connect a bank or import a CSV → see Home with safe-to-spend and unpaid invoices.
+- **Repeat task, 3 steps:** new invoice → pick client and add lines → send.
+- **Weekly check, 1 step:** open Home. Anything needing attention is already listed.
 
-**Quality bar:**
-- Money is stored as integer minor units, never floats.
-- Every edit is audit-logged, and invoices are immutable once sent (void and reissue instead).
-- Tax figures are labeled "estimate" with the assumptions visible.
-- Home renders in under 1 second, and invoice send takes under 2 seconds.
-- Accessibility to WCAG AA, with full keyboard use.
-- 2FA, one-click data export, and account deletion.
-- Backups are tested by restoring them.
+## Screens
 
-**Technology:** One web app with a Postgres database and a single source of truth for the ledger. Use Stripe for pay links, a bank-aggregator API (or CSV import first), and server-generated PDFs. Choose the stack after the screens are agreed.
+Four main tabs: **Home, Invoices, Money, Taxes**. Settings sits under the profile menu.
 
-## Main screens
-
-Navigation has five items. Clients live inside Invoices, not in their own tab.
-
-| Screen | Primary action | What's on it |
+| Screen | What it does | One primary action |
 |---|---|---|
-| **Home** | Create invoice | Owed to you, earned this month, tax set-aside, next deadline, items needing review |
-| **Invoices** | Send invoice | List by status (draft, sent, overdue, paid). The editor shows a live preview. Reminders are automatic. |
-| **Money** | Confirm | A single feed of income and expenses. The inbox of unconfirmed items sits on top. Receipt attachments live here. |
-| **Taxes** | Set aside | Estimate with its assumptions, deadlines, a deductible-expense summary, and an accountant export |
-| **Settings** | n/a | Profile, bank connections, invoice branding, security, export, delete account |
+| **Home** | Safe-to-spend, money owed to you (with overdue items first), this month's income and expenses, and a short "needs attention" list | New invoice |
+| **Invoices** | List filtered by Draft, Sent, Overdue, and Paid. The editor has client, lines, due date, and live preview. Opening an invoice shows its history (sent, viewed, paid) | Send |
+| **Pay page** (client-facing) | Invoice, amount, pay button, PDF download. It carries your branding, not ours | Pay |
+| **Money** | One transaction list. An "Inbox" of uncategorized items gets cleared in a few taps, and receipts attach by drag-drop | Confirm category |
+| **Taxes** | Estimated amount owed this quarter and year, set-aside progress, deadlines, deductible expenses, and a "ready to file" checklist. Export for your accountant | Export tax pack |
+| **Clients** (opened from Invoices or search) | Contact details, invoice history, average days to pay | New invoice |
+| **Settings** | Business profile, invoice branding and numbering, tax settings, bank connections, categorization rules, security, data export, delete account | none |
 
-Outside the app, there are two more surfaces. The **client pay page** is a public invoice view with a pay button. The **emails** (invoice, reminder, receipt) are part of the product.
+Clients doesn't get its own tab. It's one concept, and most people reach it from an invoice.
 
-## Questions that change the design
-1. **Which country first?** Tax rules differ per country, so one country is far better than a vague global version. If you don't say, I'll default to the US (self-employment tax plus quarterly estimates).
-2. **Bank sync or CSV import at launch?** I'd start with CSV plus one aggregator integration. Bank sync costs money and adds compliance work.
-3. **Should clients pay inside the app (Stripe) in v1?** I recommend yes, because it's central to "getting paid". It does add payment compliance work.
+## Features and where they live
 
-Once you confirm the cut and answer these, I can detail the data model and the invoice and tax flows before any code.
+**On the surface (v1 core):**
+- Invoices: create, send by email or link, track viewed and paid, auto-remind, accept card or bank payment, send receipts.
+- Transactions: bank sync, auto-categorization that learns from your corrections, receipt attachments, manual entry.
+- Tax set-aside: a percentage rule based on your country and income, shown on Home.
+- Tax estimate: quarterly and annual, with deadline reminders.
+
+**One level down:**
+- Recurring invoices, deposits, partial payments, and credit notes (on the invoice).
+- Multi-currency (on the invoice and the client).
+- Categorization rules and bulk edit (Money → ••• menu).
+- Mileage and home-office deductions (Taxes → Deductions).
+- Accountant share link or export, including CSV and PDF (Taxes → Export).
+
+**Advanced:**
+- CSV import and export of everything, a command palette and keyboard shortcuts, and an API.
+
+## Not now
+
+- **Time tracking and projects:** it's a separate product, and invoices cover the need at first.
+- **Contracts and proposals:** other tools do this well. Let people attach a PDF for now.
+- **Teams, employees, and payroll:** this is a solo-freelancer product first.
+- **Filing taxes directly:** it's jurisdiction-specific and carries liability. v1 produces the tax pack instead.
+- **Native mobile apps:** ship a responsive, installable web app first, and revisit with usage data.
+- **Several countries at launch:** one country done properly beats five done thinly.
+- **A full double-entry accounting screen:** keep a proper ledger underneath, but don't expose it.
+
+## States to design
+
+- **First run:** guided setup with defaults for everything, and "import from CSV" as an escape if bank connection isn't available.
+- **Empty:** every screen names its first action, for example "No invoices yet. Create your first one."
+- **Loading and sync:** bank sync shows progress and never blocks the app.
+- **Errors:** a plain-language message, a retry button, and no lost input. A bank disconnect says what to do next.
+- **Edge cases:** zero income, a very late payer, a partial payment, a refund, and a client in another currency.
+
+## Quality bar
+
+- **Money correctness:**
+  - Amounts are stored as integers in the smallest currency unit.
+  - Payment handling is idempotent.
+  - Sent invoices can't be edited. They're voided or credited instead.
+  - Invoice numbers have no gaps and no duplicates.
+- **Security:**
+  - Per-user data isolation.
+  - Two-factor authentication.
+  - Encrypted bank tokens.
+  - An audit log.
+  - Automated backups with a tested restore.
+- **Speed:** Home renders in under 1 second, and an invoice saves instantly.
+- **Accessibility:**
+  - Keyboard operation.
+  - AA contrast.
+  - Status never shown by color alone, since overdue and paid need a label as well as a color.
+- **Leaving:** a full export, and account deletion that works.
+
+## Suggested technology
+
+Chosen last, and kept small: a TypeScript full-stack web app (Next.js) on one PostgreSQL database. Add a bank-data provider (Plaid, TrueLayer, or GoCardless, depending on country), Stripe for client payments, and a transactional email service. No microservices, and no separate queue until the volume needs one.
+
+## Decisions I need from you
+
+1. **Which country first?** Tax rules, currency, and bank providers all depend on it, so this is the biggest one.
+2. **Bank sync or CSV import first?** Bank sync is the better experience but adds cost and a provider dependency. CSV is faster to ship. I'd suggest starting with CSV import and adding bank sync soon after, unless it's central to your pitch.
+3. **Who is this for first?** I assumed solo freelancers who invoice clients. If it's closer to gig workers (ride-share, delivery) or small agencies, the invoicing-first plan changes.
+
+Once you've answered those, I can write per-screen specs, a data model, and a build order for the first release.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. A makes a sharper product call (safe-to-spend as the core, an explicit not-now list), covers essentials B omits such as accessibility, undo, audit trail, and empty/error/offline states, and stays concise, while B is broader but less focused and leaves out accessibility entirely.
+Blind pairwise judgment: **skill**. A gives a sharper, more opinionated plan built around one core question, with a clear hero path, scope cuts, states, and a quality bar that keeps accessibility, security, backups, export, and deletion; B is solid and detailed but longer, less focused, and leaves out accessibility.
 
 ### baseline
 
@@ -390,98 +424,84 @@ Once you've answered these, the next step would be a data model and a screen-by-
 ### skill
 
 - Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
-- Checks passed: 4/5 [False, True, True, True, True]
-- Judge note: The purpose covers who, when, and the outcome, but it is spread across three sentences ('A solo freelancer opens it between client work. It shows... They no longer have to guess.') rather than stated as one sentence.
-- Words: 883
+- Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: none
+- Words: 727
 
 <details><summary>Output</summary>
 
-**Recommendation:** Build this as "what can I spend, and what do I owe?" for a solo freelancer, not as accounting software. Income, expenses, invoices and taxes feed one number on the home screen: your safe-to-spend amount after tax set-aside. Pick one tax country for v1, because tax rules differ too much by country to do well in several at once.
+**Recommendation:** Build around one question: *"How much of my money is actually mine?"* Most freelancer tools are accounting software with invoicing bolted on. This one would be invoicing and cash tracking that automatically answers that question, with tax set aside, bills owed, and money still outstanding all accounted for. Everything below serves that question.
 
-## Product brief
+**Purpose:** A freelancer, between client jobs or on payday, sees what they can safely spend. They get that because invoices, payments, expenses, and tax set-aside all feed one number.
 
-**Purpose:** A solo freelancer opens it between client work. It shows what they've earned, what's owed to them, and how much to keep aside for tax. They no longer have to guess.
-
-**Real problem:** Freelancers don't want bookkeeping. They want to avoid two surprises: an unpaid invoice they didn't chase, and a tax bill they didn't save for. Today they use a spreadsheet plus a bank app, and they only face the numbers at tax time.
+**Real problem:** Freelancers don't lack bookkeeping. They have irregular income, a tax bill that arrives later, and no sense of what's safe to spend. Today they use a spreadsheet plus a separate invoicing tool, and they find out what they owe at tax time.
 
 **Hero path:**
-1. Sign up with email or Google.
-2. Pick your country and tax setup. These are defaults you can change later.
-3. Create and send the first invoice (client, line items, send), or import a bank CSV.
-4. The home screen shows the first numbers.
+1. Sign up and pick country and tax setup. This is one screen, with defaults.
+2. Create and send the first invoice. A client, line items, and Send.
+3. Mark it paid, or let it match a bank or CSV import.
+4. Home shows "Safe to spend" and the tax set-aside.
 
-That is 4 steps. The repeat task (send an invoice, or log or confirm an expense) should take 3 steps or fewer.
+That's 4 steps to first value. The repeat task is invoice → paid, in about 3 taps.
 
 **Brilliant at:**
-1. **Safe to spend:** one live number covering income, expenses, unpaid invoices and tax set-aside.
-2. **Invoicing that gets you paid:** fast to create, a payment link, automatic polite reminders, and clear status (draft, sent, viewed, overdue, paid).
-3. **Tax set-aside:** a running estimate of what you owe and when, with no tax knowledge needed.
+- The **Safe to spend** number: income minus tax set-aside minus expenses and upcoming bills.
+- **Invoicing that gets you paid**: a fast send, automatic reminders, and a pay link.
+- **Tax readiness**: a running estimate, quarterly reminders, and a one-click export for your accountant.
 
-**Depth (and where each item lives):**
-- Auto-categorize expenses and match bank transactions to invoices: automatic. You confirm only the uncertain ones.
-- Receipt capture (photo or email forward): in context, on the expense.
-- Recurring invoices, retainers, multiple currencies, and tax rates: one level down, in client or invoice detail, with defaults set during setup.
-- Mileage, home-office deduction, and rules for custom categories: advanced, in Settings.
-- CSV/PDF export, accountant access, and full data export: a visible "Export" area, always available.
-- Security and account control: 2FA, sessions, delete account.
+**Main screens:**
+- **Home:** Safe to spend, tax set aside, money owed to you, and what needs attention (overdue invoices, uncategorized expenses).
+- **Invoices:** list by status (draft, sent, overdue, paid), plus the editor and the client-facing pay page.
+- **Money:** one ledger of income and expenses, with search, filters, and quick categorizing. Receipts attach here.
+- **Taxes:** estimate to date, next due date, set-aside progress, and deductible categories.
+- **Clients:** who owes what, payment history, and default terms.
+- **Settings:** profile, tax rules, bank connections, export, security, and account deletion.
+
+**Depth (where each capability lives):**
+- **Automatic:** categorization suggestions, tax estimate updates, overdue reminders, recurring invoices.
+- **In context:** "Mark paid" appears when a matching deposit shows up. A fix-it prompt appears on an uncategorized expense.
+- **One level down:** multi-currency, mileage, receipt scanning, time tracking, and project-level profit.
+- **Advanced:** CSV/PDF export, custom categories, bulk edit, keyboard shortcuts, and API access.
 
 **Not now:**
-- Payroll and employees: this is for solo freelancers.
-- Double-entry bookkeeping and a full chart of accounts: that's accountant software, and it would bury the surface.
-- Multiple tax countries: do one well first.
-- Tax filing: v1 estimates and exports, and doesn't submit anything.
-- Time tracking, proposals and contracts: these are separate products, and none of them is needed for "what do I owe?".
-- Native mobile app: use a responsive web app first.
-- Bank-feed integrations: start with CSV import. Add live feeds once the numbers are trustworthy.
+- **Payroll and employees:** this is a different product for a different customer.
+- **Full double-entry accounting:** it adds a lot of complexity, and accountants can take an export instead.
+- **Tax filing:** it carries liability and varies by country. Estimates and exports come first.
+- **Team accounts:** wait until solo use is excellent.
+- **Native mobile app:** start with a responsive web app, and revisit once usage shows it's needed.
+- **Proposals and contracts:** these are adjacent to invoicing, not core to it.
 
 **States:**
-- *First run:* a guided setup, then a home screen with sample numbers marked as sample.
-- *Empty:* each list names its first action, such as "No invoices yet. Create your first one."
-- *Loading:* skeletons, with no layout jumps.
-- *Error:* plain words, input preserved, and a next step.
-- *Offline:* drafts save locally and sync later.
-- *Overdue:* shown prominently on home, with a one-tap "Send reminder".
-- *Scale:* a year of data (thousands of transactions) stays fast.
+- **First run:** a guided setup that ends on a sample-free, empty Home with one action, "Create your first invoice".
+- **Empty:** each screen names its first action.
+- **Errors:** plain words, with no lost input.
+- **Bank sync failure:** the app falls back to CSV import with a clear message.
+- **Scale:** it should stay fast with years of transactions.
 
 **Quality bar:**
-- Money handled as integer minor units with an explicit currency, never floats.
-- An audit trail on every edit.
-- Undo for deletions, and confirmation that names the consequence for anything permanent.
-- Automated backups, tested restores, and tests on every calculation (totals, tax, currency).
-- Accessibility to WCAG AA, with full keyboard support.
-- Budgets: home screen under 1 s, invoice creation feels instant.
-- Honest disclaimers: tax figures are estimates, not advice.
+- Money is stored as integer minor units, with idempotent payment handling.
+- Strict per-user data isolation.
+- Backups with a tested restore.
+- Data export and account deletion from day one.
+- Safe to spend updates in under a second after any change.
+- Full keyboard use and WCAG AA contrast.
+- Tax figures are labeled as estimates, not advice.
 
-**Technology:** Not decided yet, and it follows the above. My default is a standard web stack with a relational database, because money needs transactions and integrity. I'll propose specifics once you confirm the scope.
+**Technology:** A single server-rendered or React web app with Postgres and a managed auth provider. Payments go through Stripe, and bank feeds through an aggregator such as Plaid or GoCardless, behind one interface so they can be swapped. I'd pick the stack after you settle the open decisions.
 
-## Main screens
+**Open decisions:**
+1. **Country:** tax rules differ a lot (US quarterly estimates, UK self-assessment, and so on). I suggest launching in one.
+2. **Bank connection in v1:** I suggest CSV import first, with live bank feeds as v1.1.
+3. **Pricing:** free tier with paid invoicing features, or a flat subscription.
 
-| Screen | Purpose |
-|---|---|
-| **Home** | Safe-to-spend, unpaid and overdue invoices, next tax date, and the one action that matters now |
-| **Invoices** | List by status; create or edit; send; payment link; reminders |
-| **Money** | Income and expenses in one list, with the transactions needing review pinned on top |
-| **Clients** | Per-client history, outstanding balance, payment speed |
-| **Taxes** | Estimate for the period, set-aside amount, deadlines, deductions found |
-| **Reports and Export** | Profit and loss, year summary, accountant pack, full export |
-| **Settings** | Business profile, tax setup, categories, security, billing |
-| **Setup (first run only)** | Country, business type, optional import |
-
-That is 7 navigation items. Create and Search are available everywhere, including from the keyboard.
-
-## Open decisions for you
-1. **Which country's tax rules first?** This is the biggest scope driver. Without an answer I'll assume US self-employed (quarterly estimates).
-2. **Who is the first user: you, a specific group of freelancers, or a public product?** That sets how much billing and onboarding we build.
-3. **Should invoices collect payment (a Stripe-style link) in v1, or just track it?** I recommend collecting, since it's what makes invoicing get you paid.
-
-Once you confirm or change the cut, I can go deeper on the data model, the tax estimate logic, or the home screen design before we write code.
+I can go deeper next on any of these: per-screen layouts and states, the data model, or a phased build plan.
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A makes sharper product judgments: it centers the product on a 'safe to spend' hero path, gives an explicit 'Not now' list with reasons, and defines empty, error and success states. It also explicitly preserves accessibility (WCAG AA, labels not color alone), security (2FA, audit trail) and recovery (tested backups, full export), all of which B omits. A's one weakness is a minor inconsistency, featuring bank sync in its hero path while recommending CSV import first.
+Blind pairwise judgment: **skill**. A is more focused around a single sharp product insight ("safe to spend") and explicitly covers the essentials B omits (accessibility, per-user isolation, idempotent payments, audit trail, undo/void, backup restore, account deletion), while B is longer, more generic, and asserts an unsupported claim that bank sync is "the most-requested feature."
 
 ### baseline
 
@@ -611,122 +631,68 @@ If you answer those, I can turn this into a technical spec with the schema and a
 
 ### skill
 
-- Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
+- Skill activated: True; references read: none
 - Checks passed: 5/5 [True, True, True, True, True]
 - Judge note: none
-- Words: 904
+- Words: 672
 
 <details><summary>Output</summary>
 
-**Recommendation:** Build around one question freelancers can't answer today: "What's actually mine, and what do I owe?" Send an invoice in under a minute, get paid, and always see your safe-to-spend number after taxes. Expenses, bank sync and reports support that, and nothing else goes on the main screen.
+**Recommendation:** Build around one question freelancers can't answer today: "What's actually mine to spend after tax and what's still owed to me?" Invoices, expenses and taxes feed that answer instead of being separate modules. v1 is a single-user, single-jurisdiction app that covers get paid, track money, and set tax aside.
 
-## Product brief
+```
+Purpose:        A solo freelancer, checking in between client work, sees what they're owed, what they've
+                spent, and what to set aside for tax, without being an accountant.
+Real problem:   Freelancers don't want bookkeeping. They want to get paid on time, avoid a surprise tax bill,
+                and hand clean numbers to an accountant or tax form.
+Hero path:      1. Sign up → 2. pick country and tax setup (defaults pre-filled) → 3. add a client and send
+                a first invoice. (3 steps)
+                Repeat task: duplicate or create an invoice → send (2 steps). Payments and expenses
+                arrive and categorize themselves where possible.
+Brilliant at:   1. "Safe to spend": cash in, minus expenses, minus tax set-aside, minus bills due.
+                2. Invoicing that gets paid: fast to send, automatic reminders, a pay link.
+                3. Tax set-aside that updates itself with every payment and expense.
+Depth:          (rung → where it lives)
+  Automatic:    Tax estimate recalculated on every transaction; overdue detection and reminders; recurring
+                invoices and expenses; auto-categorization that learns from corrections.
+  Default:      Currency, tax rates, and categories by country; invoice numbering; payment terms.
+  Surface:      Dashboard, invoices, money in/out.
+  In context:   "Mark as paid", "Add receipt", and "Categorize this" appear on the item they apply to.
+  One level down: Clients, reports (profit and loss, quarterly tax summary), mileage, receipts.
+  Advanced:     CSV import/export, bulk edit, multi-currency, custom tax rules, API/webhooks, keyboard shortcuts.
+Not now:        Bank sync (high value, but heavy and regulated; start with CSV import, then add it as the
+                first follow-up). Payroll and employees: wrong user. Team accounts and roles: v1 is solo.
+                Full double-entry accounting: that's accountant software. Direct tax filing: jurisdiction-
+                specific and liability-heavy, so export a filing-ready summary instead. Mobile app: make
+                the web app responsive first.
+States:         First run: guided setup, then a sample-free empty dashboard with one clear action.
+                Empty: every list explains itself and offers its one next step.
+                Loading: skeletons.
+                Error: every error states the fix ("Client has no email. Add one to send.").
+                Success: a payment arriving updates "safe to spend" visibly.
+Quality bar:    Amounts stored as integer minor units with currency. Invoice send and payment are idempotent
+                (no double sends, no double-counted payments). Strict per-user data isolation. Tested
+                backup restore. Full data export and account deletion. Keyboard access, contrast, and
+                screen-reader labels. Dashboard under 1s on a typical connection. Audit trail on edited
+                financial records. Undo or void instead of silent delete. Tax figures are labeled
+                estimates, not advice.
+Technology:     One web app, one relational database (Postgres: money needs transactions and constraints),
+                a managed payments provider for pay links, and transactional email. No microservices and
+                no custom auth. Pick a framework once the screens are agreed.
+Open decisions: Which country first (tax logic differs a lot)? Do you want to take payments (card/bank
+                links) in v1 or just track them? Is this a product you'll charge for? Who are the first
+                users: designers, developers, writers, or consultants?
+```
 
-**Purpose:** For a freelancer between client projects, who wants to know what they can spend, what they owe in tax, and who owes them money, without doing bookkeeping.
+**Main screens (v1)**
+1. **Dashboard:** "Safe to spend" at the top, then owed to you (with overdue items), the next tax payment and amount, and recent activity.
+2. **Invoices:** list by status (draft, sent, overdue, paid), plus an editor with live preview and a send action.
+3. **Money:** one timeline of income and expenses, with filters, quick categorize, and receipt attach.
+4. **Taxes:** the set-aside balance, an estimate for the period, deadlines, and a filing-ready export.
+5. **Clients:** the people you bill, with history, balance, and payment habits.
+6. **Reports** (one level down): profit and loss, income by client, and the tax summary.
+7. **Settings:** profile, business and tax setup, invoice branding, data export, security, and account deletion.
 
-**Real problem:** The request is "track income, expenses, invoices, taxes." The need underneath is "stop worrying about money and tax surprises." Most freelancers use a spreadsheet plus a separate invoicing tool, and they only learn their tax bill when it's due.
-
-**Hero path:**
-1. Sign up (email only).
-2. Create an invoice (client, line items, send).
-3. Mark it paid, or let bank sync match the payment.
-4. See the "Safe to spend" number update.
-
-That's 4 steps to first value. The repeat task is "send an invoice for a returning client," which takes 2 steps using a saved client and a copy of the last invoice.
-
-**Brilliant at:**
-1. **Safe to spend:** income minus expenses minus the tax set-aside, shown as one number.
-2. **Invoicing and getting paid:** fast to create, with automatic reminders and a clear view of who's late.
-3. **Tax awareness:** a running estimate and the next deadline, with no tax knowledge required.
-
-**Depth (where each capability lives):**
-- **Automatic:**
-  - Tax set-aside calculation.
-  - Matching bank transactions to invoices.
-  - Categorizing recurring expenses.
-  - Late-payment reminders.
-- **Default:**
-  - Currency and tax year from your location.
-  - Payment terms (net 14, say).
-  - Invoice numbering.
-- **Surface:** Home, Invoices, Money (income and expenses), Taxes.
-- **In context:**
-  - Receipt attached from the expense row.
-  - "Remind" button on an overdue invoice.
-  - "Mark as personal" on a transaction.
-- **One level down:**
-  - Recurring invoices.
-  - Multi-currency.
-  - Mileage and home-office deductions.
-  - Quotes.
-- **Advanced:**
-  - CSV/PDF export.
-  - Accountant access (read-only link).
-  - Custom categories.
-  - Keyboard shortcuts and a command palette.
-  - API.
-
-**Not now:**
-- Payroll or employees: this is for solo freelancers.
-- Time tracking: other tools do it well, and we can import from them later.
-- Full double-entry accounting: it adds concepts a freelancer shouldn't have to learn.
-- Filing taxes directly: the legal and regional work is large. Export an accountant-ready pack first.
-- Native mobile apps: a responsive web app first.
-- Team or client portals: invoices carry a pay link instead.
-
-**States:**
-- **First run:** a three-question setup (country, business type, tax year). Optionally import from CSV or connect a bank.
-- **Empty:** "No invoices yet. Create your first one." Home shows an illustrated example of the safe-to-spend number.
-- **Loading:** skeletons, with no layout jump.
-- **Error:** plain words, input preserved. A failed bank sync says what failed and offers a retry.
-- **Success:** "Invoice sent to Acme. We'll remind them if it's unpaid on [date]."
-
-**Quality bar:**
-- Money stored as integer minor units with currency, never floats.
-- Audit trail on edits.
-- Nightly backups with a tested restore.
-- Full export at any time.
-- Invoice created in under 60 seconds.
-- Home renders in under 1 second.
-- Keyboard operable, WCAG AA contrast, and a descriptive label for every status (never color alone).
-- Real tax and legal disclaimers: estimates, not advice.
-
-**Technology:** One TypeScript full-stack app (Next.js or similar) on Postgres. Use a hosted auth provider, a payments provider for pay links, and a bank-aggregation API. There are no microservices, because the data is relational and one deployment is enough. The tax logic goes in its own tested module with one rules file per country.
-
-## Main screens
-
-1. **Home:**
-   - Safe to spend (large).
-   - Owed to you (with late items).
-   - Next tax deadline and amount to set aside.
-   - A "New invoice" button as the primary action.
-2. **Invoices:**
-   - List filtered by Draft, Sent, Overdue and Paid.
-   - Invoice editor with a live preview, plus a send dialog.
-   - Public pay page the client sees.
-3. **Money:**
-   - A single timeline of income and expenses.
-   - Receipt capture, categories, personal/business toggle.
-   - Bank connections.
-4. **Taxes:**
-   - Year-to-date estimate with a plain-language breakdown.
-   - Set-aside tracker and deadlines.
-   - Deductions found.
-   - Accountant pack export.
-5. **Clients:** a lightweight list with total billed and average days to pay. This is secondary, reached from Invoices.
-6. **Settings:**
-   - Business profile and invoice branding.
-   - Tax settings.
-   - Connected accounts.
-   - Security (2FA, sessions).
-   - Export all data and delete account.
-
-## Open decisions
-
-1. **Which country first?** This is the biggest one, because tax rules, invoice formats and bank APIs all depend on it. I'd launch in one country, and I'd suggest the US (self-employment tax, quarterly estimates) or the UK unless you have a reason to pick another.
-2. **Bank sync at launch, or manual and CSV first?** Sync is the best automation but adds cost and compliance work. I'd start with CSV import and add sync second.
-3. **Pricing:** free for a few invoices a month, or a flat paid plan from the start? This shapes what goes behind the paywall.
-
-Once you've picked the country, I can turn this into a data model and a build order of thin, finished slices: invoicing first, then Money, then Taxes.
+I can go deeper on any layer: per-screen wireframes, the data model, or the tax-setup flow for a specific country.
 
 </details>

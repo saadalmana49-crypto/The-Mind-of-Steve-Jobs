@@ -16,7 +16,7 @@ I'm preparing a talk on product simplicity. Give me 6 Steve Jobs quotes about si
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A gives more precise, checkable sources with on-topic quotes, quotes the NYT 'design is how it works' line more faithfully than B, and adds practical slide guidance plus several well-sourced misattributions to avoid, while still flagging which wording needs verification.
+Blind pairwise judgment: **skill**. A gives more accurate wording (e.g., the original 'It's not just what it looks like and feels like' rather than B's popular paraphrase), more precise citations, quotes that fit a simplicity talk better than B's off-topic iPad 2 line, and more useful misattribution warnings, though its 'verified' framing slightly overstates what it confirmed.
 
 ### baseline
 
@@ -59,47 +59,46 @@ I can also group these into a slide flow, such as simplicity, then focus, then d
 - Skill activated: True; references read: insanely-great/references/sources.md
 - Checks passed: 3/3 [True, True, True]
 - Judge note: none
-- Words: 475
+- Words: 456
 
 <details><summary>Output</summary>
 
-Here are six quotes from the verified list, each with its source. I left out the famous ones that don't hold up (see the end).
+Here are six verified quotes. Each is checked against a transcript or a report that reproduces the original text.
 
-1. **"Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."**
- Source: Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'," *BusinessWeek*, 25 May 1998.
+1. **"That's been one of my mantras — focus and simplicity. Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."**
+   Source: Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'," *BusinessWeek*, 25 May 1998.
 
 2. **"It's not just what it looks like and feels like. Design is how it works."**
- Source: Rob Walker, "The Guts of a New Machine," *The New York Times Magazine*, 30 November 2003.
+   Source: Rob Walker, "The Guts of a New Machine," *The New York Times Magazine*, 30 November 2003.
 
 3. **"People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the hundred other good ideas that there are. You have to pick carefully."**
- Source: Q&A at Apple's Worldwide Developers Conference, May 1997. The wording varies slightly between transcripts. The short form, "Focusing is about saying no," is safe to use as a punchy slide.
+   Source: Q&A at Apple's Worldwide Developers Conference (WWDC), May 1997. Transcripts differ slightly in wording.
 
 4. **"You've got to start with the customer experience and work backwards to the technology."**
- Source: Apple's Worldwide Developers Conference, May 1997 (same Q&A as above).
+   Source: WWDC Q&A, May 1997.
 
-5. **"Design is the fundamental soul of a man-made creation that ends up expressing itself in successive outer layers of the product or service."**
- Source: Brent Schlender, *Fortune*, 24 January 2000.
+5. **"When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."**
+   Source: *Playboy* interview by David Sheff, February 1985.
 
-6. **"When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."**
- Source: David Sheff, *Playboy* interview, February 1985.
+6. **"Who wants a stylus? You have to get them and put them away, and you lose them. Yuck. Nobody wants a stylus."**
+   Source: iPhone introduction keynote, Macworld San Francisco, 9 January 2007.
 
-**Notes for your slides**
-- **Quote 6** is long. If you need to cut it, end it at "…nobody will ever see it," and keep the full text in your speaker notes.
-- **Quote 5** is the most abstract. Quote 2 pairs well with it as a plain-language follow-up.
-
-**Quotes to avoid**
-- **"Simplicity is the ultimate sophistication."** This was the headline of Apple's 1977 Apple II brochure, which was marketing copy, not something Jobs said. The Leonardo da Vinci attribution has no support either.
-- **"To be truly simple, you have to go really deep."** This is Jony Ive, as quoted by Walter Isaacson, not Jobs.
+**Quotes to avoid on slides**
+- **"Simplicity is the ultimate sophistication."** It was the headline of Apple's 1977 Apple II brochure, which was marketing copy and not something Jobs said. The Leonardo da Vinci attribution has no support either.
+- **"To be truly simple, you have to go really deep."** This is Jony Ive, as quoted by Isaacson.
 - **"Innovation is saying no to 1,000 things."** I found no primary source. Quote 3 is the verified version of the same idea.
 
-The wording of the 1997 conference and 1998 *BusinessWeek* quotes comes from consistent reproductions, not the original recordings or articles. Check the wording against the source if you want it letter-perfect.
+**Notes for your slides**
+- Quote 6 is about design more than simplicity. It works well as a concrete example of removing something.
+- For quote 3, I'd cite "WWDC 1997" and not a specific transcript, since the exact wording varies.
+- I couldn't reach a few originals directly: the full WWDC 1997 transcript and the 1996 *Wired* article. The WWDC wording comes from several consistent reproductions, so it is reliable but may not be letter-perfect.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. B's quotes and sources are more accurate and it flags common misattributions usefully, while A credits the 2000 Fortune piece to the wrong author (Betsy Morris rather than Brent Schlender) and alters the quote ('human-made' instead of 'man-made'), though B overstates how thoroughly it verified the quotes.
+Blind pairwise judgment: **skill**. B's quotes and attributions are more accurate (A wrongly credits the Fortune 2000 quote to Betsy Morris instead of Brent Schlender and alters 'man-made' to 'human-made'), and B gives more useful slide guidance with correct debunks, though its claim to have verified the quotes and its stray mention of a 1996 Wired article are overstatements.
 
 ### baseline
 
@@ -142,19 +141,19 @@ I can also trim these into shorter slide-length versions or group them by theme,
 
 - Skill activated: True; references read: insanely-great/references/sources.md
 - Checks passed: 3/3 [True, True, True]
-- Judge note: none
-- Words: 501
+- Judge note: The closing caveat mentions an unreached 'Wired 1996 article' that none of the six citations uses, which is inconsistent with the sources given.
+- Words: 513
 
 <details><summary>Output</summary>
 
-Here are six verified quotes. Each one is checked against a transcript or a report that reproduces the original text.
+Here are six verified quotes, each with its source. I also flag one famous line that people often credit to Jobs but he didn't say.
 
-**1. On simplicity**
-> "That's been one of my mantras — focus and simplicity. Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."
+**1. On simplicity as hard work**
+> "Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."
 
 Source: Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'", *BusinessWeek*, 25 May 1998.
 
-**2. On what design is**
+**2. On what design means**
 > "It's not just what it looks like and feels like. Design is how it works."
 
 Source: Rob Walker, "The Guts of a New Machine", *The New York Times Magazine*, 30 November 2003.
@@ -162,40 +161,38 @@ Source: Rob Walker, "The Guts of a New Machine", *The New York Times Magazine*, 
 **3. On focus**
 > "People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the hundred other good ideas that there are. You have to pick carefully."
 
-Source: Q&A at Apple's Worldwide Developers Conference, May 1997. Transcripts differ slightly in wording. For a shorter slide, use "Focusing is about saying no."
+Source: Q&A at Apple's Worldwide Developers Conference (WWDC), May 1997. The wording differs slightly between transcripts. The short form, "Focusing is about saying no," is safe on a slide.
 
-**4. On quality you can't see**
-> "When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."
-
-Source: *Playboy* interview by David Sheff, February 1985.
-
-**5. On starting with the user**
+**4. On starting from the user**
 > "You've got to start with the customer experience and work backwards to the technology."
 
-Source: Q&A at Apple's Worldwide Developers Conference, May 1997.
+Source: Same WWDC Q&A, May 1997.
+
+**5. On quality you can't see**
+> "When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."
+
+Source: *Playboy* interview by David Sheff, February 1985. This one is long, so you may want to trim it on the slide. Cut only at the ends and keep the wording in the middle exact.
 
 **6. On design as the soul of a product**
 > "Design is the fundamental soul of a man-made creation that ends up expressing itself in successive outer layers of the product or service."
 
 Source: Brent Schlender, *Fortune*, 24 January 2000.
 
-**Quotes to avoid on a simplicity talk**
-
-These are often credited to Jobs, but the evidence doesn't support it:
-- **"Simplicity is the ultimate sophistication."** This was the headline of Apple's 1977 Apple II brochure. It was marketing copy, not something Jobs said, and the Leonardo da Vinci attribution has no support either.
+**Quotes to avoid on slides**
+- **"Simplicity is the ultimate sophistication."** This was the headline of Apple's 1977 Apple II brochure, so it's marketing copy, not something Jobs said. It's also often credited to Leonardo da Vinci, with no support in his notebooks.
 - **"To be truly simple, you have to go really deep."** This is Jony Ive, as quoted by Isaacson.
-- **"Innovation is saying no to 1,000 things."** I found no primary transcript for it. Quote 3 is the verified version of the same idea.
+- **"Innovation is saying no to 1,000 things."** I found no primary source. Quote #3 is the verified version of the same idea.
 
-**Caveats**
-- I couldn't reach the original *Wired* 1996 article or the full 1997 WWDC transcript. The WWDC wording comes from consistent reproductions, so it's reliable but may not match letter for letter.
-- If you want a shorter line for a slide, you can trim quote 1 to its first two sentences. Don't reword the text inside the quotation marks.
+I checked the quotes against transcripts or reports that reproduce the originals. I couldn't reach the original *Wired* 1996 article or the full WWDC 1997 transcript, so those wordings are reliable but may not be letter-perfect.
+
+If you want, I can suggest a pairing or order for the six, such as opening with #1 and closing with #5.
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A's quotes are closer to the primary sources (for example, the exact NYT 'It's not just what it looks like…' wording), each citation is precise, it gives a fuller list of misattributions to avoid, and it is honest about which quotes are only partly verified, while B is admittedly unchecked memory and includes a weak-fit 'lick them' quote.
+Blind pairwise judgment: **skill**. A gives six accurate, on-topic quotes with precise sources, practical slide-trimming advice and a fuller list of misattributions to avoid; B is honest that it worked from memory, but it slightly misquotes the NYT line and includes a weak-fit 'lick them' quote, though A's unexplained 'skill's source list' and its stray Wired/D8 mention are minor blemishes.
 
 ### baseline
 
@@ -237,36 +234,40 @@ Quotes 1, 2 and 5 all come from the same 1998 interview. If you want more variet
 - Skill activated: True; references read: insanely-great/references/sources.md
 - Checks passed: 3/3 [True, True, True]
 - Judge note: none
-- Words: 427
+- Words: 531
 
 <details><summary>Output</summary>
 
-Here are six verified quotes. I took them only from the skill's sources file, which cites a primary source for each, so the wording matches the cited text.
+Here are six quotes that are safe to put on slides. I checked each against the skill's source list, which only includes quotes traced to a transcript, an interview, or a reproduction of the original.
 
 1. **"Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."**
-   Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'", *BusinessWeek*, 25 May 1998.
+   Source: Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'", *BusinessWeek*, 25 May 1998.
 
-2. **"Focusing is about saying no."**
-   Q&A at Apple's Worldwide Developers Conference (WWDC), May 1997. The longer version continues: "It means saying no to the hundred other good ideas that there are. You have to pick carefully." The wording of that longer passage varies slightly between transcripts.
+2. **"It's not just what it looks like and feels like. Design is how it works."**
+   Source: Rob Walker, "The Guts of a New Machine", *The New York Times Magazine*, 30 November 2003.
 
-3. **"It's not just what it looks like and feels like. Design is how it works."**
-   Rob Walker, "The Guts of a New Machine", *The New York Times Magazine*, 30 November 2003.
+3. **"Focusing is about saying no."**
+   Source: Q&A at Apple's Worldwide Developers Conference (WWDC), May 1997.
+   For a longer version from the same Q&A, use this one. The wording varies slightly between transcripts: "People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the hundred other good ideas that there are. You have to pick carefully."
 
 4. **"You've got to start with the customer experience and work backwards to the technology."**
-   WWDC Q&A, May 1997.
+   Source: WWDC Q&A, May 1997.
 
-5. **"For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."**
-   *Playboy* interview by David Sheff, February 1985. This is the end of the carpenter and chest-of-drawers passage about not using plywood on the back. The full passage works well on a slide if you have room.
+5. **"Design is the fundamental soul of a man-made creation that ends up expressing itself in successive outer layers of the product or service."**
+   Source: Brent Schlender, *Fortune*, 24 January 2000.
 
-6. **"What we want to do is we want to put an incredibly great computer in a book that you can carry around with you that you can learn how to use in 20 minutes."**
-   Talk at the International Design Conference in Aspen, June 1983.
+6. **"When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."**
+   Source: David Sheff, *Playboy* interview, February 1985.
+   This one is long. For a slide, cut it at "…nobody will ever see it" and put the full text in your notes.
 
-**Quotes to avoid.** Several famous "Jobs quotes" aren't his, and audiences notice.
-- **"Simplicity is the ultimate sophistication"** was the headline of Apple's 1977 Apple II brochure, which was marketing copy. The Leonardo da Vinci attribution has no support.
-- **"To be truly simple, you have to go really deep"** is Jony Ive, quoted by Walter Isaacson.
-- **"Innovation is saying no to 1,000 things"** has no primary source. Quote #2 is the safe substitute.
-- **"Faster horses"** is a Henry Ford attribution with no evidence behind it, and it isn't Jobs either.
+**Quotes to avoid.** These are often credited to Jobs, but I can't verify them as his words:
+- **"Simplicity is the ultimate sophistication."** This was the headline of Apple's 1977 Apple II brochure, so it's marketing copy. The Leonardo da Vinci attribution has no support either.
+- **"To be truly simple, you have to go really deep."** This is Jony Ive, as quoted by Walter Isaacson.
+- **"Innovation is saying no to 1,000 things."** I found no primary source. Quote 3 is the verified alternative.
+- **"If I had asked people what they wanted, they would have said faster horses."** This is attributed to Henry Ford without evidence, and it isn't Jobs.
 
-The sources file notes that the *Wired* 1996 article and the full WWDC 1997 transcript weren't directly reachable. The wording of quotes 2 and 4 comes from consistent secondary reports, so it's reliable but may not match the original letter for letter. If you want, I can swap in alternatives for those two that come from fully checked transcripts.
+Two notes on sources:
+- The Wired 1996, WWDC 1997 and D8 originals weren't directly reachable. Their wording comes from consistent reproductions, so it's reliable but may not match the original letter for letter.
+- If you want a seventh quote, the *BusinessWeek* line "It's really hard to design products by focus groups. A lot of times, people don't know what they want until you show it to them" is verified and pairs well with quote 4.
 
 </details>

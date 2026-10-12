@@ -17,7 +17,7 @@ Our notes app (web + iOS, about 40k users) currently has a flat list of notes pl
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. Both merge the eight requests into the same coherent concepts, but B covers more of what users need: folder delete goes to Trash with full restore, plus Dynamic Type and Reduce Motion, export of folders and tags, offline, empty and first-run states, and search scoped to the current folder; A opens with an irrelevant note about a disabled Write tool and leaves trash restore as an open question.
+Blind pairwise judgment: **skill**. Both make the same sound merge of eight requests into four concepts, but B also covers what users and the system need and A omits: undo for moves and deletes, per-user authorization scoping with a test, error and offline states, migration restore testing, and export, plus concrete hero paths; A is tighter and phases the work well, but it lacks these recovery and security requirements.
 
 ### baseline
 
@@ -180,128 +180,194 @@ The main call for you is merging the requests into four concepts and phasing the
 - Skill activated: True; references read: none
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 1210
+- Words: 1927
 
 <details><summary>Output</summary>
 
-# Sidebar spec: folders, tags, pins
+# Sidebar Organization: Product Spec (v1)
 
-**Recommendation:** Build one sidebar on three concepts: **Folders** (nested), **Tags** (with optional color), and **Pins** (which replaces both pinning and favorites). Ship that first. Smart folders and emoji icons come in a second slice, and none of your eight requests is dropped. Please confirm the cut before engineering starts.
+**Status:** Draft for your confirmation. Section 9 lists the cuts I made to your request, so please review it before anyone builds.
 
-## Eight requests, four needs
+## 1. Purpose
 
-| Need | Requests it covers | Resolution |
+For people with hundreds of notes, the sidebar lets them file, find and return to any note in one or two actions. They no longer scroll a flat list or rely on search alone.
+
+**Real problem:** Eight requests come down to three needs.
+1. **Organize and retrieve:** folders, nested folders, tags, smart folders.
+2. **Get back to what matters now:** pinning, favorites.
+3. **Recognize things at a glance:** colored labels, emoji icons.
+
+I recommend four concepts that cover all three needs: **Folders, Tags, Pins, Smart Folders**. Color and emoji are attributes of those concepts, not features of their own.
+
+## 2. Concepts
+
+| Concept | Rule | Covers your requests |
 |---|---|---|
-| Put notes in places | Folders, nested folders | One folder concept with unlimited nesting |
-| Cross-cut categories | Tags, colored labels | A colored label is a tag with a color, so there is one concept |
-| Fast access | Pinning, favorites | Pinning and favorites do the same job, so there is one **Pin** |
-| Recognize things at a glance | Emoji icons | An optional icon on notes and folders (slice 2) |
-| Reusable queries | Smart folders | Saved search shown in the sidebar (slice 2) |
+| **Folder** | A note lives in at most one folder. Folders nest. Unfiled notes appear only under All Notes. | Folders, nested folders |
+| **Tag** | A note can have many tags. Each tag has a name and an optional color. Tags are flat. | Tags, colored labels |
+| **Pin** | One toggle on a note. Pinned notes show in the sidebar's Pinned section and sort first in any list. | Pinning, favorites (merged) |
+| **Smart Folder** | A saved search that updates live. It uses the same query as search. | Smart folders |
+| **Icon** | An optional emoji on a note, folder or smart folder. | Emoji icons |
 
-Shipping "tags" and "labels" separately, or "pins" and "favorites" separately, would give users two concepts for one job. They would have to keep asking which one to use.
+Folders answer "where does it belong?" and tags answer "what is it about?" Everything else builds on those two. I recommend against a second kind of label, which is why colored labels become tag colors.
 
-## Product brief
+## 3. Sidebar layout (web and iOS)
 
-**Purpose:** For people with hundreds of notes who can no longer find things by scrolling. They open the app, see where their notes live and which ones matter, and reach any of them in one or two taps.
+Top to bottom:
+1. Search field
+2. **All Notes**
+3. **Pinned** (hidden when empty)
+4. **Smart Folders** (hidden until the first one exists)
+5. **Folders** (tree)
+6. **Tags**
+7. **Trash**
 
-**Hero path (first value):**
-1. Open the app. The sidebar shows All Notes, Pinned, Folders and Tags.
-2. Tap a folder or tag to filter the list.
+- Each section collapses, and the app remembers the state per device.
+- The Folders and Tags sections always show a "+" control, so creation is never hidden.
+- Each row shows its icon, name and note count. Tags show their color as a dot.
+- **Web:** a persistent left pane that is resizable and collapsible.
+- **iPad:** a split view.
+- **iPhone:** the sidebar is the root screen, and tapping a row pushes the note list.
 
-**Repeat tasks:**
-- *Filing a note* takes 2 steps: drag it onto a folder on web, or use Move on iOS.
-- *Pinning* takes 1 step: a pin action on the note, or a swipe on iOS.
-
-**Brilliant at:** (1) Finding a note in two taps. (2) Organizing without ceremony: no setup, and no required filing.
-
-## Sidebar layout (top to bottom)
-
-1. **Search field.** Unchanged.
-2. **All Notes**, then **Pinned**. Pinned is hidden when empty and shows the first 5 items, with "Show all" for the rest.
-3. **Folders.** A collapsible tree.
-4. **Tags.** A flat list sorted by use, with a color dot where one is set.
-5. **Trash.**
-
-The sidebar is a persistent column on web. On iOS it is the root screen of a navigation stack (a drawer on iPad).
-
-## Behavior
+## 4. Behavior
 
 **Folders**
-- A note lives in at most one folder, or in none (All Notes only). Filing is never required.
-- Nesting is unlimited in the data model. The UI indents to depth 6 and then stops indenting. The cap is a rendering limit only.
-- Create from a "+" in the Folders header. Rename inline. Reorder and re-parent by drag on web, and by Move on iOS.
-- Selecting a folder shows its notes. A setting, "Include subfolders", defaults to on.
-- Deleting a folder moves it and its contents to Trash, with a confirmation that states the note count. Restore puts everything back in place.
+- **Create:** the "+" control, or ⌘⇧N on web. Rename inline.
+- **Move a note:**
+  - Drag it onto a folder.
+  - Use "Move to…" with a type-to-filter picker (⌘⇧M on web).
+  - On iOS, use the swipe action or the context menu.
+- **Nesting limit:** 5 levels, so the sidebar stays legible. See open decision 1.
+- **Reorder and re-parent:** by drag. Folders sort alphabetically by default, and a manual order is possible.
+- **Delete a folder:** a confirmation states how many notes and subfolders it holds. Contents move to Trash together and can be restored together. Notes are never silently orphaned.
+- **Selecting a folder:** shows its notes. A toggle, "Include subfolders", is on by default.
 
 **Tags**
-- Type `#name` in a note or use the Tags field on it. Autocomplete suggests existing tags, and creating a new one needs no extra step.
-- Tags are case-insensitive and can be renamed or merged. Renaming to an existing name offers a merge.
-- Color is optional: pick from a fixed palette of 8 in the tag's menu. The palette is chosen for contrast and colorblind safety.
-- Selecting several tags filters with AND by default. A visible "Any" toggle switches to OR.
-- Deleting a tag removes it from notes but never deletes notes.
+- **Add a tag:** type `#name` in the note, or use the tag field in the note header. Both autocomplete.
+- **Rename, recolor, merge or delete** from the tag row's menu. Deleting a tag removes it from notes but never deletes the notes. Merge is how people fix near-duplicates like `#todo` and `#to-do`.
+- **Color:** 10 preset colors chosen to meet contrast requirements. There are no arbitrary hex values. A tag with no color is valid and is the default.
+- **Multiple tags:** selecting several tags shows notes with all of them (AND). Any-of is available through a Smart Folder.
 
 **Pins**
-- Pinned notes appear in the sidebar's Pinned section and at the top of whichever list the user is viewing.
-- Pins are per user and sync across devices.
+- **Pin and unpin:** the context menu, a swipe on iOS, or ⌘⇧P on web.
+- **Order:** most recently pinned first, or drag to reorder.
+- **Limit:** none. The Pinned section scrolls if it grows.
 
-**Sorting and filtering inside the list:** the existing sort options are kept. Search works within the current folder or tag by default, with a "Search everywhere" option next to it.
+**Smart Folders**
+- **Create:** run a search, then choose "Save as Smart Folder". That takes 2 steps from any search.
+- **Filters:** text, tag, folder, pinned, created or edited date, and has-icon.
+- **Query editor:** filters appear as editable chips, and the raw query syntax is available in an "Advanced" disclosure. Experts can type the syntax directly.
+- **Editing:** a Smart Folder is editable but not manually fillable. Notes can't be dragged into it, and the drop target says why.
+- **Counts:** match counts update live.
 
-## States
+**Icons**
+- **Picker:** the system emoji picker, plus a "Remove icon" action.
+- **Default:** no icon. Notes and folders look clean until a user adds one.
+- **Where it appears:** sidebar row, note list row and note header.
 
-- **First run (existing user):** nothing moves. All Notes behaves as today, and a single dismissible line points to "New folder". There is no tour.
-- **Empty folders and tags:** each has a one-line hint about how to add notes.
-- **Loading:** the sidebar renders instantly from the local cache and updates in the background.
-- **Error and offline:** changes are queued locally and synced later. A failed sync shows a visible retry. Conflicts are resolved last-writer-wins per field, and folder moves never lose a note.
-- **Scale:** it must stay usable with 5,000 notes, 500 folders and 300 tags. The tree is virtualized.
+## 5. Hero paths
 
-## Data and sync
+- **First value (organize one note):** open a note → drag it to a folder or press "Move to…" → done. This takes 2 steps. Creating a folder inline from the picker adds one more.
+- **Repeat task (file a new note):** the note opens in the currently selected folder and inherits it by default. This takes 0 extra steps. Selecting a tag does the same: new notes get that tag.
+- **Find something:** click a folder or tag, or run a saved smart folder. This takes 1 step.
 
-- Folder: `id, name, parent_id, sort_order, (icon)`.
-- Note gets `folder_id` and `pinned_at`.
-- Tag: `id, name, color`, with a note-to-tag join.
-- Reparenting a folder under its own descendant is rejected on both clients and the server.
-- The migration is additive. Existing notes get `folder_id = null`, so there is no behavior change and rollback is safe.
-- Both clients use the same API and semantics. Ship behind a flag, starting with internal users, then 5%, then everyone.
+## 6. States
 
-## Quality bar
+- **Existing users, first launch:** nothing moves. All Notes looks exactly like today's list. A single dismissible hint in the Folders section reads "Create a folder to organize your notes". There is no tour.
+- **Empty:**
+  - An empty folder reads "No notes here. Drag notes in or press + to write one."
+  - An empty tag or smart folder says why it's empty.
+  - The Tags section shows "Add `#tags` to notes to find them here."
+- **Loading:** the sidebar renders from local cache immediately. Counts fill in afterward.
+- **Offline (iOS and web):** every organizing action works offline and syncs later.
+- **Error:** a failed sync shows a non-blocking banner with a Retry button. A failed move rolls the note back visibly and says what happened.
+- **Scale:** a tree of 500+ folders or 1,000+ tags stays usable, with virtualized rows and a filter field at the top of the section.
+- **Conflicts:**
+  - Folder and tag metadata merge per field, last write wins.
+  - If device A deletes a folder while device B adds a note to it, the note lands in Unfiled and is not lost.
 
-- Sidebar renders in under 100 ms from cache. A folder or tag filter applies in under 150 ms.
-- Full keyboard control on web, including tree navigation with arrow keys and move-to-folder by shortcut. VoiceOver and screen-reader labels cover the tree, with expanded/collapsed state announced.
-- Color is never the only signal: tags always show their name.
-- Respect Reduce Motion and Dynamic Type.
-- Folder structure and tags are included in export (folders as directories, tags as front-matter or metadata).
-- Tests cover critical paths: reparenting cycles, delete and restore, tag merge, and sync conflicts.
-- Track adoption: share of users who create a folder or tag in week one, and time to open a note.
+## 7. Data model and sync
 
-## Slice 2: committed, not in v1
+- `Folder(id, name, parent_id, icon, sort_key, deleted_at)`
+- `Tag(id, name, color)`, and a `NoteTag(note_id, tag_id)` join
+- `SmartFolder(id, name, icon, query)`
+- `Note` gains `folder_id` (nullable), `icon`, and `pinned_at` (nullable)
+- Folder and tag operations must be idempotent, so retried syncs from flaky connections can't duplicate anything.
+- **Migration:**
+  - It is additive. Existing notes get `folder_id = null`.
+  - It must be reversible.
+  - Run it first on a copy of production data. Test the restore path before rollout.
+- **Authorization:** every folder, tag and smart-folder query is scoped to the owning user. Add a test that proves it.
+- **Validation:**
+  - Reject folder cycles server-side. A folder can't be moved into its own descendant.
+  - Enforce the depth cap server-side too.
+  - Cap name length and sanitize emoji input.
 
-| Item | Why later | What it takes |
+## 8. Quality bar
+
+- **Performance:**
+  - The sidebar is interactive in under 200 ms from cache.
+  - Folder selection shows its list in under 100 ms.
+  - A smart-folder query on 10k notes returns in under 300 ms.
+  - Please confirm these against your real note-count distribution.
+- **Accessibility:**
+  - Full keyboard navigation of the tree, using standard tree semantics (arrow keys, expand and collapse).
+  - Screen-reader labels give each row's name, depth and count.
+  - **Color is never the only signal.** Tags always carry their name, and tag colors meet contrast ratios in light and dark mode.
+  - Reduced-motion is respected for drag and expand animations.
+  - Drag-and-drop always has a non-drag equivalent ("Move to…").
+- **Undo:** every move, delete, tag merge and unpin can be undone, with an undo toast on web and shake or undo gesture on iOS.
+- **Export:** export preserves folder hierarchy as directories and tags as metadata, in whatever formats the app already supports.
+- **Observability:**
+  - Metrics on sync failures for organizing operations.
+  - Metrics on migration errors.
+  - Alerts on both.
+- **Success metrics (30 days after full rollout):**
+  - The share of active users with at least one folder, tag or pin.
+  - A drop in search-to-open time for users who organize.
+  - No increase in support tickets about lost notes.
+- **Rollout:** ship web and iOS together, since sync parity matters. Use an internal beta, then 5%, 25% and 100% behind a flag. The flag lets you cut back without a data migration.
+
+## 9. Cuts and merges (please confirm)
+
+Nothing you asked for loses its capability. Two requests were merged and one was reshaped:
+
+| Your request | What I recommend | Tradeoff |
 |---|---|---|
-| **Smart folders** | They need tags and folders to exist first, and the query model is the largest design risk. | A saved query over text, tag, folder, date and pinned, shown in the sidebar like a folder. Live results only; no manual membership. |
-| **Emoji icons** | Pure recognition polish, and it does not change how people organize. | An `icon` field on notes and folders, a picker in the rename and note menus, and fallback rendering for older clients. |
+| Pinning and favorites | **One concept: Pin.** | Two overlapping ways to say "keep this handy" confuse users. If you need pinned-in-folder and favorited-globally to differ, that's a real reason to split. See open decision 2. |
+| Colored labels | **Tag colors.** | Users who want colored labels get them through tags. A separate label system would duplicate tags. |
+| Smart folders | Included, but built **on the existing search** rather than as a new engine. | There is no new query language. Saved searches inherit search improvements automatically. |
 
-## Not now
+## 10. Not now / later
 
-- **Multiple folders per note.** Tags already cover this, and two filing systems cause confusion.
-- **Per-folder sharing and permissions.** This is a separate product decision.
-- **Custom label colors.** The curated palette keeps contrast guarantees.
-- **Auto-organization suggestions.** Revisit after adoption data.
+| Item | Reason | What it would take to add |
+|---|---|---|
+| Nested tags (`#work/project`) | Folders already give hierarchy, and two hierarchies confuse users. | Tag tree UI and a query-semantics decision |
+| A note in multiple folders | Tags do this job. Multi-folder breaks the "where is it?" mental model. | Data model change and UI to explain it |
+| Custom tag colors (hex) | Presets guarantee contrast. | A contrast checker in the picker |
+| Folder colors | Icons already differentiate folders, and color on both adds noise. | One more attribute and sidebar styling |
+| Image or custom icons | Emoji covers the need with no storage or moderation cost. | Upload, storage and moderation |
+| Manual membership in Smart Folders | It contradicts "saved search". Tags cover it. | Rethink the concept |
+| Shared folders and permissions | A separate collaboration spec. | A permission model and a sharing UI |
+| Bulk tag and move from multi-select | Valuable for experts. I'd put it first in the next slice. | Multi-select states on web and iOS |
+| Auto-suggested tags and folders | Wait for usage data. | A model or heuristics, plus an evaluation |
 
-## Open decisions for you
+## 11. Open decisions
 
-1. Do you approve the cut: tags and labels merged, pins and favorites merged, and smart folders and emoji in slice 2?
-2. Should "Include subfolders" default to on? I recommend yes.
-3. Are the 8 colors enough? Do you want to review the palette?
-4. Are there any iOS-specific constraints, such as minimum OS version or offline-first guarantees, that change the sync approach?
+1. **Folder depth cap:** I recommend 5. Do you want a different limit, or none?
+2. **Pins vs. favorites:** are you OK merging them? Tell me if you have a use case that needs both.
+3. **Existing-user rollout:** is a lightweight hint enough, or do you want a one-time prompt?
+4. **Note-count distribution:** the performance budgets assume typical users have under 10k notes. Can you check the heaviest users?
+5. **Export formats:** which ones exist today, so I can specify the folder and tag mapping for each?
 
-I can go deeper on the smart-folder query model, the API shapes, or the iOS interaction details if you want.
+Once you confirm the cut in section 9, I can write per-screen detail for web and iOS, including the drag-and-drop interaction and the sync-conflict test cases.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. B shows stronger product judgment: it folds Favorites into Pin and asks the user to confirm that merge, and it specifies recovery (Undo and whole-structure Trash restore), concrete accessibility thresholds, empty, offline and error states, and export, while A keeps two overlapping concepts and treats recovery and accessibility more thinly.
+Blind pairwise judgment: **skill**. B shows stronger product judgment: it merges overlapping requests (Pin plus Favorites, tag colors instead of labels) and asks for confirmation of those cuts, and it keeps what people need, including undo for every action, a recoverable folder trash, empty and error states, accessibility, tenant isolation, and export, while A omits undo and opens with irrelevant tool chatter.
 
 ### baseline
 
@@ -471,173 +537,166 @@ Web and iOS ship each phase together. If they can't, the lagging platform must a
 
 ### skill
 
-- Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
+- Skill activated: True; references read: none
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 1818
+- Words: 1587
 
 <details><summary>Output</summary>
 
-# Sidebar spec: folders, tags, pins, and more
+# Sidebar v2: Organization Spec
 
-## Recommendation
+**Status:** Draft for your confirmation. Section 9 lists the cuts I made, and I need you to confirm them before engineering starts.
 
-Your 8 requests come down to 4 concepts, because several overlap:
+## 1. Purpose
 
-| Requested | Becomes |
+People with a lot of notes need to find the right one in one or two taps and keep it where they expect it. The sidebar is the one place where they browse, organize, and jump.
+
+## 2. Real problem
+
+The eight requests come down to three needs:
+
+| Need | Requests that serve it |
 |---|---|
-| Folders, nested folders | **Folders**: a note lives in one place, and folders can nest |
-| Tags, colored labels | **Tags**: a note can have many, and each tag has an optional color. A label is just a tag with a color, so there is no second system. |
-| Pinning, favorites | **Pin**: one verb for "keep this within reach". Two features with the same job would confuse people. |
-| Smart folders | **Saved searches**: a search you can keep in the sidebar |
-| Emoji icons | One optional icon field on notes, folders, and tags |
+| **Put things where they belong** | folders, nested folders, tags, colored labels |
+| **Get back to things fast** | pinning, favorites, smart folders |
+| **Make things recognizable** | emoji icons, colors |
 
-Nothing you asked for is dropped. I recommend shipping it in two slices, with the core first. Please confirm the cut at the end.
+Several requests overlap, so I propose **four concepts** instead of eight:
 
-## Product brief
+- **Folder:** a note lives in exactly one folder. Folders nest.
+- **Tag:** a note can have any number of tags. A tag can have a color. This replaces "colored labels", which would otherwise be a second tagging system.
+- **Pin:** pinning replaces both "pinning" and "favorites". Two features that put things at the top would confuse people.
+- **Smart folder:** a saved search.
+
+Emoji icons are a property of notes, folders, and tags. They add no new concept.
+
+## 3. Sidebar layout (web and iOS)
 
 ```
-Purpose:        People with hundreds of notes get to the right one in a tap or
-                two, and see where it lives, without giving up the plain
-                list-plus-search they have today.
-Real problem:   Search only works if you remember a word from the note. People
-                need to put notes in places, and to keep a few things always at hand.
-Hero path:      Organize: drag a note onto a folder (1 step) or type "#tag" in the
-                note (1 step). Retrieve: tap a pinned or folder item in the
-                sidebar (1 step), then the note (2 total).
-Brilliant at:   1. Getting to a known note fast. 2. Organizing without
-                interrupting writing. 3. Never losing anything.
-Depth:          See "Placement" below.
-Not now:        See "Later".
-States:         See "States".
-Quality bar:    See "Quality".
-Technology:     One data model on the server, synced to web and iOS. See "Data model".
-Open decisions: See the end.
+🔍 Search
+─────────────
+📌 Pinned            ← only shown when something is pinned
+   (notes, folders, tags, smart folders)
+─────────────
+All Notes
+Unfiled
+🗂 Folders        [+]
+   ▸ 📁 Work
+       ▸ Projects
+   ▸ 🏡 Home
+🔖 Tags           [+]
+   ● design   ● ideas   ○ travel
+⚙ Smart Folders  [+]
+   Edited this week
+─────────────
+Trash
 ```
 
-## Sidebar structure (top to bottom)
+- Sections collapse, and the collapsed state persists per device.
+- Web uses a persistent left sidebar. iOS uses the standard master/detail pattern, with the sidebar as the root screen and a swipe-back gesture.
+- A new user with no folders, tags, or pins sees: Search, All Notes, Trash, and a one-line empty-state hint under Folders. Nothing is pushed on them.
 
-1. **Search field.** It is unchanged and always visible.
-2. **Pinned.** It appears only when something is pinned.
-3. **All Notes.** This is today's flat list, still the default view.
-4. **Folders.** This is a collapsible tree.
-5. **Tags.** This is a flat list. Each tag has an optional color dot, an optional emoji, and a count.
-6. **Saved searches.** (Slice 2.)
-7. **Trash.**
+## 4. Feature behavior
 
-On iOS, the sidebar is the root screen of the navigation stack, and it is a slide-over drawer on web at narrow widths. The order is identical on both platforms.
+### Folders and nesting
+- Create from the **+** button or from the context menu on a folder ("New subfolder").
+- Move notes by drag and drop on web, and by "Move to…" or drag on iOS.
+- Folders can be renamed, moved, and reordered. The default sort is alphabetical, with manual ordering as an option.
+- A folder shows notes from its subfolders in an "Include subfolders" view. This is on by default and can be toggled.
+- Depth limit: 6 levels (see open decisions).
+- Deleting a folder moves it and its contents to Trash, restorable for 30 days. A confirmation shows the note count. This matches the existing note trash behavior.
 
-## Behavior
+### Tags and colors
+- Add a tag by typing `#` in the note, or from the note's info panel. Autocomplete is based on existing tags.
+- A tag can optionally have one of 8 accessible colors, set from the tag's menu.
+- Rename and merge are available from the tag's menu. Deleting a tag removes it from notes but never deletes notes.
+- Color is never the only signal. Every colored tag also has a text name, which also covers color-blind users.
 
-**Folders**
-- A note is in exactly one folder or none. "None" appears under All Notes only, and I don't add an "Unfiled" folder.
-- Folders nest up to 5 levels. Past that, dropping into a deeper level is refused with an explanation. Depth beyond 5 is unlikely to help anyone find anything.
-- Selecting a folder shows its notes. There is a toggle, "Include subfolders", which defaults to on.
-- Create a folder with "+" in the Folders header, or with "New folder inside…" in a folder's menu. It is named inline, with no dialog.
-- Move a note by drag and drop (web and iPad), or with "Move to…" (the note menu and the context menu). "Move to…" is searchable, and it is the keyboard and VoiceOver path.
-- Reorder and re-nest folders by dragging. The default sort is alphabetical, and manual order is a per-folder option.
-- Deleting a folder moves the folder and its notes to Trash as one unit, and restoring it restores the whole structure. The confirmation says exactly what happens: "Delete 'Work' and 14 notes? You can restore them from Trash for 30 days."
+### Pinning
+- Pin or unpin notes, folders, tags, and smart folders from the context menu, a swipe action on iOS, or the shortcut `⌘⇧P` on web.
+- Pinned items appear in the **Pinned** section. Pinned notes also sort to the top of their own list.
+- Manual order within Pinned is supported.
 
-**Tags**
-- Add a tag by typing `#word` in the note body, or from the tag field in the note's info panel. Both autocomplete from existing tags, which prevents near-duplicates like #todo and #to-do.
-- A tag's menu has Rename, Color, Icon, Merge into…, and Delete.
-- Rename and Merge update every note in one step. Delete removes the tag from notes but never deletes notes, and it shows an Undo.
-- Selecting several tags filters to notes that have all of them (AND). A "match any" toggle is available from the filter bar.
-- Colors come from a fixed palette of 8 to 10 colors, not a free color picker. A fixed palette stays legible in light and dark mode and passes contrast checks.
+### Smart folders
+- Created with "Save as Smart Folder" from any search result. They use the existing search engine and syntax, with a filter bar for tag, folder, date, and has-text.
+- The saved query is shown as editable chips, so no query language has to be learned.
+- Smart folders are read-only views. Notes can't be dragged into them. The results update live.
+- They can be renamed, edited, pinned, and deleted. Deleting one never touches notes.
 
-**Pin**
-- Pinning a note puts it at the top of every list it appears in, such as All Notes, its folder, and tag views.
-- Pinning a folder, tag, or saved search adds it to the sidebar's Pinned section.
-- Pin and unpin are the same action everywhere: a note's menu, a swipe on iOS, and ⌘⇧P on web.
-- "Favorites" does not exist as a separate word or concept.
+### Emoji icons
+- Set on a note, folder, or tag from a picker that uses the native emoji keyboard on iOS and a searchable popover on web.
+- They show in the sidebar, the note list, and the note header. If none is set, the default icon is used.
 
-**Icons**
-- Any note, folder, or tag can have an emoji. A note's emoji shows at the start of its row in the list.
-- The emoji picker uses the system picker, and clearing it is one tap.
-- The icon is never the only carrier of meaning. Items always have a text name, and an untitled note falls back to its first line.
+## 5. States and edge cases
 
-**Saved searches (slice 2)**
-- When a search has results, the search field offers "Save this search". The saved item reuses today's search syntax, extended with `folder:`, `tag:`, and `is:pinned`.
-- The saved search shows a live count, and it can be renamed, given an icon, pinned, or edited.
-- It is read-only as a container: you can't drag notes into it.
-
-## Placement (capability ladder)
-
-| Capability | Where |
+| State | Behavior |
 |---|---|
-| Sidebar sections remember expanded/collapsed state per device | Automatic |
-| Default folder view sorts by last edited, subfolders included | Default |
-| New note created inside the selected folder, and inheriting its tag if a tag is selected | Automatic |
-| Folders, tags, pins, search | Surface |
-| Color, icon, merge tags, manual order | In context (item menu) |
-| Bulk move or tag (multi-select), keyboard navigation, tag filter AND/OR | One level down |
-| Search syntax for saved searches, export with structure | Advanced |
+| First run | Existing notes land in All Notes and Unfiled. Nothing is moved or renamed. A dismissible one-time hint points at "+ folder". |
+| Empty section | A short, plain line with one action ("Create your first folder"). |
+| Loading | Skeleton rows. The sidebar structure renders first from the local cache. |
+| Offline | Everything works locally and syncs later. Conflicts resolve last-write-wins per field, and a folder move never silently loses a note. |
+| Error | Plain language plus the next step ("Couldn't move note. Try again."). |
+| Large library | Virtualized lists. 10,000 notes and 500 folders must stay smooth. |
+| Undo | Every move, delete, pin, and tag change can be undone through a toast with Undo, plus `⌘Z` on web. |
 
-## States
+## 6. Accessibility and expert speed
 
-- **First run, existing user.** The sidebar appears with All Notes and Trash, and nothing is moved or renamed. A one-time inline hint under Folders says "Group your notes into folders" with a "New folder" button. It is dismissible and never a modal tour.
-- **Empty sections.** Folders and Tags each show one line naming the first action. Pinned is hidden when empty.
-- **Loading.** The sidebar renders from the local cache immediately, and counts update afterward without layout jumps.
-- **Offline.** All organizing actions work offline and queue, and a small "Syncing…" status shows when back online.
-- **Conflict.** Two devices moving the same note to different folders: last write wins, and the note shows a brief "Moved on another device" notice. Concurrent renames merge by timestamp.
-- **Scale.** Test at 0, 1, 10,000 notes, and at 500 folders and 1,000 tags. Long names truncate in the middle, with the full name in a tooltip or accessibility label.
-- **Errors.** Moving into a deleted folder, or past the depth limit, says what happened, keeps the note where it was, and offers a next step.
+- Full keyboard navigation on web: arrow keys to move, `→` and `←` to expand and collapse, `F2` to rename, and `⌘K` to jump to any folder, tag, or smart folder.
+- VoiceOver and screen-reader labels describe the hierarchy ("Projects, folder, level 2, expanded").
+- Dynamic Type is supported on iOS. Reduced-motion is honored.
+- Drag-and-drop always has a non-drag alternative ("Move to…").
+- Bulk actions: multi-select notes to move, tag, pin, or delete.
+- Export: the folder hierarchy and tags are included in existing export formats. Folders map to directories, and tags go into front matter.
 
-## Data model
+## 7. Data model and sync
 
-- `folder(id, parent_id, name, icon, sort_mode, position, deleted_at)`
-- `note.folder_id` (nullable), `note.icon`, `note.pinned_at` (nullable)
-- `tag(id, name_normalized, display_name, color, icon, pinned_at)` and `note_tag(note_id, tag_id)`
-- `saved_search(id, name, query, icon, pinned_at)` (slice 2)
-- Pinned folders, tags, and searches use `pinned_at` on their own rows, so there is no separate "favorites" table.
-- The migration is additive: nullable columns and new tables. Existing notes need no data rewrite, so it can ship without downtime and be rolled back.
-- Folder counts and the subfolder rollup are computed and cached server-side. Don't compute them on the client at launch.
+- `folder`: id, parent_id, name, icon, sort, deleted_at.
+- `note.folder_id` is nullable (null means Unfiled), so a note is in at most one folder.
+- `tag`: id, name (unique, case-insensitive), color, icon. `note_tag` is the join table.
+- `pin`: item_type, item_id, position, per user.
+- `smart_folder`: id, name, icon, query (JSON). The query is validated server-side.
+- All entities are tenant-isolated by user and checked at the API. Move operations reject cycles (a folder into its own descendant).
+- The migration is additive. It adds new tables and nullable columns, and there is no backfill that rewrites existing notes. It is tested on a copy of production data with a verified rollback.
+- Sync is idempotent, so retried requests don't duplicate folders or tags. The web and iOS clients share one API contract and one fixture-based test suite.
 
-## Quality
+## 8. Quality bar and success measures
 
-- **Performance.** The sidebar renders from cache in under 100 ms. Opening a folder shows its list in under 300 ms with 10,000 notes. Drag, drop, pin, and tag changes show visible feedback immediately and sync in the background.
-- **Accessibility.**
-  - Color is never the only signal, because tags always have a name.
-  - Contrast is at least 4.5:1 for text, and 3:1 for color dots against the background.
-  - The folder tree uses correct tree roles, with expanded and collapsed states announced.
-  - Everything that works by drag also works through "Move to…" and the keyboard.
-  - Touch targets are at least 44×44 pt.
-  - Reduced motion is honored.
-- **Recovery.** Every destructive or bulk action has an Undo or Trash restore. That includes tag delete, merge, and folder delete.
-- **Export and API.** Exports (and the API, if you have one) include folder paths, tags, colors, pins, and icons. For markdown, use folder directories plus YAML frontmatter for tags.
-- **Parity.** The same names, order, and behavior on web and iOS, following each platform's conventions for gestures and menus.
-- **Tests.** Cover the migration, the tree operations (move, cycle prevention, depth limit), tag merge, sync conflicts, and permission checks on every new endpoint.
-- **Metrics.** Track the share of users with at least one folder or tag, time to open a known note, and search-to-open rate. If organizing doesn't reduce search use, the feature isn't working.
+- The sidebar renders from cache in under 200 ms. Moving a note feels instant (optimistic update) and confirms in under 1 s on a normal connection.
+- There is a tested backup and restore for the new tables before launch.
+- Instrument the hero path: creating the first folder, adding the first tag, saving the first smart folder, and the time to open a note from the sidebar.
+- **Success** is measured at 60 days: the share of active users who use at least one organization feature, the median taps or seconds to open a frequently used note, and support tickets about "can't find my note". Search usage should not go down because people find it unnecessary. It should go down because they find notes faster.
+- **Rollout:** an internal build, then 5% of users, then 25%, then 100%, with a kill switch on the sidebar and none on the data.
 
-## Phasing
+## 9. Not now / later
 
-**Slice 1 (the core):** nested folders, tags with color, pin, and the sidebar itself, with the migration, export, accessibility, and offline behavior fully done.
+| Item | Why it's deferred | What adding it takes |
+|---|---|---|
+| Notes in multiple folders | Tags already cover this. Two models cause confusion about what "delete from folder" means. | Needs a product decision on delete semantics. |
+| Separate "favorites" list | Duplicates Pin. | None needed unless pinning proves insufficient. |
+| Separate "colored labels" | Same job as colored tags. | None. Tag colors cover it. |
+| Nested tags (`#work/clients`) | Adds a second hierarchy beside folders. | Revisit if users ask after launch. |
+| Per-folder colors | Folder icons already differentiate. | Small, additive change. |
+| Smart folder boolean builder (AND/OR/NOT) | A chip filter covers the common cases. | Extend the query JSON and editor. |
+| Shared folders and collaboration | A different product problem with permissions. | Separate spec. |
+| Custom emoji or image icons | Standard emoji meets the need. | Upload, moderation, and storage. |
 
-**Slice 2:** saved searches and emoji icons. Saved searches need the search syntax to be finalized first. Emoji icons are cheap, but they matter more once folders and tags exist.
+## 10. Open decisions for you
 
-## Later (not now)
+1. **Do you accept the merge?** The merges are tag colors instead of labels, Pin instead of Pin plus Favorites, and one folder per note. This is the biggest cut from the original list. All eight requests are still met, but a few user-visible labels will differ from what people asked for.
+2. **Depth limit:** 6 levels, or unlimited?
+3. **Trash retention for folders:** 30 days, to match notes. Confirm that's right.
+4. **Tag syntax:** is typing `#` in the note body acceptable, or should tags be set only from the info panel to avoid accidental tags in existing text?
+5. **Platform order:** ship web and iOS together, or web first? I recommend together, because sync bugs show up when one client can't read what the other writes.
 
-- **Sharing or collaboration per folder.** It needs a permissions model that is a separate project.
-- **Tag hierarchies (#work/projects).** Folders cover hierarchy, and two nested systems would blur the model. Revisit if people ask for it once tags exist.
-- **Custom colors for tags.** A fixed palette keeps contrast and dark mode safe. It could be added later if people ask.
-- **Notes in multiple folders.** This would erode "where does this live?". Tags already cover it.
-- **Rule-based auto-filing.** It could be a later addition built on saved searches.
-- **Separate Favorites section.** It would duplicate Pin.
-
-## Open decisions for you
-
-1. **Confirm the merge and cut.** Specifically, that favorites folds into Pin, colored labels fold into tags, and saved searches and icons go in slice 2. If you want everything in one release, the spec is the same, but the risk and timeline grow.
-2. **Trash retention.** I assumed 30 days. Does that match your current Trash?
-3. **Folder depth limit.** I chose 5. Do you have usage data on how deep people nest in competitors or in your own users' habits?
-
-I can follow up with a wireframe-level description of each screen, an API and sync design, or the migration plan.
+If you confirm the cuts, I can follow with per-screen designs, the API contract, and the migration plan.
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A shows sharper product judgment: it collapses eight requests into five concepts, ships the high-value core first and defers decorative emoji, labels its assumptions, and keeps accessibility, recovery, export and rollback as requirements, whereas B builds every request as asked, invents arbitrary targets and limits (30% ticket drop, 10-pin cap), and puts emoji icons ahead of tags in its phasing.
+Blind pairwise judgment: **skill**. A is more focused and concise. It merges overlapping requests into four clear concepts without losing any capability, flags those merges for confirmation, and still covers accessibility, undo/Trash recovery, sync and offline. B is thorough and catches the old-client field-stripping risk, but it opens with an irrelevant note about a disabled Write tool, adds arbitrary limits such as 10 pins, and runs much longer for its added value.
 
 ### baseline
 
@@ -834,181 +893,148 @@ I'd push for the phasing in section 11 over a single release. Eight interacting 
 
 ### skill
 
-- Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
+- Skill activated: True; references read: none
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 2008
+- Words: 1558
 
 <details><summary>Output</summary>
 
-I couldn't save the spec to a file because Write is disabled in this session, so the full text is below. You can paste it into a doc as is.
+# Sidebar v2 Spec: Folders, Tags, Pins, Saved Searches
 
-**Recommendation:** The eight requests describe five concepts, and three of them ship first. Folders (nested), tags (each with an optional color) and pin go in slice 1. Smart folders and emoji icons follow in slice 2. "Colored labels" is the same need as tags, and "favorites" is the same need as pinning, so each pair becomes one feature. Please confirm that cut (open decision 1) before anyone builds.
+**Status:** Draft for confirmation. **Platforms:** Web and iOS, with the same model on both.
 
----
+## 1. Purpose and recommendation
 
-# Sidebar Spec: Organizing Notes (web + iOS)
+**Purpose:** Someone with hundreds of notes opens the app and gets to the right note, or the right group of notes, in one or two taps. Notes stay where they put them.
 
-Status: draft for confirmation. Date: 2026-10-11.
+The eight requests come down to three needs:
+- **Put things somewhere** (folders, nested folders, tags).
+- **Get back to what matters** (pinning, favorites, smart folders).
+- **Tell things apart at a glance** (colored labels, emoji icons).
 
-## 1. Requests mapped to concepts
+I recommend **four concepts**, and every requested capability is kept:
 
-| Need | Requests | What we build |
+| Requested | Becomes | Reasoning |
 |---|---|---|
-| Put things where I'll find them | folders, nested folders | **Folders** (nested) |
-| Mark what a note is about, across folders | tags, colored labels | **Tags** with optional color |
-| Keep current notes one tap away | pinning, favorites | **Pin** (one concept) |
-| Show me this group automatically | smart folders | **Smart folders**, slice 2 |
-| Recognize a note at a glance | emoji icons | **Icon**, slice 2 |
+| Folders, nested folders | **Folders** (a tree) | Nesting is part of folders, not a separate feature. |
+| Tags, colored labels | **Tags**, each with an optional color | A colored label is a tag with a color. Two concepts doing one job would confuse people. |
+| Pinning, favorites | **Pinned** | Both mean "keep this within reach." Two lists with different names would force a choice with no clear answer. |
+| Smart folders | **Saved searches**, shown in the sidebar | They reuse the existing search. |
+| Emoji icons | An **icon** attribute on notes, folders, and tags | It's decoration, not structure. It needs no new concept. |
 
-Existing users keep their flat list. It becomes "All Notes", and nobody has to reorganize anything.
+Folders and tags are different on purpose. A note lives in **one** folder, so people can answer "where is it?" A note can have **many** tags, so one note can belong to several topics.
 
-## 2. Product brief
+## 2. Sidebar layout
 
-- **Purpose:** Someone with hundreds of notes reaches the one they want in two taps or fewer, without remembering its exact words.
-- **Real problem:** A flat list plus search breaks down past a few dozen notes. Users have no way to say "these belong together."
-- **Today's alternative:** Search and hand-typed title prefixes like "Work - …". This is my assumption, so check it against support tickets and a sample of note titles. Slice 1 has to beat this on the repeat task, not on feature count.
-- **Brilliant at:**
-  1. Getting to a note fast, in at most two taps or clicks from pinned and three through one folder level.
-  2. Filing without ceremony. It takes one drag or one menu action and is never required.
+Top to bottom:
 
-## 3. Hero paths (step budgets)
+1. **Search** field.
+2. **Pinned.** Hidden when empty. Contains pinned notes, and can also hold pinned folders, tags, and saved searches.
+3. **All Notes**, then **Unfiled** (notes in no folder).
+4. **Folders**, a collapsible tree. Expanded or collapsed state is remembered per device.
+5. **Tags**, a flat list with color dots. It can be searched once it's long.
+6. **Saved Searches.** Hidden until the person creates one.
+7. **Trash.**
 
-| Path | Steps |
+On iOS the sidebar is the top-level screen on iPhone and a column on iPad. On web it's the left column, collapsible, with a keyboard shortcut to toggle it.
+
+## 3. Behavior
+
+### Folders
+- **Create:** a `+` on the Folders header, or "New subfolder" in a folder's ••• menu.
+- **Move:** drag and drop (web and iPad). On iPhone, use "Move to…" from the note or folder menu, which shows a tree picker. "Move to…" exists on every platform as the accessible alternative to dragging.
+- **Depth limit:** 8 levels. This is generous, and it keeps the tree readable and queries bounded.
+- **Selecting a folder** shows its notes. A toggle, "Include subfolders," is on by default.
+- **Deleting a folder:** its notes and subfolders go to Trash with it, as one restorable unit. Show a confirmation that states the counts.
+- **New notes** are created in the currently selected folder. In All Notes or Unfiled, they are created unfiled.
+
+### Tags
+- **Add a tag:** type `#` in the note or use the tag field. Autocomplete suggests existing tags, so typos don't create duplicates. Matching is case-insensitive.
+- **Color:** optional, chosen from a fixed palette of 8–10 colors. No custom hex values in v1. The color is set on the tag, so renaming or recoloring it updates every note.
+- **Rename and merge:** renaming a tag to an existing name offers to merge them.
+- **Delete:** removes the tag from notes but never deletes notes.
+- **Accessibility:** color is never the only signal. Every tag shows its name, and the color dot has an accessible label.
+
+### Pinned
+- **Pin or unpin:** via the ••• menu, a swipe on iOS, or `⌘⇧P` on web.
+- **Order:** pinned items can be reordered manually.
+- **In lists:** pinned notes also appear at the top of their own folder's list.
+
+### Saved searches
+- **Create:** run any search, then choose "Save search." It stores the query and filters, which can combine text, folder, tags, and date.
+- **Live results:** results update as notes change.
+- **Editing:** rename, edit the query, or delete from the ••• menu. Deleting never touches notes.
+- **Scope:** saved searches are filters, not containers, so notes can't be dragged into them.
+
+### Emoji icons
+- **Set:** click or tap the icon slot next to a note, folder, or tag name, and use the system emoji picker. There's a "Remove" option.
+- **Default:** the standard note, folder, and tag glyphs.
+- **Display:** the icon appears in the sidebar, note lists, and the note header.
+
+## 4. Data model
+
+| Entity | Fields |
 |---|---|
-| Open a pinned note | 2 on iOS, 1 click on web |
-| Open a note in a folder | 3 (each extra nesting level adds 1) |
-| File a note | 2 (drag on web, "Move to…" on iOS) |
-| Tag a note | 2 (type `#name`, or Tag button then pick) |
-| First run for an existing user | 0 required steps. They see their notes as before, plus one dismissible hint. |
+| Folder | `id`, `parent_id` (nullable), `name`, `icon`, `sort_order`, `deleted_at` |
+| Tag | `id`, `name` (unique per user, case-insensitive), `color`, `icon` |
+| NoteTag | `note_id`, `tag_id` |
+| Note (new fields) | `folder_id` (nullable), `icon`, `pinned_at` |
+| PinnedItem | `id`, `item_type`, `item_id`, `sort_order` |
+| SavedSearch | `id`, `name`, `icon`, `query` (JSON) |
 
-## 4. Sidebar structure (top to bottom)
+- **Notes:** `pinned_at` is a quick filter for pinned notes. `PinnedItem` holds the manual order across all pinned types.
+- **Sync:** every new field and entity syncs between web and iOS, and works offline.
+- **Conflicts:** use last-writer-wins per field. Folder moves must never create cycles, so validate on the server and reject or repair them.
+- **Search index:** add folder and tag filters to the existing index.
+- **Existing notes:** no migration is needed beyond adding nullable fields. All current notes start in Unfiled, and the first release changes nothing about how they look.
 
-1. **Search** (unchanged).
-2. **Pinned** appears only when something is pinned. It shows the 5 most recently pinned, with "Show all".
-3. **All Notes** is the default selection, and every current note lives here.
-4. **Folders** is an expandable tree with "+". Unfiled notes appear only in All Notes.
-5. **Tags** is a flat list sorted by use. It shows the top 8, with "Show all".
-6. **Trash.** I'm assuming it exists (open decision 3).
+## 5. States
 
-Sections collapse, and the collapsed state persists per device. Slice 2 adds **Smart folders** below Folders.
+- **First run, existing users:** all notes are in All Notes and Unfiled. A single dismissible hint says "Create a folder or add a tag to organize your notes." There is no tour.
+- **Empty folder:** "No notes here yet," with a New Note button.
+- **Empty tag or saved search:** a short explanation of what would appear there.
+- **Loading:** the sidebar shows a cached tree immediately and updates when sync finishes.
+- **Offline:** every action works and syncs later.
+- **Errors:** a failed move or rename reverts the item and says why, for example "Couldn't move: this folder is inside the one you chose."
+- **Scale:** the tree is virtualized. Target up to 1,000 folders, 1,000 tags, and 50,000 notes per user.
 
-- **Web:** persistent, resizable, collapsible left sidebar.
-- **iPhone:** the sidebar is the root screen of a navigation stack, using native swipe actions and context menus.
-- **iPad:** native split view.
+## 6. Quality bar
 
-The model, names and order are identical on both platforms. Interaction follows each platform's conventions.
+- **Performance:** the sidebar renders in under 100 ms from cache. Selecting a folder, tag, or saved search shows results in under 200 ms for accounts up to the scale above.
+- **Accessibility:** full keyboard navigation of the tree (arrows to move, left and right to collapse and expand). Screen-reader labels state depth, expansion, and counts. VoiceOver actions replace drag and drop. Dynamic Type and reduced motion are respected.
+- **Recovery:** moves and deletes are undoable, and deleted folders are restorable from Trash.
+- **Safety:** all operations are authorized per user. Folder and tag names are validated for length and content.
+- **Export:** the existing export includes folder paths, tags, and icons, so nothing is locked in.
+- **Observability:** track the use of each concept, sync failures, and cycle-repair events.
 
-## 5. Behavior
+## 7. Delivery plan
 
-**Folders**
-- A note is in one folder or none. A folder holds notes and subfolders.
-- Maximum depth is 5 levels. Beyond that, "Move here" is disabled with the message "Folders can go 5 levels deep."
-- Selecting a folder shows its notes and its subfolders' notes. Nested notes carry a muted folder label. This is a default I chose (open decision 2).
-- Creating a folder opens it with the name field focused. Sibling names are unique, and a duplicate gets " 2" appended instead of an error.
-- Rename, move and reorder are all supported. Moving uses drag on web and "Move to…" on iOS.
-- **Delete** sends the folder, its subfolders and their notes to Trash together, and they can be restored together. The confirmation names the consequence, for example "Delete 14 notes". If the parent is gone on restore, the folder returns to the top level.
-- Moving a folder into itself or a descendant is blocked in the UI and rejected by the server.
+Each slice ships complete, with all its states, accessibility support, and sync.
 
-**Tags**
-- A tag has a name and an optional color from a fixed set of 8, tested for contrast in light and dark themes.
-- Add a tag by typing `#name` in the note, or from the Tag control, which autocompletes and offers "Create 'name'".
-- Names are case-insensitive and unique.
-- Selecting a tag filters the list. A second tag narrows with AND, and a "Clear" control appears while filtering.
-- Renaming onto an existing name merges the tags, and the confirmation says so: "6 notes will use 'travel'."
-- Deleting a tag leaves the notes untouched. It names the count and offers 10-second undo.
-- **Color is never the only signal.** The tag name always appears next to its color, and the color has an accessible name.
-- Tags are flat, with no hierarchy.
+1. **Folders and Pinned.** This is the largest need and the foundation for the rest. It includes nesting, move, and the sidebar structure.
+2. **Tags with color, and emoji icons.** Emoji ships here because it is small and applies to everything built in slice 1.
+3. **Saved searches.** This slice builds on the folder and tag filters, so it comes after them.
 
-**Pin**
-- "Pin" and "Unpin" are available from the note menu, the context menu, an iOS swipe and a web shortcut.
-- Pinned notes appear in the Pinned section and at the top of any list they're in.
-- There is no separate "Favorite."
+## 8. Not now / later
 
-**Migration:** If the app already has favorites or labels, convert them automatically and losslessly to pins and colored tags (open decision 4).
-
-## 6. States
-
-| State | Behavior |
-|---|---|
-| First run, existing user | Empty Folders and Tags sections with "+", and one dismissible hint |
-| First run, new user | "Create a folder to group notes." |
-| Empty folder | "No notes here yet. Drag a note in, or create one." (iOS: "Move notes here from their menu, or create one.") |
-| Empty tag | "No notes use this tag." |
-| No pins | The Pinned section is hidden |
-| Loading | Renders from local cache. Counts refresh in place with no layout jump. |
-| Offline | Actions work locally and queue. A quiet "Will sync when you're back online" status shows, with no blocking error. |
-| Conflict | Resolved silently per section 7, with no dialog |
-| System error | "Couldn't move the note. Nothing was lost. Retry." The note returns to its previous place. |
-| Scale | Tested with 0, 1 and 5,000+ folders or tags. Long names truncate in the middle and carry the full name in the tooltip and accessibility label. Tree children load lazily. |
-| Interrupted | Organizing a note that's open on another device updates that view without losing unsaved edits |
-
-## 7. Data and sync
-
-- **Folder:** `id, parentId?, name, position, deletedAt?, updatedAt`
-- **Note** adds `folderId?` and `pinnedAt?`
-- **Tag:** `id, name (unique, case-insensitive), color?`
-- **NoteTag:** `noteId, tagId`
-- **Conflicts:** last-writer-wins per field. Tag changes sync as add and remove operations, so two devices tagging the same note both succeed.
-- **Server validation:** it checks for cycles and depth, and auto-suffixes duplicate names. If a note is moved into a folder deleted elsewhere, the note goes to the top level and nothing is lost.
-- **Migration:** additive only, with new nullable columns and tables and no rewrite of note content. Rolling the feature back must leave every note visible in All Notes.
-- **Export** includes folder paths, tags and pin state. This is part of slice 1, not a follow-up.
-
-## 8. Quality bar
-
-- **Performance (confirm on mid-range devices):**
-  - Sidebar renders from cache in under 300 ms after launch.
-  - Expand, filter and pin respond in under 100 ms.
-  - Writes go local first and sync in the background.
-  - No scroll jank at 10,000 notes and 500 folders.
-- **Accessibility:**
-  - The web has full keyboard operation, including moving notes and folders, with visible focus.
-  - The tree uses proper tree semantics on web and native outline semantics on iOS. Each row announces its name, level, expanded state and note count.
-  - Every drag has a non-drag alternative.
-  - Contrast is at least 4.5:1 for text and 3:1 for icons and tag chips. iOS targets are at least 44 pt.
-  - Reduced motion, dynamic type and high contrast are honored.
-- **Recovery:** every destructive action is undoable or restorable from Trash. Reversible actions get no "Are you sure?"
-- **Words:** buttons name outcomes ("Delete 14 notes"). One name per concept on both platforms: Folder, Tag, Pin.
-- **Tests:** cycle prevention, depth limit, two-device concurrency, offline queue replay, nested restore, migration rollback, and large-account performance.
-- **Measure** (targets to be set after a baseline week):
-  - Share of active users who create a folder or tag within 30 days.
-  - Time from launch to opening a note. Search use should fall without this time rising.
-  - "Can't find my note" tickets.
-  - Sync conflict rate.
-
-## 9. Not now / later
-
-| Item | Why not now | What it takes |
+| Item | Reason | What it would take |
 |---|---|---|
-| **Smart folders** (slice 2) | They're the most valuable item after the core, but there's little to save a search over until tags and folders are in use. | "Save this search" in search results, a stored query, a Smart folders section, and `tag:` and `in:` filters. They're read-only views. |
-| **Emoji icons** (slice 2) | They're decoration and don't help anyone find a note, and they add picker, rendering and accessibility work. | An optional `icon` on notes and folders, the system emoji picker, a default glyph, and the emoji description as the accessible name. |
-| Nested tags | Folders already provide hierarchy, and two hierarchies do one job. | Revisit after tags ship. |
-| Custom tag colors | Eight tested colors keep contrast consistent. | A picker with contrast validation. |
-| Notes in multiple folders | Tags cover this, and a second mechanism blurs "where is it?" | Not planned. |
-| Separate Favorites | Merged into Pin. | Not planned. |
-| Per-folder sort and view settings | They ask users a question a default can answer. | Revisit with usage data. |
-| Shared folders | It's a collaboration and permissions decision. | Separate spec. |
-| Bulk move and tag | Users with large flat lists will want it, but the model ships without it. | Multi-select plus "Move to…" and "Tag…". This is slice 1.5, right after slice 1. |
+| Custom hex colors | A fixed palette keeps the UI consistent and accessible. | A color picker plus a contrast check. |
+| Notes in multiple folders | It breaks "where is it?" Tags cover this need. | A join table and a rethink of the folder semantics. |
+| Nested tags (`#work/projects`) | It duplicates folders. | A tag hierarchy, if people ask. |
+| Folder sharing and permissions | It's a separate collaboration feature. | Sharing model and access control design. |
+| Auto-tagging and suggested folders | It's useful, but needs trust in the base model first. | A suggestion model on top of slices 1–2. |
+| Sidebar customization (reordering sections) | The default order should be right. | A settings area, if evidence shows a need. |
+| Saved-search widgets and home-screen shortcuts | It depends on slice 3. | An iOS widget extension. |
 
-## 10. Rollout
+## 9. Open decisions
 
-1. **Slice 1:** folders, tags, pin, export and migration. Order is dogfood, then 5% of users, then everyone, behind a flag with a safe rollback.
-2. **Slice 1.5:** bulk move and tag.
-3. **Slice 2:** smart folders and emoji icons.
+1. **Do you accept the merges?** These are tags with colors (no separate labels) and Pinned (no separate favorites). If you want them kept separate, I'd want to understand what each does differently.
+2. **Delete behavior for folders:** is "notes go to Trash with the folder" right, or should contents move up to the parent?
+3. **Is the sequencing acceptable?** Slices 2 and 3 could ship together if you'd rather not stage them.
+4. **Do you have usage data on how users search today?** It would help me size the tag and saved-search features.
 
-Each slice ships complete, with all states, accessibility and export. Scope moves between slices, but quality doesn't.
-
-## 11. Open decisions
-
-1. **Confirm the cut:** 8 requests become 5 concepts, with smart folders and emoji icons in slice 2. Does either have to ship in slice 1?
-2. **Folder view:** show subfolder notes too (proposed), or direct children only?
-3. **Trash:** does it exist today? If not, it moves into slice 1, because folder deletion depends on it.
-4. **Existing favorites or labels:** does the app already have either? If so, migrate them as in section 5.
-5. **Depth limit:** 5 is a proposal. Adjust it if users' imports show deeper structures.
-6. **iPhone sidebar:** root screen (proposed) or a slide-over drawer. The root screen follows platform convention and avoids a hidden control.
-
----
-
-I can turn this into a doc, or write the slice 1 task breakdown for the web and iOS teams, once you've confirmed the cut.
+I can turn this into per-screen designs for web and iOS, a sync and conflict-handling design, or tickets for each slice. Which would you like next?
 
 </details>

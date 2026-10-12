@@ -19,7 +19,7 @@ Our app's settings screen feels cluttered. Make it minimal, like Apple would: cu
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A keeps every capability people may need, including the accessibility overrides, sound and haptics, the timezone and date-format overrides, and visible beta and developer options, while still simplifying the screen and flagging its assumptions, whereas B removes needed controls, hides options behind an obscure gesture, and miscounts its cuts (both answers claim 6 rows but list 8).
+Blind pairwise judgment: **skill**. A reduces clutter through grouping and progressive disclosure while keeping everything people need, including accessibility, security, export/delete, and per-notification control, and it places default view on the list itself; B cuts things people may need (in-app sound control, timezone/date overrides, a discoverable beta opt-in) and contradicts itself on counts, though A also miscounts its top-level rows.
 
 ### baseline
 
@@ -84,95 +84,79 @@ I can also sketch this as a wireframe or write the component and navigation code
 
 - Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 6/6 [True, True, True, True, True, True]
-- Judge note: none; the response says the top level has 6 rows, but its own tree shows 7 grouped rows plus the profile header and Delete, a small accuracy slip that fails no check.
-- Words: 631
+- Judge note: none; the only flaw is a miscount: the response says the new screen has 'six rows,' but the tree shows seven sections below the profile header.
+- Words: 521
 
 <details><summary>Output</summary>
 
-**Recommendation:** Make the top level a single list of 6 rows. Nothing is deleted. Each of the 37 controls is automated, defaulted, moved to where it's used, or moved one level down. I'd like your approval on one change: "Show tips" stops being a setting (see the ledger).
+Cut the screen to a profile header plus six rows. Every setting stays reachable and none are deleted. The clutter came from too many choices on one level, and a few things that aren't settings at all.
 
 ## New structure
 
 ```
 Settings
+├─ [Photo]  Display name · email          → Profile (edit name, photo, email)
 │
-├─ [Photo]  Display name          ← tap to edit name, photo, email
-│
-├─ Sign-In & Security
-│    Password
-│    Two-factor authentication
-│    Connected devices
-│
+├─ Account & Security
+│    Change password · Two-factor authentication · Connected devices
 ├─ Notifications
-│    Allow notifications          (one master switch)
-│    Activity · Reminders · Updates   (3 group toggles)
-│    Weekly digest email
-│    Customize…  → the original 12 toggles, grouped under those 3 headings
-│
+│    One master switch + 3–4 grouped toggles (e.g. Activity, Messages, Account, Updates)
+│    "Customize" → the 12 individual toggles · Weekly digest
 ├─ Appearance & Accessibility
-│    Theme            System (default) / Light / Dark
-│    Text size        follows system by default
-│    Reduce motion    follows system by default
-│    Increase contrast  follows system by default
-│    Sound effects
-│    Haptic feedback
-│
+│    Theme (System by default) · Text size · Reduce motion · High contrast
+│    Sounds & haptics (two toggles)
 ├─ Language & Region
-│    Language         follows device by default
-│    Time zone        Automatic (default), override available
-│    Date format      follows region by default
-│
-├─ Privacy & Data
+│    Language (System by default) · Time zone & date format (Automatic by default)
+├─ Your Data
 │    Export my data
-│
+│    Delete account                                  ← last, in red, confirmed
 ├─ Advanced
-│    Beta features
-│    Developer mode
-│
-├─ Help & About
-│    Keyboard shortcuts
-│    Version
-│    Open-source licenses
-│
-└─ Delete account                 (last, in red, with confirmation)
+│    Beta features · Developer mode · Show tips
+└─ About & Help
+     Version · Keyboard shortcuts · Open-source licenses
 ```
-
-Delete account and Export are separate on purpose. Deletion sits alone at the bottom, and export is nearby so people can save their data first.
 
 ## Simplification report
 
 | | Before | After |
 |---|---|---|
-| Top-level rows | 26 items (37 controls) | 6 rows plus the profile header and Delete |
-| Notification toggles on first view | 12 | 3 groups and 1 master switch |
-| Settings that ask what a default could answer | 6 (theme, language, time zone, date format, text size, motion) | 0 asked up front. All default to the system and can be overridden |
+| Top-level items | 26 (37 controls, counting the 12 toggles) | 1 header + 6 rows |
+| Controls visible on the main screen | 37 | 0 (only the rows) |
+| Notification toggles on first view | 12 | 4 groups |
 
-## Capability ledger
+**Capability ledger**
+- **Kept on the surface:** profile (name, photo, email), the six section rows.
+- **Automated:**
+  - Time zone and date format follow the device and region. The override stays under Language & Region.
+  - Tips show once, then never repeat.
+- **Moved to where it belongs:**
+  - *Default view (list/grid):* becomes a toggle on the list itself, which is where you'd want to change it.
+  - *Keyboard shortcuts:* a reference, not a setting, so it moves to About & Help. It also opens from `?` or `⌘/` for experts.
+  - *The 12 notification toggles:* one level down, behind "Customize". Each is still individually controllable.
+  - *Weekly digest:* moves into Notifications.
+  - *Beta features and developer mode:* a labeled Advanced section.
+- **Merged:** sound effects and haptics into one "Sounds & haptics" group.
+- **Removed:** none.
+- **Capabilities lost:** 0.
 
-- **Kept on the surface:** profile, security, notifications, theme.
-- **Automated or defaulted:** time zone (auto-detected), date format (from region), language, text size, reduce motion and contrast (follow the OS). The in-app override stays for each, so custom-rendered text and motion still honor the user's choice.
-- **Moved to context:**
-  - **Default view (list/grid):** becomes a toggle in the toolbar of the list itself, since it's a per-screen choice.
-  - **Keyboard shortcuts:** moves to Help, because it's reference material and not a setting. Consider also opening it from `?` or ⌘/.
-- **Moved one level down:** the 12 notification toggles go behind "Customize…". Per-item control is kept.
-- **Moved to Advanced:** beta features and developer mode, both labeled and visible.
-- **Changed, needs your approval:** "Show tips" stops being a setting. Tips appear in context and each has its own "Don't show tips" action. Add "Reset tips" under Advanced if you want a way to bring them back.
-- **Capabilities lost:** 0 (assuming the tips change is approved).
+## Decisions I made that you may want to override
 
-## Notes and risks
+- **Accessibility stays.** Text size, reduce motion and high contrast are kept as in-app controls, defaulting to the OS setting. If your app draws its own text and animation, the OS setting alone won't reach it.
+- **Security, export and delete stay.** They are easy to find. Delete is last and needs confirmation.
+- **Language stays as an override.** It follows the device unless the user changes it.
 
-- **Notification groups:** I guessed "Activity / Reminders / Updates" because I haven't seen your 12 toggles. Share them and I'll map each to a group. If some are security alerts, such as new-device sign-in, leave them on and show them as a non-optional row.
-- **Sound and haptics:** I kept these on the Appearance & Accessibility screen, since haptics matter for accessibility. If you add more feedback options later, split them into their own screen.
-- **Data check:** I have no usage data. If analytics show almost nobody changes Date format or Time zone, they could later be folded into a single "Region" row. I'd move them first and measure before removing anything.
+## Needs your approval
+- **"Show tips" toggle:** the tips now dismiss themselves, so the toggle is probably redundant. I left it in Advanced. If your data shows nobody uses it, remove it.
+- **Notification grouping:** I proposed four groups, but your 12 toggles should decide the real ones. Send me the list and I'll map them.
 
-I can write this as a navigation spec or build it in your codebase if you tell me the framework.
+I can write the per-screen detail (copy, defaults, states) or the implementation plan for your codebase next.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. A reaches a genuinely minimal top level by defaulting, nesting, and moving items into context while keeping user overrides for accessibility (text size, reduce motion, high contrast), language, and security reachable, and it flags the Show tips behavior change for approval; B strips these in-app controls entirely, relying on the OS and adding caveats afterward, which risks regressing accessibility and language needs.
+Blind pairwise judgment: **skill**. A makes the top level as minimal as requested while keeping the in-app accessibility controls (text size, reduce motion, high contrast), language, and discoverable beta features, whereas B drops the accessibility controls and language in favor of system settings, adding caveats only after the fact, and hides beta features behind a 7-tap easter egg.
 
 ### baseline
 
@@ -241,86 +225,83 @@ I can turn this into a screen-by-screen spec, or update the code if you point me
 
 - Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 6/6 [True, True, True, True, True, True]
-- Judge note: none
-- Words: 493
+- Judge note: none; the conditional wording on keeping in-app text size, motion, and contrast controls is slightly ambiguous, but the structure and the 'Capabilities lost: 0' ledger both keep them.
+- Words: 521
 
 <details><summary>Output</summary>
 
-**Recommendation:** The top level shrinks from 26 items (37 controls, counting the 12 notification toggles) to a profile header and 7 rows. Nothing is deleted. Each item is automated, defaulted, moved into context, or moved one level down. Accessibility, security and account controls, language, export and licenses all stay reachable.
+Group the settings by what people are trying to do, and let defaults answer most of them. The top level drops from 26 items (37 controls with the 12 toggles) to a profile header and 6 rows. Nothing is removed. Every control stays reachable, and accessibility, security, and data controls stay intact.
 
 ## New structure
 
-**Profile header** (tap to edit)
-- Photo, display name, email
+**Profile header** (tap to edit): photo, display name
 
-**1. Sign-in & Security**
+**1. Account & Security**
 - Email
-- Change password
+- Password
 - Two-factor authentication
 - Connected devices
+- *Bottom, separated:* Export my data, then Delete account (plainly labeled, with a confirmation)
 
 **2. Notifications**
-- Three group switches: Activity, Messages & mentions, Product news. The weekly digest sits under Product news.
-- "Customize" opens the 12 individual toggles one level down.
+- Top level: 3 or 4 groups, each with one switch (for example Activity, Mentions & messages, Account & security, Product news). The weekly digest lives under Product news.
+- "Customize" in each group opens the individual toggles, so all 12 still exist.
 
-**3. Appearance**
-- Theme (System / Light / Dark), defaulting to System
-- Text size, defaulting to the system size
-- Sounds & Haptics, with the two toggles side by side
-- **Accessibility** (one level down): Reduce motion, High contrast. Both default to the OS setting and can be overridden here.
+**3. Appearance & Accessibility**
+- Theme (defaults to System)
+- Text size
+- Reduce motion
+- High contrast
+- Sounds & haptics (one row with two switches)
+
+Text size, motion, and contrast follow the OS by default. Keep the in-app controls if your app renders its own text and animation.
 
 **4. Language & Region**
-- Language, defaulting to the device language
-- Timezone and date format, both automatic from the device and region, with an override one level down
+- Language (defaults to the device language)
+- Timezone (automatic, with an override)
+- Date format (follows the region, with an override)
 
-**5. Data**
-- Export my data
-- Delete account (last, in red, with confirmation)
-
-**6. Advanced**
+**5. Advanced**
 - Beta features
 - Developer mode
 
-**7. Help & About**
-- Keyboard shortcuts (reference)
-- Reset tips
+**6. Help & About**
+- Keyboard shortcuts
 - Version
 - Open-source licenses
 
-## Where the other items went
-- **Default view (list/grid):** a toggle on the list or grid screen itself, remembered automatically.
-- **Show tips:** tips appear once in context and stay dismissed. "Reset tips" in Help replaces the toggle.
-- **Timezone and date format:** automatic, with an override one level down.
-
-## Numbers
+## Simplification report
 
 | | Before | After |
 |---|---|---|
-| Top-level items | 26 | 7 rows plus the profile header |
-| Visible controls at top level | 37 | 0 on the root screen (all behind rows) |
+| Top-level items | 26 (37 controls) | 6 rows + profile header |
+| Notification controls on first view | 12 | 3–4 |
+| Decisions a new user must make | ~20 | 0 (all have defaults) |
 
-## Capability ledger
-- **Kept on the surface:** profile, theme, language, text size, sounds and haptics.
-- **Moved one level down:** the 12 notification toggles, reduce motion, high contrast, timezone and date format overrides.
-- **Moved to Advanced or Help:** beta, developer mode, keyboard shortcuts, licenses.
-- **Moved into context:** default view.
-- **Automated:** timezone, date format, tips.
-- **Removed:** 0 capabilities. The only behavior change is the Show tips toggle becoming a Reset tips action, and I need your OK on that.
+**Capability ledger**
+- **Kept on the surface:** profile photo, display name, and the 6 group rows.
+- **Moved one level down:** email, password, 2FA, devices, export, delete, theme, text size, motion, contrast, language, and the 12 notification toggles.
+- **Moved to Advanced:** beta features, developer mode.
+- **Moved to where it belongs:** keyboard shortcuts go to Help. The default view (list/grid) moves to a toggle on the list itself, since it's a per-screen choice.
+- **Automated:** timezone, date format, and language come from the device, with overrides kept. "Show tips" becomes contextual hints that a user can dismiss.
+- **Removed:** 0.
 - **Capabilities lost:** 0.
 
 ## Decisions for you
-1. Do you approve replacing the Show tips toggle with automatic dismissal plus "Reset tips"?
-2. Is the Activity / Messages / Product news grouping right? I'd need the 12 toggle names to map them properly.
-3. Do you have usage data on sounds and haptics, or on developer mode? If they're rarely changed, they could move down to Advanced. I haven't done that without evidence.
 
-If you confirm the grouping, I can write the screen. It would help to know your platform and framework first.
+1. **Notification groups:** I don't know what your 12 toggles are. Send them and I'll sort them into groups.
+2. **Show tips:** I'd retire the toggle and make each tip dismissible in context. If anyone relies on turning all tips off at once, keep one switch in Help.
+3. **Sound effects and haptics:** combining them into one row is a judgment call. Haptics don't exist on desktop, so that row would show only the switches the device supports.
+4. **Usage data:** I have none. If any control is truly unused, such as date format, tell me and I can propose removing it. For now it's only moved.
+
+I can detail any screen, such as the notification groups or the Advanced copy, or turn this into a spec for your codebase.
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A achieves a genuinely simpler structure while keeping the accessibility, language, and recovery controls people need, and it asks before any removals; B cuts in-app text size, reduce motion, high contrast, and language overrides, which hurts users who need them even though B's notification analytics advice is good (A has small inconsistencies, like announcing two removals but listing one).
+Blind pairwise judgment: **skill**. A simplifies to 7 top-level rows while keeping the accessibility controls, the language/timezone overrides and the granular notification access people need, and it flags what it hasn't verified; B removes in-app accessibility settings and manual locale overrides on the untested assumption that the OS covers them, and it hides developer options behind an easter egg.
 
 ### baseline
 
@@ -391,75 +372,78 @@ I can also draft the notification groupings, or sketch the screens as a SwiftUI 
 
 ### skill
 
-- Skill activated: True; references read: none
+- Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 6/6 [True, True, True, True, True, True]
 - Judge note: none
-- Words: 534
+- Words: 538
 
 <details><summary>Output</summary>
 
-The new settings screen has 6 rows and a profile header. Nothing is deleted. Most of the clutter was options the app can decide itself or controls that only matter in one place, so those move down or become automatic. I'd like your OK on the two proposed removals at the bottom before any code changes.
+**Recommendation:** The screen goes from 26 entries (37 controls, counting the 12 notification toggles) to 7 top-level rows. I got there by organizing and automating rather than deleting. Several items you listed are accessibility, security, data-control or legal capabilities, so I moved them and didn't cut them. Nothing is removed.
 
 ## New structure
 
-**Profile header** (tap to edit): photo, display name, email
+**Top level (7 rows)**
+1. **Account**
+   - Photo and display name (the header)
+   - Email
+   - Password & Security → change password, two-factor authentication, connected devices
+2. **Notifications**
+   - 3–4 grouped switches, for example Activity, Account & Security, and Product Updates. I haven't seen your 12 toggles, so the grouping is for you to confirm.
+   - The weekly digest sits in Product Updates.
+   - "Customize" opens the individual toggles.
+3. **Appearance & Accessibility**
+   - Theme (defaults to System)
+   - Text size
+   - Reduce motion
+   - High contrast
+   - Sound effects
+   - Haptic feedback
+4. **Language & Region**
+   - Language
+   - Timezone and date format, set automatically from the device. The row shows "Automatic" and lets you override.
+5. **Data**
+   - Export my data
+   - Delete account, last on the screen, labeled plainly and with a confirmation
+6. **Advanced**
+   - Beta features
+   - Developer mode
+7. **About & Help**
+   - Version
+   - Open-source licenses
+   - Keyboard shortcuts
+   - Show tips
 
-**1. Account & Security**
-- Email, change password, two-factor authentication
-- Connected devices
-- Export my data
-- Delete account (last row, red, with confirmation)
+**Moved out of settings:** default view (list/grid) now lives on the view's own toggle and remembers the last choice.
 
-**2. Notifications**
-- Top level: one "Allow notifications" switch and the weekly digest toggle
-- The 12 toggles become 3–4 labeled groups (for example Activity, Messages, Account, Product news). Each group has one switch, and tapping it opens the individual toggles.
+## Simplification report
 
-**3. Appearance & Accessibility**
-- Theme (defaults to System)
-- Text size
-- Reduce motion (defaults to the OS setting)
-- High contrast (defaults to the OS setting)
-
-**4. Sounds & Haptics**
-- Sound effects
-- Haptic feedback
-
-**5. Language & Region**
-- Language (defaults to the system language)
-- Time zone and date format (both default to the device's settings)
-
-**6. Advanced**
-- Beta features
-- Developer mode
-
-**About** (a quiet footer row): version, open-source licenses, keyboard shortcuts
-
-## What changed and why
-
-| Item | Move | Reason |
+| | Before | After |
 |---|---|---|
-| Default view (list/grid) | In context | It becomes a toggle on the list or grid screen, where people change it. |
-| Keyboard shortcuts | In context, plus About | The `?` key opens the reference, and About links to it. |
-| Time zone, date format | Automatic | The app follows the device. The override sits one level down in Language & Region. |
-| Reduce motion, high contrast | Default | They follow the OS setting. I kept the in-app controls because the app renders its own motion and contrast. |
-| Sound and haptics | Merged | Two related toggles share one row. |
-| Beta, developer mode | Advanced | Few people need them, and they stay visible and labeled. |
-| Show tips | Automatic | Tips appear on first use and stop once the user has done the thing. |
+| Top-level entries | 26 | 7 |
+| Controls visible on the main screen | 37 | 7 rows |
+| Decisions a new user must make | ~12 (timezone, date format, language, theme, and others) | 0 required |
 
-## Counts
-- **Top-level rows:** 26 items (37 controls with the 12 notification toggles) → 6 rows plus a profile header and About.
-- **Controls visible without drilling down:** about 37 → about 10, mostly the profile header and the first-screen rows.
-
-## Capability ledger
-- **Kept:** everything related to accessibility, security, data export, account deletion, language override and licenses.
-- **Moved:** 23 items.
-- **Automated:** time zone, date format and tips.
-- **Removed:** nothing yet. I'm proposing two removals below.
+**Capability ledger**
+- **Kept on the surface:** profile (name, photo, email), the notification group switches, theme.
+- **Moved one level down:**
+  - Security items go under Password & Security.
+  - The 12 individual notification toggles go under "Customize".
+  - Text size, reduce motion and high contrast go in Appearance & Accessibility.
+  - Sound and haptics go there too.
+  - Export and delete go to Data.
+- **Moved to Advanced:** beta features, developer mode.
+- **Moved to Help:** keyboard shortcuts (reference material, not a setting), tips, licenses, version.
+- **Moved in context:** default view.
+- **Automated:** timezone, date format, theme (follows the system), language (starts from the device). Each keeps its override.
+- **Removed:** 0.
+- **Capabilities lost:** 0.
 
 ## Decisions for you
-1. **Show tips:** do you want the toggle removed? If you want to keep a way to turn tips off, I'd put a single "Reset tips" action under About.
-2. **Notification grouping:** which of the 12 toggles go in which group? I can draft it if you list them.
+- **Accessibility controls:** I kept text size, reduce motion and high contrast, even though the OS has equivalents. If the app draws its own text and animation, the OS setting doesn't always reach it. If you can confirm it honors the OS settings everywhere, those three could become automatic. I'd keep them until you do.
+- **Sound effects and haptics:** these could merge into one "Sound & Haptics" switch. You'd lose the ability to turn one off without the other, so I left them separate.
+- **Show tips:** the toggle is in Help for now. If tips become contextual hints that dismiss themselves, the toggle could go. That would be a removal, so it needs your approval.
 
-If you want, I can map this to your codebase next. I haven't looked at it, so I can't say how much work that is.
+I can map your 12 notification toggles into groups next, or write per-screen detail or implementation notes.
 
 </details>

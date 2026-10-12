@@ -18,7 +18,7 @@ Our desktop photo editor is used by professional photographers, but new users sa
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A keeps every capability, including panel customization for all users, in a tighter three-stage workflow. It spells out what moves to the surface, what moves one level down and what gets automated, and it flags telemetry as the check on its guesses. B adds a separate Retouch mode that splits masks from editing, limits layout customization to Pro, and makes the unsupported claim that most users never need layers.
+Blind pairwise judgment: **skill**. A keeps every capability and protects existing professionals by defaulting them to Pro mode, unifies masking into one concept applied to any adjustment, and labels its estimates honestly, while B splits local adjustments into a separate Retouch workspace, never addresses migrating current users, and asserts unverified impact claims.
 
 ### baseline
 
@@ -109,81 +109,78 @@ If you share the codebase or your current panel layout, I can map this onto your
 - Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 5/5 [True, True, True, True, True]
 - Judge note: none
-- Words: 709
+- Words: 526
 
 <details><summary>Output</summary>
 
-**Recommendation:** Don't cut features. Pros rely on every one of them. Reorganize around the photographer's workflow instead. The app opens in a calm three-stage layout (**Library → Edit → Export**). Each stage shows only the tools most people use most often, and everything else stays one labeled level down. A "Pro" workspace restores today's dense, fully customizable layout in one click.
+**Recommendation:** Organize the app around the photographer's workflow (Capture → Edit → Export), not around the toolset. Show a calm "Essentials" surface by default, and keep every current tool one visible, labeled step away. Nothing is removed.
 
 ## New structure
 
-**Purpose:** A photographer imports a shoot, finishes the best frames, and delivers them. That should work without learning the whole toolset first.
+**Three workspaces**, replacing the current all-at-once layout:
+1. **Capture:** import, tethered shooting, and keyword/metadata presets applied on arrival.
+2. **Edit:** the main workspace (below).
+3. **Export:** presets, batch, soft proofing, and metadata options.
 
-### 1. Library (import, cull, organize)
-- **Surface:** import, grid, rating/flag, compare, and a search box.
-- **In context:** keywords and metadata appear in a side panel for the selected photos. Tethered shooting appears when a camera is detected, with a "Shoot tethered" action.
-- **One level down:** the full metadata and keyword editor, and batch metadata.
+**Edit workspace**
+- **Surface (Essentials panel):** Auto, Exposure, White Balance, Color, Crop. A "Local" button and a "Heal" button sit beside the image.
+- **Tone & Color** (one tab over): Curves, Levels, HSL.
+- **Local:** one concept, a mask. Choose Brush, Gradient, or Subject (AI), then apply any adjustment to it. Healing sits next to it.
+- **Detail & Lens:** sharpening, noise, manual lens corrections, RAW options.
+- **Layers:** a labeled **Advanced** tab, with stacking and compositing.
 
-### 2. Edit (one photo, three zones)
-The tools sit in a single panel as collapsible sections, ordered by how often people use them.
+**Two layout modes**
+- **Essentials** (default): the structure above, with panels collapsed to the basics.
+- **Pro:** the current dense, customizable layout, restored with the user's saved panels. Switching is one visible control, and the choice is remembered.
 
-| Section | What it holds | Rung |
+## Simplification report
+
+| | Before | After (approx.) |
 |---|---|---|
-| **Auto + Basic** | Auto button, exposure, contrast, highlights/shadows, white balance, crop | Surface |
-| **Color** | Vibrance/saturation, HSL | Surface (HSL one level down inside) |
-| **Detail & Fix** | Sharpening, noise, healing, lens corrections | Healing on the surface, lens corrections automatic |
-| **Local** | Masks: AI subject, brush, gradient | Surface (one "Mask" button, three types) |
-| **Layers** | Layers panel | One level down |
-| **Curves & Levels** | Full tonal control | One level down, labeled "Advanced tone" |
-| **Color management** | Profiles, soft proofing | One level down, with a proof toggle in the toolbar |
+| Tool groups visible at first launch | ~14 | 3 workspaces, 5 essential controls |
+| Decisions before first edit | Many (profile, lens, panels, RAW) | 0 |
+| Mask concepts to learn | 3 tool types | 1 (mask) with 3 ways to draw it |
 
-### 3. Export
-- **Surface:** pick a preset ("Web," "Print," "Client proof," "Full-res") and click Export.
-- **One level down:** the full preset editor, naming rules, and batch queue.
+I estimated these from your feature list, not from usage data.
 
-### Cross-cutting
-- **Plugins:** one "Plugins" menu, and each plugin appears in the stage where it applies.
-- **Shortcuts:** unchanged, and a command palette (⌘K) finds every tool by name, which makes the hidden depth quick to reach. A shortcut sheet lives in Help.
-- **Workspaces:** *Simple* (default for new users), *Standard*, and *Pro* (today's layout). Panel customization stays, and saved layouts are labeled and switchable.
+**Capability ledger**
+- **Automated:**
+  - RAW defaults are applied on open.
+  - Lens corrections are detected from metadata.
+  - The color profile is read from the file and monitor.
+  - Edits are saved non-destructively.
+- **Kept on the surface:** basic adjustments, crop, Auto, local and heal entry points, export.
+- **In context:**
+  - Soft proofing appears in Export and in the View menu.
+  - The tethering option shows when a camera is detected.
+  - A "Manual lens fix" link appears if a lens isn't recognized.
+- **One level down:** Curves, Levels, HSL, Detail & Lens, color profile overrides, and metadata and keyword editing in an Info panel.
+- **Advanced:**
+  - Layers.
+  - Plugins (under an Extensions menu).
+  - The customizable panel layout (Pro mode).
+  - Batch export preset editing.
+- **Keyboard shortcuts:** all kept, with a searchable shortcut list in Help. A command palette (⌘K) lets experts reach any tool by name.
+- **Removed:** none. Capabilities lost: 0.
 
-## Automated and defaulted
-- **RAW:** a camera-specific profile and auto-exposure are applied on import, so photos don't open flat.
-- **Lens corrections:** detected from metadata and on by default, with a manual override.
-- **Color profile:** sRGB or the working space is set from the export preset, and soft proof is offered only when a print preset is chosen.
-- **Masks:** the AI subject mask is suggested when the tool opens.
-- **First run:** pick a goal ("Cull a shoot," "Edit a photo," "Deliver to a client") instead of taking a tour.
+**Guardrails**
+- Experts get a speed path through Pro mode and the command palette.
+- Existing users should open in Pro mode, so nothing they rely on moves unannounced.
+- Only new installs start in Essentials.
 
-## Before and after
+**Open decisions for you**
+- Is Essentials the default for new users only, or for everyone?
+- Do you have usage data or support tickets to confirm which tools belong in Essentials? If not, ship it, measure, and adjust.
+- Should the first run offer a 30-second guided edit instead of a product tour?
 
-| | Before | After |
-|---|---|---|
-| Top-level areas | ~15 tools and panels | 3 stages |
-| Panels visible on first launch | All | 1 edit panel, 7 collapsed sections |
-| Steps from import to first export | Many, with decisions on profiles, formats, and presets | 3: import, Auto, Export preset |
-
-## Capability ledger
-- **Kept on the surface:** import, rating, Auto/basic edits, crop, healing, masks, export presets.
-- **Moved one level down:** HSL, curves, levels, layers, color profiles and soft proofing, full metadata, preset editor.
-- **Automated:** RAW defaults, lens corrections, color space, mask suggestion.
-- **Kept for experts:** shortcuts, plugins, panel customization (Pro workspace), batch export.
-- **Removed:** nothing. Capabilities lost: 0.
-
-## Not now
-- **Merging masks and layers into one concept.** This is likely worth doing later, but it's a larger change that affects saved files.
-- **Cloud sync.** It doesn't address the overwhelm.
-
-## Open decisions
-1. Should new users default to *Simple*, or should the app ask at first run? I recommend defaulting to Simple with a visible workspace switcher.
-2. Do you have usage data? Without it, the surface and one-level-down split above is my best guess. Check it against telemetry or support tickets before shipping.
-
-I can go deeper on the Edit panel layout, the first-run flow, or the migration path for existing users' custom layouts.
+I can go deeper on any layer: per-panel layouts, the first-run flow, or the migration plan for existing users.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. B gives a more coherent structure: A lists Export under both Library and Output. B also explicitly accounts for every capability with nothing removed, protects existing pros with a Classic workspace and a muscle-memory risk plan, and stays more focused on judgment and open decisions.
+Blind pairwise judgment: **skill**. B gives a cleaner workflow-based structure with an explicit capability ledger. It also adds guardrails that protect professionals: no speed tax, migration opt-in, and an intact interchange. It labels its numbers as estimates and stays more concise, while A puts Export in two modules and runs longer without adding proportionally better judgment.
 
 ### baseline
 
@@ -293,82 +290,93 @@ If you want, I can turn this into wireframes, a navigation spec, or a mapping fr
 
 ### skill
 
-- Skill activated: True; references read: none
+- Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 5/5 [True, True, True, True, True]
-- Judge note: none
-- Words: 730
+- Judge note: none; the only flaw is that the report table says 5 default Edit panels while the structure lists 6, which does not fail any check.
+- Words: 607
 
 <details><summary>Output</summary>
 
-**Recommendation:** Keep every capability and change how the app is organized. Build it around the photographer's workflow (Import → Edit → Export) and show only the few controls most edits need. Everything else moves one level down, into a labeled place. Nothing is removed.
-
-## Purpose
-A photographer who just shot a session wants to pick the best frames, make them look right, and deliver them, without learning the whole toolset first.
-
-## New structure
-
-**Three top-level spaces** (replacing a flat set of ~14 feature areas):
-
-| Space | Contains |
-|---|---|
-| **Import** | Tethered shooting, card/folder import, metadata and keyword presets applied on ingest |
-| **Edit** | Everything for working on a photo (below) |
-| **Export** | Batch export with presets, color profile and soft proofing, metadata options |
-
-**Edit space, in three depths:**
-
-1. **Surface, "Adjust" panel (the hero path).** It has **Auto**, **Light** (exposure, contrast, highlights/shadows), **Color** (temperature, saturation/vibrance), **Crop**, and **Remove** (healing, with one-click spot removal). These are the five things most photos need. Lens corrections and RAW processing run automatically with sensible defaults.
-2. **In context.** Tools appear when relevant:
-   - **Select:** the subject, sky, and background buttons run the AI mask. The brush and gradient sit next to them. Any adjustment can be applied to a selection.
-   - **Lens profile:** it is detected from the file's metadata. A "Lens" row appears only when a profile was found or needs a choice.
-   - **Soft proof:** it appears in Export, and as a toggle in the view menu.
-3. **Advanced, a labeled "Advanced" tab in the same panel.** It holds **Curves**, **Levels**, **HSL**, **RAW settings** (demosaic, profile, noise), **Lens corrections** (manual), **Layers**, and **Masks** (the full list). Each Surface control has a "More" link to its advanced equivalent. For example, Color → HSL, and Light → Curves.
-
-**Beneath the three spaces:**
-- **Library strip.** A single filmstrip across all spaces handles culling and ratings. It also holds the metadata and keyword editor, in a side panel.
-- **Preferences → Plugins.** Plugins keep their own menu and can add tools to the Advanced tab or to Export.
-- **Workspace menu.** Three presets: *Simple* (the default for new users), *Standard*, and *Pro* (everything open). Custom panel layout is still available here, and a user can save their own.
-- **Shortcuts.** Every action keeps its shortcut. A searchable command palette (⌘K) lists every action with its shortcut. It also makes features discoverable by name.
+**Recommendation:** Don't cut features. Reorganize the app around the photographer's workflow, which is Import → Select → Edit → Deliver, and show only the Edit tools most people use most often. Everything else stays and is reachable through labeled places. Professionals keep their speed through shortcuts, saved layouts and a "Pro" workspace that matches today's app.
 
 ## Simplification report
 
 | | Before | After |
 |---|---|---|
-| Top-level areas | ~14 peers | 3 spaces |
-| Controls visible on first run | all | ~5 groups |
-| Layout decisions for a new user | build your own | none (Simple preset) |
-| Steps to a finished, exported photo | not guided | Import → Auto → tweak → Export (4) |
+| Top-level areas visible on first run | ~13 | 4 stages |
+| Edit panels open by default | all | 5 |
+| Concepts to learn before the first edit | ~8 (layers, masks, profiles, curves, and so on) | 2 (Edit and Adjust a region) |
+
+*These are estimates from your feature list. Check them against the real UI.*
+
+## New structure
+
+**Four stages** (a top bar, one stage at a time):
+
+1. **Import** (tethered shooting lives here)
+2. **Select** (browse, rate, keyword)
+3. **Edit** (the main workspace)
+4. **Export**
+
+**Edit, the default surface** (6 panels, top to bottom):
+
+1. **Auto**: one-click starting point, with RAW processing and lens corrections applied automatically.
+2. **Light**: exposure, contrast, highlights and shadows.
+3. **Color**: white balance, vibrance, saturation.
+4. **Detail**: sharpening and noise reduction.
+5. **Crop**
+6. **Fix**: healing and spot removal.
+
+**Adjust a region** is one tool that replaces three separate concepts (brush, gradient and AI subject). You pick "Subject", "Brush" or "Gradient" from one control. The same Light and Color sliders then apply to that region.
+
+**In context:**
+- Lens corrections show a "Lens detected: apply?" prompt.
+- The soft-proof toggle appears in the Export stage and in the View menu.
+- A "Create preset" button appears after an edit.
+
+**One level down ("More" in Edit):**
+- **Precision Color:** HSL, color grading.
+- **Curves and Levels**
+- **Color profile**
+- **Lens** (manual control)
+- **Layers** (stacking and compositing)
+
+**Advanced** (a labeled "Pro" workspace, plus Preferences → Advanced):
+- All panels open, with the current dense layout.
+- The full customizable panel layout (move, dock, save).
+- The command palette and shortcut editor.
+- Plugins.
+- Per-channel curves, range masks, and similar controls.
 
 ## Capability ledger
-- **Kept on the surface:** Auto, light, color, crop, healing, export.
-- **Moved to context:** AI/brush/gradient masks, lens corrections, soft proofing, tethering.
-- **Moved to Advanced:** curves, levels, HSL, layers, full mask editing, RAW controls.
-- **Automated:** lens profile detection, RAW defaults, export preset suggestion, metadata on import.
-- **Unchanged:** plugins, shortcuts, customizable layout, metadata/keywords.
-- **Removed:** none.
 
-## Not now
-- A guided tour: it would explain a confusing UI instead of fixing it. Let's see how the Simple preset performs first.
-- A separate "lite" app or edition: two products to maintain, and users would outgrow it.
-- Removing rarely used tools: we'd need usage data, and professional users may depend on them.
+- **Automated:** lens profile detection, RAW defaults, embedded profile, export preset suggestion.
+- **Kept on the surface:** light, color, detail, crop, fix, region adjustments.
+- **Moved down:** curves, levels, HSL, layers, profiles, soft proofing, manual lens controls, batch export options, metadata editing.
+- **Advanced:** plugins, panel layout editing, keyboard customization, tethered options.
+- **Removed:** nothing. Brush, gradient and AI subject become options of one tool, with their functions unchanged.
+- **Capabilities lost:** 0.
 
-## Risks
-- Existing users will lose their muscle memory for panel locations. Mitigate by letting current users keep their old layout as a "Classic" workspace and migrating it automatically.
-- "Advanced" can become a dumping ground. Each tool there still needs a visible entry point from its Surface counterpart.
+## Guardrails
 
-## Open decisions for you
-1. Should new users default to *Simple* and existing users stay on *Classic*? I recommend yes.
-2. Do you have usage telemetry? It would help confirm which five Surface controls to choose.
-3. Is culling (rating and picking) a core part of your users' workflow? If so, it deserves a more prominent place than the filmstrip.
+- **Experts pay no speed tax.** All shortcuts keep working, and the Pro workspace is one switch away. A first-run question, "Show everything or guided?", sets the starting mode, and you can change it anytime.
+- **Every capability has a visible path.** A search or command palette (Cmd+K) finds any tool by name, so nothing hides behind a gesture.
+- **No migration surprise.** Existing users keep their saved layouts. Offer them a "Try the new Edit view" option instead of forcing it.
+- **Interchange stays intact.** That covers RAW formats, presets, profiles and plugin APIs.
 
-Please confirm the structure before I go deeper. I can then produce a screen-by-screen wireframe, a migration plan for existing layouts, or the first-run flow.
+## Not now / later
+
+- **A guided "assistant" mode with tutorials:** wait until the new structure is tested, so you don't explain a UI you just fixed.
+- **Removing rarely used tools:** do this only after usage data. Move first, measure, then decide.
+
+**Open decisions for you:** whether new users start in Guided or Pro by default, and whether Layers belongs under "More" or gets its own stage for composite-heavy photographers. Want me to detail each stage's screen, or draft the first-run flow?
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. Both keep every capability, but A is more focused and has better judgment: it explicitly protects existing pros (layout kept on upgrade, shortcuts in both layouts, no plugin migration) and labels its guesses as needing data, while B is longer and never says what happens to current users' layouts.
+Blind pairwise judgment: **skill**. A gives a tighter, workflow-based three-workspace structure that keeps every capability. Its explicit ledger shows nothing was removed, and it flags its own assumptions, such as the lack of usage data. B adds more workspaces and mode-splitting, which works against simplicity, and it states claims about the current product as fact, such as that the pro layout is the only layout.
 
 ### baseline
 
@@ -461,68 +469,64 @@ If you tell me the tech stack or share the repo, I can map this onto the existin
 
 ### skill
 
-- Skill activated: True; references read: insanely-great/references/simplicity.md
+- Skill activated: True; references read: none
 - Checks passed: 5/5 [True, True, True, True, True]
 - Judge note: none
-- Words: 636
+- Words: 613
 
 <details><summary>Output</summary>
 
-**Recommendation:** Organize the editor around the photographer's workflow: Import, Select, Develop, Export. Don't cut features. Show a calm "Essentials" layout by default, and let one control switch to the full "Pro" layout. All 14 capabilities stay, and the expert path doesn't get slower. These are design proposals, not tested against usage data (see "Needs your input").
+Keep every capability, but organize the app around the photographer's workflow (Import, Edit, Export) instead of a flat set of tools. Defaults and automation do the setup work, and the advanced tools sit one visible level down. Nothing is removed.
 
-## The new structure
-
-**Purpose:** A photographer opens a shoot and gets from "a pile of files" to "finished images out the door" without learning the tool first.
-
-**Four modes** (one row at the top, replacing the panel sprawl):
-
-| Mode | Job | Contains |
-|---|---|---|
-| **Library** | Bring in, find, and rate | Import, tethered shooting, ratings/flags, keywords and metadata |
-| **Develop** | Make the photo look right | See the three levels below |
-| **Retouch** | Fix specific areas | Healing, masks (brush, gradient, AI subject), layers |
-| **Export** | Deliver | Batch export, presets, soft proofing |
-
-**Develop has three levels:**
-1. **Essentials panel (default):** Auto, Exposure, Contrast, Highlights/Shadows, White Balance, Color, Crop. It has one panel and about 8 sliders.
-2. **Detail panels (one level down):** Curves, Levels, HSL, Lens corrections, Color profile. Each is a labeled, collapsed section under "More tools".
-3. **Pro layout (labeled toggle in the toolbar):** The full dense panel set with customizable layout, as it is today.
-
-## What the product does instead of asking
-
-- **Automatic:** RAW decoding and camera/lens profile detection, so lens corrections apply when the profile is found. Autosave of edits, non-destructive.
-- **Default:** Color profile follows the display. Export presets come with sensible starters like Web, Print, and Full-res.
-- **In context:** A "Remove blemish" prompt when you hover a spot. A soft-proof warning appears only when colors go out of gamut. The AI subject mask is offered when you pick Masks.
-- **Search:** One command palette (⌘K) finds any tool, setting, or preset by name. This is the discovery path for the depth.
-
-## Before → after (newcomer's first screen)
+**Simplification report**
 
 | | Before | After |
 |---|---|---|
-| Panels/tools visible at once | ~14 areas | 1 mode + 1 panel (~8 controls) |
-| Concepts to learn before first edit | ~8 (curves, levels, HSL, layers, masks, profiles…) | 2 (Auto, sliders) |
-| Steps from import to export | Not guided | 4 modes, left to right |
+| Top-level areas competing for attention | ~13 | 3 workspaces |
+| Edit panels open by default | all, user-arranged | 5 collapsed sections, with Light open |
+| Decisions before first edit | profile, lens, layout, export preset | 0 (all defaulted or detected) |
 
-## Capability ledger
+**New structure**
 
-- **Kept on the surface:** RAW processing, basic adjustments, crop, import, export.
-- **Moved one level down:** curves, levels, HSL, lens corrections, color profiles, healing, masks, layers, metadata and keyword editing, soft proofing, batch presets, tethering. Each sits in a labeled mode or section.
-- **Automated:** lens profile detection, color profile choice, autosave.
-- **Preserved for experts:** shortcuts for everything (unchanged), plugin support (an "Extensions" menu plus the palette), customizable layout (the Pro layout), and saved workspaces.
-- **Removed:** nothing. Capabilities lost: 0.
+1. **Import** (tethered shooting lives here)
+   - Browse, rate, and cull. Keywords and metadata are a side panel here, plus a metadata template applied on import.
+   - Tethered is a "Connect camera" source, shown in context when a camera is detected.
+   - Hero path: pick a folder, see photos, and double-click to edit.
 
-## Protect the experts
+2. **Edit** (one right-hand panel, five sections, top to bottom in typical order)
+   - **Light:** Auto, Exposure, Contrast, Highlights, Shadows. "Curves" and "Levels" sit under a visible *Advanced* disclosure in this section.
+   - **Color:** White balance, Vibrance, Saturation, and *HSL* one level down.
+   - **Detail:** Sharpening, noise reduction.
+   - **Geometry & Lens:** Crop and rotate. Lens corrections apply automatically from detected lens metadata, with a manual override.
+   - **Retouch:** Heal, plus **Masks** (Subject, Brush, Gradient). "Select Subject" is the most prominent action here.
+   - **Layers** is a labeled tab beside the panel, shown when the user adds one from the "+" menu or when a mask or composite needs it. It is not on the default screen.
+   - The RAW pipeline runs automatically on open, with a sensible default look. Camera-specific RAW options are under *Photo → RAW settings*.
 
-- Existing users keep their current layout on upgrade. Switching to Essentials is an opt-in prompt, not a forced change.
-- Shortcuts work in both layouts, including for tools in collapsed sections.
-- Plugins, presets, and project files keep working with no migration needed.
+3. **Export**
+   - A single dialog with presets such as Web, Print, and Full-res, and a "Custom…" option that opens every current option.
+   - Batch applies to the selection. Soft proofing is a toggle in the Export dialog and in the View menu, showing a destination-profile picker when switched on.
 
-## Needs your input
+**Supporting layers**
 
-1. **Which tools are Essentials?** I guessed. Usage telemetry or support tickets would settle it. Without data, I'd ship the guess and measure it.
-2. **Do AI subject mask and healing belong in Essentials?** They're often a newcomer's first "wow." I'd put one-click AI subject in Essentials and keep the brush tools in Retouch.
-3. **Not now:** a guided tutorial or a tour (fix the layout first), and new features. Neither is needed to reach the goal.
+- **Color management:** Defaults to the embedded profile and sRGB for export. The full profile control sits in *Settings → Color (Advanced)*.
+- **Layout:** Ship three workspace presets (Essentials, Standard, Full). Custom panel layout is still available under *Window → Workspace*, and "Reset layout" is always one click away.
+- **Keyboard:** Every shortcut stays. Shortcuts show in tooltips and menus, and a command palette (⌘K) finds any function by name. That palette is also the discovery path for experts and newcomers.
+- **Plugins:** Available under a *Plugins* menu and in Settings. Plugin panels appear in context, in the section they extend.
+- **First run:** Open on Import with a short "pick a folder" empty state. There's no tour, because the structure should explain itself.
 
-I can go deeper on any of these next: a screen-by-screen wireframe of Develop, the command palette's design, or a rollout plan for existing users.
+**Capability ledger**
+
+- **Kept on the surface:** Browse, Auto, basic light and color, crop, Select Subject, Export.
+- **Moved one level down or in context:** Curves, Levels, HSL, Layers, soft proofing, tethering, metadata and keywords, plugins.
+- **Automated or defaulted:** Lens corrections, RAW baseline, color profile, export preset, and the initial layout.
+- **Removed:** None.
+
+**Open decisions for you**
+
+- Should *Essentials* be the default workspace for new users, with a visible "Show all tools" switch? I recommend yes.
+- Do you have usage data to confirm which controls should sit in the open Light section? I used common photo-editing conventions.
+- Should Layers stay a separate tab or become a section in the panel? I recommend the tab, because layers are a different mental model from adjustments.
+
+I can detail any one workspace screen by screen or draft the migration plan for existing users' saved layouts.
 
 </details>

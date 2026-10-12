@@ -17,7 +17,7 @@ Our 15-person office has two meeting rooms and people keep double-booking them. 
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. Both rightly suggest checking for Google Workspace or Microsoft 365 room resources first, but A keeps a tighter one-week scope with an explicit Not-now list. It also keeps the needs B omits: accessibility, a tested backup restore, an audit log, and clear error and offline states. B adds useful detail (half-open intervals, 409 responses, a day-by-day plan) but overloads the week and drops accessibility and recovery testing.
+Blind pairwise judgment: **skill**. Both answers are technically sound and both recommend database-level overlap prevention, but A keeps the scope tighter with an explicit Not-now list, and it covers accessibility, recovery (restore test, soft-deleted cancellations), error and conflict states, and helpful conflict alternatives that B omits; B is stronger only in putting the existing-calendar check up front and detailing half-open intervals.
 
 ### baseline
 
@@ -93,87 +93,75 @@ If you'd like, I can start scaffolding the MVP once you pick a stack. I'd sugges
 
 ### skill
 
-- Skill activated: True; references read: none
+- Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/engineering.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 789
+- Words: 700
 
 <details><summary>Output</summary>
 
-**Recommendation:** Build one small web app with one job: pick a room and a time, and the system refuses overlaps. Use a single server, SQLite, and company-email login, with no microservices, queue, or separate frontend build. The one thing to check first is whether you already have Google Workspace or Microsoft 365. Both have room resources that block double-booking with no code. If you do, build only if you want something those don't give you, such as a wall display or a Slack flow.
+**Recommendation:** Build one small web app with a single database table, and make double-booking impossible at the database level. A 15-person office doesn't need accounts, approval flows, or a calendar product. A week is enough for a complete version of this. The main design choice is that a clash gets rejected on save, so it can't happen by accident.
+
+**Product brief**
 
 ```
-Purpose:        Anyone in the 15-person office, at the moment they need a room,
-                gets a room that is theirs and nobody else's.
-Real problem:   People can't see availability, and nothing stops conflicting
-                bookings. The fix is visibility plus a hard guarantee, not
-                more features.
-Hero path:      1. Open the link (already signed in). 2. Click a free slot on
-                the day grid (the room is pre-selected from the column).
-                3. Type a title and confirm. (3 steps)
-                Repeat task, "book it now for 30 min": 1 click on "Book now".
-Brilliant at:   1. Never allowing a double-booking, even with two people
-                clicking at once.
-                2. Showing at a glance which room is free right now and until
-                when.
-Depth:          - Edit, move, or cancel your own booking → in context, on the
-                  booking
-                - Recurring bookings (weekly standup) → one level down, a
-                  "Repeat" option
-                - Admin cancel/override → advanced, for a small admin list
-                - Calendar export (.ics feed per user) → one level down
-                - Email or Slack reminder → default on, easy to turn off
-                - Booking history and CSV export → advanced, admin
-Not now:        Room equipment/capacity filters: only two rooms, so you can
-                see the difference.
-                Approval workflows: no one needs to approve at 15 people.
-                Visitor management: a different problem.
-                Analytics dashboards: add once there's data and a question.
-                Mobile app: the responsive web page is enough.
-                More rooms/buildings: the data model allows it, but no UI yet.
-States:         First run: sign in, see today's grid with both rooms.
-                Empty: "Both rooms are free all day. Click a slot."
-                Conflict: "Ana booked Room B 2:00–3:00. Next free: 3:00. [Book 3:00]"
-                Error: say what happened and the next step, never a code.
-                Offline/slow: the booking button shows progress, and a failed
-                save never looks like a success.
-Quality bar:    - Conflicts are rejected by the database, not just the UI.
-                - Bookings reject end-before-start and past times, and enforce
-                  a sensible maximum length.
-                - Times stored in UTC, shown in the office timezone.
-                - Page loads in under 1 s on office wifi.
-                - Keyboard-operable, labeled controls, usable contrast.
-                - Nightly SQLite backup, with a restore you've tested once.
-                - A basic log of who booked, changed, and cancelled what.
+Purpose:        Anyone in the office, in the moment they need a room, sees which
+                of the two rooms is free and books it in under 10 seconds.
+Real problem:   People can't see availability reliably, and nothing stops two
+                bookings overlapping. Today's tool is probably chat, a shared
+                calendar, or memory. (Confirm this. If a shared calendar
+                with the rooms as resources already exists, configuring it might beat building.)
+Hero path:      1. Open the link  2. Tap a free slot (room, start, length)
+                3. Confirm  (3 steps). Repeat task: same 3 steps, with your name remembered.
+Brilliant at:   (1) Showing "what's free right now" at a glance.
+                (2) Never allowing an overlap.
+Depth:          - Edit or cancel your own booking → in context, on the booking
+                - Recurring bookings (weekly standup) → "Repeat" option in the booking dialog
+                - Title and attendees → optional field in the dialog
+                - Admin: block a room (maintenance, all-hands), cancel anyone's booking → labeled Admin page
+                - Calendar feed (iCal/ICS) and CSV export → Settings → Export
+                - Keyboard control and screen-reader labels → built in
+Not now:        - Room-equipment/capacity filters: only two rooms, you can see the difference.
+                - Approval workflows: 15 people can sort it out between themselves.
+                - Slack/Teams bot: add after the web version is in daily use.
+                - Google/Outlook two-way sync: costly and fragile, and the ICS feed covers most of the need.
+                - Check-in / auto-release of no-shows: add if ghost bookings turn out to be a real problem.
+                - Usage analytics: nothing to decide from yet.
+States:         First run: the grid is empty with "Book the first slot".
+                Loading: the grid skeleton shows at once.
+                Conflict: "Room A is taken 2:00–3:00 by Sam. Room B is free then. [Book Room B]".
+                Offline/error: the form keeps your input and offers Retry.
+                Success: the booking appears in the grid immediately.
+Quality bar:    Grid loads in under 1s. Overlap is rejected in the database, not just the UI,
+                so two simultaneous clicks can't both succeed. Times stored in UTC, shown in the office timezone.
+                Daily database backup with one restore test before launch.
+                Past bookings are never silently deleted (cancelled ones are kept, hidden).
 Technology:     See below.
 Open decisions: See below.
 ```
 
-**Technology (simplest that meets the bar)**
-- **App:** one server process, such as Node/TypeScript or Python/FastAPI, serving server-rendered pages with a little JavaScript for the grid. No SPA framework.
-- **Data:** SQLite with three tables: `users`, `rooms`, `bookings(room_id, user_id, title, start, end)`. The booking insert runs in one transaction that checks for overlap (`start < new_end AND end > new_start`) before writing. That check is the guarantee against double-booking. If you prefer Postgres, an exclusion constraint on a time range does the same job declaratively.
-- **Login:** Google or Microsoft SSO restricted to your company domain, so there are no passwords to manage.
-- **Hosting:** a small VM or a PaaS with a persistent disk, behind HTTPS, with a daily backup off the machine.
-- **Notifications:** email or a Slack webhook for reminders and cancellations.
-- **Tests:** concurrency tests on the overlap rule (simultaneous requests, back-to-back slots, boundaries, DST), plus a handful of end-to-end tests of the hero path.
+**Technology (and why each piece exists)**
+- **One web app, one deployable.** Use a server-rendered or light-SPA framework your team already knows. Make it mobile-friendly, since people book from the corridor. No native app.
+- **Postgres** (SQLite is fine at this scale). The key is one `bookings` table with an exclusion constraint on `(room, time range)`. In Postgres this is `EXCLUDE USING gist`. It makes overlaps impossible even with concurrent requests. Other tables are `rooms` (2 rows) and `users`.
+- **Sign-in:** Use your existing Google/Microsoft workspace login, restricted to your company domain. Don't build passwords. Regular users can edit only their own bookings. Admins can edit all.
+- **Hosting:** Any managed platform (Fly, Render, a small VPS). Add HTTPS, secrets in environment variables, and error alerts to one channel.
+- **Add more later only when triggered.** Add a queue or notifications when you build reminders. Add caching only if the grid exceeds the 1s budget, which is unlikely at this size.
 
-**One-week slice (ships whole):** SSO login, day grid for both rooms, book/cancel, atomic conflict rejection, "free now / free until" header, backup and logging. Recurring bookings and `.ics` export come next, and the other items on the Not-now list wait.
+**Week plan:** Days 1–2: schema, conflict constraint, sign-in, booking API with tests (overlap, simultaneous requests, timezone edges). Days 3–4: day grid, booking dialog, cancel/edit. Day 5: recurring bookings, admin block, ICS feed. Then deploy, test the restore, and have the office use it for a week before touching the Not-now list.
 
-**Open decisions for you**
-1. Do you already have Google Workspace or Microsoft 365? If so, are room calendars enough?
-2. Which SSO provider do you use?
-3. Should anyone be able to cancel any booking, or only the owner and admins? I recommend owner plus admins.
-4. Do you need a maximum booking length or a no-show auto-release? I'd start with a 4-hour cap and no auto-release.
-5. Do you want a wall display outside each room? It's a cheap add-on, since it's just a read-only page.
+**Please confirm:**
+1. What do you use today, and does your workspace (Google/Microsoft) already support room resources?
+2. Which sign-in provider should we use?
+3. Should the Not-now cut stand, especially no Slack bot and no approvals?
 
-Please confirm the cut, especially the Not-now list, and answer 1 and 2 before I write any code. I can go deeper on the data model, the conflict-handling code, or the week's task breakdown.
+I can write the full schema and API spec or the screen-by-screen design next, if you'd like either.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. Both share the core judgment (check for built-in calendar room resources first, use a Postgres exclusion constraint to make double-booking impossible), but B also covers accessibility, tested backup and restore, a concurrency race test, and concrete conflict and error states, and its recurrence design keeps the constraint effective, while A omits accessibility and recovery entirely.
+Blind pairwise judgment: **skill**. Both put the no-double-booking rule in the database and suggest checking existing calendar room resources first, but B also covers needs A omits (accessibility, tested backups and restore, idempotent submit, input validation, error alerts) and defers speculative features more strictly, while staying comparably concise.
 
 ### baseline
 
@@ -254,85 +242,73 @@ If you tell me your stack preference and whether you're on Google or Microsoft, 
 - Skill activated: True; references read: none
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 827
+- Words: 603
 
 <details><summary>Output</summary>
 
-**Recommendation:** Build a small web app where booking a room takes about three clicks. The database itself rejects overlapping bookings, so double-booking is impossible rather than just discouraged. Use one server, one database and company sign-in, with no microservices and no separate frontend project. It's a one-week build.
-
-One check first: if you already use Google Workspace or Microsoft 365, both have bookable room resources that block conflicts. If people just don't use them, a custom tool may not fix that.
+**Recommendation:** Build one small web app with a single day-grid for both rooms. The database, not the UI, should make double-booking impossible. First check whether your Google Workspace or Microsoft 365 plan already offers room resources. They block conflicts out of the box, so building only makes sense if they don't fit.
 
 ```
-Purpose:        Anyone in the office, at the moment they need a room, sees which room
-                is free and claims it, with no chance of a clash.
-Real problem:   Two people believe they hold the same room. The causes are no single
-                source of truth and no one seeing availability at a glance.
-Hero path:      1. Open the link and you're already signed in.
-                2. See today's timeline for both rooms and click a free slot (or "Book now").
-                3. Confirm (title is optional, duration defaults to 30 min). (3 steps)
-                Repeat task: same flow, since the app remembers your last duration. (3 steps)
-Brilliant at:   1. Never double-booking.
-                2. Answering "is a room free right now?" in one glance.
-                3. Making cancelling as easy as booking.
-Depth:          - Recurring bookings (weekly standup): in context, via "Repeat" on the confirm step.
-                - Edit, move and cancel your own booking: in context, on the booking itself.
-                - Admin can cancel any booking: one level down.
-                - Calendar feed (ICS) per room and per person: one level down, labeled "Subscribe".
-                - Keyboard shortcuts and a JSON API: advanced.
-                - Booking rules (hours, max length): defaults, editable in a config file.
-Not now:        - Room equipment and capacity filters: with 2 rooms, you can just look.
-                - Approval workflows: 15 people don't need them.
-                - Email and Slack reminders: add later if no-shows are a problem.
-                - Check-in and auto-release: same reason.
-                - Floor-plan view, analytics, mobile app: the responsive web page covers phones.
-                - Extra rooms: the data model supports them, but there is no UI for adding any yet.
-States:         - First run: sign in once, then you see today's timeline with a hint on the free slots.
-                - Empty: "Both rooms are free" with a prominent Book now button.
-                - Conflict: "Room A was just taken by Sam, 10:00–10:30. Room B is free then. [Book Room B]"
-                - Loading: show the layout first, then fill in bookings.
-                - Error and offline: say what happened and that the booking was not saved.
-Quality bar:    - Overlaps are rejected by the database, not just the UI.
-                - The timeline loads in under 1 second.
-                - Past bookings are kept and visible to admins.
-                - Daily database backup, and a restore you have actually tested.
-                - Timezone stored in UTC, shown in office local time.
-                - Keyboard-navigable, with screen-reader labels and non-color-only status.
-                - A smoke test of the double-book race: two simultaneous requests, one wins.
-Technology:     See below.
-Open decisions: See below.
+Purpose:        Anyone in the 15-person office, at the moment they need a room,
+                sees what's free and claims it without a clash.
+Real problem:   Not "no booking tool" but "no single source of truth, and nothing
+                stops two people claiming the same slot."
+Hero path:      1. Open the link (SSO, already signed in)
+                2. Click or drag a free slot on the grid
+                3. Confirm (title optional)  (3 steps)
+                Repeat task: same 3 steps. Cancelling your own booking is 2 steps.
+Brilliant at:   1. A conflict can never be saved; the loser sees "just taken, next free: 3:30".
+                2. Seeing both rooms and the whole day at a glance.
+Depth:          - Weekly repeat: option on the confirm step (in context)
+                - Edit, move or cancel your own booking: click it on the grid
+                - Admin can cancel or edit anyone's booking: same click, extra permission
+                - Calendar feed (ICS) per user: Settings → Calendar
+                - Keyboard navigation and screen-reader labels: built in
+                - Data export (CSV): Settings → Advanced
+Not now:        - Slack/email reminders: add after you see real usage
+                - Check-in and auto-release of no-shows: needs a policy decision first
+                - Door-panel tablets: hardware, and the web view already works on one later
+                - Equipment, catering and visitor features: no stated need
+                - Approvals: 15 people can self-govern
+States:         First run: today's grid, with a one-line hint on the grid.
+                Empty: "Both rooms free all day", with the grid still clickable.
+                Loading: a skeleton grid.
+                Error: it names the cause and offers the next free slot.
+                Success: the booking appears instantly.
+Quality bar:    - Grid loads in under 1s.
+                - Two simultaneous requests for one slot: exactly one wins.
+                - Past bookings are never silently lost.
+                - Times are in one office timezone, shown clearly.
+                - Mobile-friendly, since people book from phones.
+Technology:     - One server app (e.g. TypeScript or Python) serving the page and a small JSON API.
+                - Postgres with an exclusion constraint on (room, time range), so overlaps are
+                  rejected at the data layer. A single-file SQLite database with a transactional
+                  overlap check is the leaner option.
+                - Hosted on one small PaaS or VM.
+                - Company SSO restricted to your domain (no passwords to manage).
+                - Safeguards: input validation (end after start, max length, no past
+                  start); idempotent submit so double-clicks don't create two bookings;
+                  secrets in env vars; versioned migrations; automated daily backup with a
+                  restore tested once; error logging with an alert on failed bookings.
+                - Tests on the overlap logic and the permission rules.
+                - No microservices, queue or cache. At 15 users, you'd need ~1000x growth to justify them.
+Open decisions: 1. Which SSO: Google or Microsoft?
+                2. Slot size (15 or 30 min) and max duration or how far ahead to book?
+                3. Who counts as admin?
+                4. Do you want weekly repeats in week one, or after launch?
+                5. Is the existing calendar suite really insufficient?
 ```
 
-## Architecture
+**Suggested week:** days 1–2 for the data model, conflict rule and SSO. Days 3–4 for the grid and booking flow. Day 5 for backups, alerts, a trial with the team, and fixes.
 
-- **App:** one server-rendered web app with light JavaScript. A good fit is TypeScript with Next.js, or Python with Django. Pick whichever the team already knows.
-- **Database:** Postgres with an exclusion constraint on `(room_id, tstzrange(start, end))`. Two simultaneous requests can't both succeed, and the loser gets the friendly conflict message above. SQLite plus a transaction also works at this size, but the constraint is the cleaner guarantee.
-- **Tables:** `rooms`, `bookings` (room, user, start, end, title, recurrence), and `users`, which sign-in fills in.
-- **Auth:** SSO through your existing Google or Microsoft accounts, restricted to your company domain. There are no passwords to build.
-- **Hosting:** one small managed host, such as Fly.io, Render or an office server, with managed Postgres and automatic backups. Monitoring can be an uptime ping plus error logs.
-- **Recurring bookings:** store the rule and expand it into real rows for the next few weeks. That way the same constraint covers them, and a clash on one date is reported instead of silently skipped.
-
-## One-week plan
-
-1. **Days 1–2:** schema, constraint, sign-in, and the book/cancel path (the hero path, complete).
-2. **Day 3:** timeline UI, empty/conflict/error states, accessibility pass.
-3. **Day 4:** edit/move, recurring bookings, admin cancel.
-4. **Day 5:** ICS feed, backups and restore test, race test, deploy, and a walkthrough with two real users.
-
-## Open decisions for you
-
-1. Do you use Google Workspace or Microsoft 365? That decides both the sign-in and whether the built-in room booking is enough.
-2. Should anyone be able to cancel anyone's booking, or only the owner and admins? I recommend owner and admins.
-3. What are the maximum booking length and the office hours? I'd default to 4 hours and 8:00–19:00.
-4. Do you want the Not-now list cut as written?
-
-Once you confirm the cut, I can scaffold the project. I can also go deeper on the schema, the conflict UX or the recurrence design.
+I can go deeper on the data model and API, the grid's screen-by-screen behavior, or a day-by-day build plan. Tell me which, and answer the open decisions if you can.
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. Both correctly push the existing calendar-resource option first and enforce no-overlap in the database, but A also covers accessibility, backups with a tested restore, an audit trail, and conflict and error states that B leaves out, and it says what to cut if the week runs short, even though its week-one scope is more ambitious than B's.
+Blind pairwise judgment: **baseline**. Both catch the key points (check Google/M365 resource calendars first, enforce no-overlap with a Postgres exclusion constraint), but B fits the week better: a concrete data model, race-condition tests, and recurring bookings, reminders and auto-release deferred to phase 2, where A packs ICS feeds, reminders and a no-show auto-release with no check-in mechanism into week one, though A does better on accessibility and tested backup restore.
 
 ### baseline
 
@@ -403,68 +379,43 @@ If you answer those, I can scaffold the project in this directory.
 - Skill activated: True; references read: none
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
-- Words: 623
+- Words: 643
 
 <details><summary>Output</summary>
 
-**Recommendation:** Build one small web app with a day-grid view of both rooms. The database enforces "no overlapping bookings", so double-booking can't happen even if two people click at the same moment. Before you commit the week, check whether Google Calendar or Outlook room resources already solve this. They block conflicts natively, and people often don't know they can. If your team won't use them, build this.
+**Recommendation:** Build one small web app, a day grid for the two rooms where you click a free slot and book it. The database makes double-booking impossible, so the rule doesn't rely on application code. One check first: if you already use Google Workspace or Microsoft 365, room resource calendars block double-booking out of the box. Confirm that doesn't already solve this before you commit the week.
 
 ```
-Purpose:        Anyone in the 15-person office, at the moment they need a room,
-                sees what's free and claims it in seconds, with no conflicts.
-Real problem:   Nobody has one trusted place to see room status. Double-booking is a
-                symptom of that, and of nothing stopping two bookings at once.
-Hero path:      1. Open the link (already signed in via company SSO)
-                2. Click a free slot on today's grid
-                3. Confirm (title prefilled, 30 min default, duration adjustable)
-                = 3 steps. Repeat task, "book the same room tomorrow": 2 steps.
-Brilliant at:   (1) Making conflicts impossible. (2) Showing both rooms' availability
-                at a glance, on a phone too.
-Depth:          - Edit/cancel own booking → surface (click the booking)
-                - Recurring bookings (weekly standup) → one level down, "Repeat"
-                - Admin override/cancel any booking → advanced, labeled admin area
-                - ICS calendar feed per user, so bookings show in their calendar → one level down
-                - JSON API + CSV export of bookings → advanced
-                - "Next free slot" suggestion when a slot is taken → in context
-Not now:        Approvals (15 people, trust-based), equipment/catering, room-door
-                displays (needs hardware), usage analytics (no question to answer yet),
-                auto-release of no-shows (add if ghost bookings become a problem),
-                Slack bot (add after week 1 if people ask), a third room (but rooms
-                are data rows, not code, so adding one is trivial).
-States:         First run: lands on today, nothing to configure.
-                Empty: grid is simply free.
-                Loading: grid skeleton.
-                Conflict: "Just taken by Dana, 2:00–3:00. Next free: 3:00" with one-click rebook.
-                Past slots: visibly disabled.
-                Offline/error: says nothing was saved and keeps the form filled in.
-Quality bar:    Grid loads under 1s. Overlap rejected at the DB level, not just the UI.
-                Times stored in UTC and shown in office timezone (watch DST).
-                Keyboard-accessible grid, labeled controls, sufficient contrast.
-                Daily automated backup, tested restore. Booking audit trail (who/when).
-                Tests on overlap, recurrence, and timezone logic.
-Technology:     One server-rendered web app plus a little JavaScript (no SPA).
-                Auth: Google or Microsoft SSO, so there are no passwords to manage.
-                Data: Postgres with an exclusion constraint on (room, time range),
-                which is the strongest guarantee. SQLite in a transaction also works
-                at this scale and means one fewer service, as long as you
-                back it up.
-                Hosting: one small VM or a PaaS, with HTTPS and office-only or SSO-gated access.
-Open decisions: 1. Google Workspace or Microsoft 365? (decides SSO and ICS/calendar sync)
-                2. Postgres or SQLite?
-                3. Can anyone cancel anyone's booking, or only owners and admins?
-                4. Max booking length and working-hours window?
+Purpose:        A 15-person office, at the moment someone needs a room, sees what's free and claims it in seconds, with no conflicts.
+Real problem:   Double-booking happens because availability and claims live in different places. The need is one trusted source of truth, not a feature set.
+Hero path:      1. Open the link (already signed in via company login) 2. Click a free slot on the grid, drag to set the length 3. Add a title, confirm (3 steps). Repeat task: same flow, with the last-used room and duration prefilled (3 steps, or 2 when you accept the defaults).
+Brilliant at:   (1) Showing at a glance what's free right now and today. (2) Never allowing an overlap. (3) Being faster than asking in Slack.
+Depth:          - Edit, move, or cancel your own booking: in context, on the booking itself.
+                - Anyone can cancel any booking, with the owner notified: one level down, since 15 trusted people don't need admin roles.
+                - Calendar feed (ICS) per user and per room: Settings.
+                - Reminder before start and auto-release of no-shows: automatic defaults, adjustable in Settings.
+                - Export all bookings as CSV, and a JSON endpoint for a wall display: Advanced.
+                - Keyboard navigation and screen-reader labels on the grid: built in from the start.
+Not now:        - Recurring bookings: the most likely first follow-up, since standups are real. It adds a lot of edge cases (exceptions, series edits), so ship the core first.
+                - Room-display tablets: the JSON endpoint leaves the door open.
+                - Capacity, equipment, and catering fields: two known rooms don't need them.
+                - Approvals, roles, and teams: 15 people can use social trust.
+                - Slack bot: add it if people ask for it after launch.
+                - Analytics: you can't act on it at this size.
+States:         First run: sign in, then today's grid with a one-line hint. Empty: "Both rooms are free today". Loading: the grid skeleton. Conflict: "Just booked by Sam, 2–3pm. Next free: 3pm" with one click to take it. Success: the booking appears instantly. Offline: read-only with a notice.
+Quality bar:    - Grid loads in under 1s, and booking confirms in under 300ms.
+                - Overlap is rejected by the database itself, so two simultaneous clicks can't both win.
+                - All times are stored in UTC and shown in the office timezone, with DST tested.
+                - Nightly backups, with a restore tested once before launch.
+                - Errors always say what to do next.
+Technology:     - One server-rendered web app (e.g. Next.js or Rails/Django; use whichever the team knows) plus managed Postgres. No microservices, queue, or cache.
+                - Postgres has an exclusion constraint on (room, time range). That is the one guarantee that matters.
+                - Login is Google or Microsoft SSO restricted to your domain, so there are no passwords to manage.
+                - Host on a single managed platform (Fly, Render, or similar) with HTTPS, and log booking failures with an alert.
+                - Plan: days 1–2 schema, auth, and booking; day 3 grid UI; day 4 edit/cancel, ICS, and reminders; day 5 states, accessibility, restore test, and launch.
+Open decisions: 1. Does an existing Google/M365 calendar already cover this? 2. Is recurring booking required for launch? 3. Max booking length (suggest 4h) and a no-show release window (suggest 15 min). 4. Which login provider do you use?
 ```
 
-**Data model (3 tables):** `rooms`, `users` (from SSO), `bookings` (room, user, start, end, title, recurrence id).
-
-**Week plan, in complete slices:**
-- **Day 1–2:** SSO, schema with the overlap constraint, and booking, cancelling and editing. This is already enough to stop double-booking.
-- **Day 3:** Day grid UI, conflict states, mobile layout.
-- **Day 4:** Recurring bookings and the ICS feed.
-- **Day 5:** Admin area, CSV export, backups with a tested restore, and a rollout message to the team.
-
-Recurrence is the likeliest part to slip. If it does, ship without it rather than ship it half-working.
-
-I can go deeper on the schema and constraint, the grid UX, or a scaffold in your preferred stack. Answer the open decisions first, especially #1.
+Please confirm the Not-now cuts, especially recurring bookings, before I start. I can follow up with the schema, the per-screen design, or a day-by-day task list.
 
 </details>

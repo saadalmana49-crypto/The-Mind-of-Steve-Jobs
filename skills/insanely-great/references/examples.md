@@ -25,7 +25,7 @@ Everything is "MVP".
 ```
 Purpose:        On Sunday evening, a parent plans the week's dinners in five minutes
                 and gets one grocery list that matches.
-Real problem:   Not "finding recipes" — deciding what to cook each night and buying
+Real problem:   Not "finding recipes", but deciding what to cook each night and buying
                 the right things in one trip.
 Hero path:      1 open → 2 household size + up to 3 dislikes → 3 app proposes 5 dinners
                 → 4 swap any with one tap → 5 grocery list, grouped by aisle (5 steps)

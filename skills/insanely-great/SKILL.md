@@ -1,6 +1,6 @@
 ---
 name: insanely-great
-description: Practical product judgment inspired by Steve Jobs' philosophy of simplicity, product excellence, and thoughtful design, for technology products of every kind (software, apps, platforms, APIs, developer tools, digital services, hardware). Use when planning a product or feature, deciding scope or priorities, designing architecture, APIs, or workflows, reviewing UX, UI, or code for unnecessary complexity, organizing features and settings, simplifying something without losing capability, improving performance or maintainability, designing hardware or connected experiences, or writing positioning and launch copy. Also use when asked to make something simpler, more focused, more polished, or "like Apple" or "like Steve Jobs", or when quoting Jobs or checking a quote attributed to him. Not for routine bug fixes or mechanical edits.
+description: Practical product judgment inspired by Steve Jobs' philosophy of simplicity, product excellence, and thoughtful design: remove complexity, keep capability. For technology products of every kind (software, apps, platforms, APIs, developer tools, digital services, hardware). Use when planning a product or feature; choosing scope, priorities, or a roadmap; proposing a system architecture, backend, tech stack, or data model; designing or refactoring APIs, SDKs, CLIs, or workflows; reviewing UX, UI, flows, or code for unnecessary complexity; organizing features and settings; simplifying anything without losing capability; improving performance or maintainability; designing hardware or connected products; or writing positioning, README, or launch copy. Also use when asked to make something simpler, more focused, more polished, "like Apple" or "like Steve Jobs", or when quoting Jobs. Not for routine bug fixes or mechanical edits.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -131,7 +131,19 @@ Load `references/simplicity.md`.
 Output: the **Review** format below. Load `references/review.md`.
 
 ### Engineer: architecture, APIs, implementation, refactoring, performance
-Derive quality requirements from the experience. Choose the simplest design that meets them. Keep power available through optional parameters and escape hatches. Refactor without breaking callers. Load `references/engineering.md`.
+1. **Derive the quality bar from the experience:** latency, data integrity, availability, security, realistic scale.
+2. **Choose the simplest design that meets it.** Map every component to a requirement, and write down what would trigger more complexity later.
+3. **Name the safeguards explicitly, every time:**
+   - authentication and authorization (tenant isolation if multi-tenant),
+   - input validation,
+   - backups with a tested restore,
+   - migrations,
+   - secrets,
+   - logs and alerts on the hero path,
+   - idempotency wherever money or messages are involved.
+4. **Keep power available** through optional parameters and escape hatches. Refactor without breaking callers.
+
+Load `references/engineering.md`.
 
 ### Decide: scope, priorities, roadmap, technology bets, differentiation
 Keep at most three items and give every other item a reason. State what would change your mind. Load `references/focus-and-strategy.md`, and also `references/innovation.md` for differentiation.
@@ -175,12 +187,14 @@ Organize, default, or move these. Never remove or hide them to make something lo
 
 ## Response shape
 
-Clarity is part of the craft. Every answer follows this order:
-1. **The recommendation or verdict,** in at most three sentences.
-2. **The mode's format,** filled in with one line per item wherever possible.
-3. **Only the detail needed to decide or act.** Offer deeper layers in one closing line, unless the user asked for them.
+Clarity is part of the craft.
+- **If the user asked for a full document** (a spec, an RFC, a design doc), write the whole document, with the recommended core first and deferred items last.
+- **Otherwise,** the answer is exactly these parts, in order:
+  1. **The recommendation or verdict,** in at most three sentences.
+  2. **The mode's output format,** one line per item where possible. Its fields are the sections. Don't add other sections.
+  3. **One closing line** offering the next layer of detail (full spec, per-screen detail, implementation notes).
 
-Plans, reviews, and decisions should be readable in about two minutes (roughly 400–700 words). A full document the user explicitly asked for, such as a spec, can be as long as its content requires. Put the recommended core first.
+  Aim for 300–600 words.
 
 ## Output formats
 

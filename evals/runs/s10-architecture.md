@@ -18,7 +18,7 @@ We're a 4-person team building a B2B invoicing SaaS. We expect about 200 busines
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. Both propose the same sound modular-monolith design, but B is tighter and adds high-value correctness and security points A misses (snapshotting customer and tax data on issued invoices, MFA on cloud, Stripe and GitHub accounts) plus useful cost and staffing guidance, without dropping anything essential like backups, restore testing or tenant isolation.
+Blind pairwise judgment: **skill**. Both recommend the same sound modular-monolith-on-managed-services design with correct Stripe and money-handling practices, but B is more concise, adds concrete quantified triggers and quality bars, and ties the architecture to the product's core job, while keeping key safeguards like RLS, restore drills, idempotency, and reconciliation; A's extra breadth adds length more than decision value.
 
 ### baseline
 
@@ -144,106 +144,73 @@ If you give me answers to these, I can sketch the data model, the Stripe webhook
 
 ### skill
 
-- Skill activated: False; references read: none
-- Checks passed: 4/5 [True, False, True, True, True]
-- Judge note: The response never mentions input validation (e.g., validating invoice line items, amounts, or API payloads), and alerting is only implied through uptime checks and Sentry rather than stated as explicit alerts.
-- Words: 933
+- Skill activated: True; references read: insanely-great/references/engineering.md
+- Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: none
+- Words: 723
 
 <details><summary>Output</summary>
 
-# Recommended architecture: a modular monolith on managed services
+**Recommendation:** Build a modular monolith: one deployable app, one managed Postgres, and a job queue that lives in Postgres. Rent everything that isn't your core experience (Stripe, email, auth, hosting, error tracking). At about 60,000 invoices a month (roughly 1 every 45 seconds on average), anything more distributed would cost a 4-person team more than it returns.
 
-At full load this is about 60k invoices a month, or roughly 2k a day. That is tiny. The main risks for a 4-person team are operational overhead and money-handling correctness, not throughput. So the design favors the fewest moving parts.
+```
+Purpose:        Small-business finance staff who need to send an invoice and know when
+                it's paid, without chasing anyone or reconciling by hand.
+Real problem:   Trust and time. Invoices must be correct and never duplicated, and
+                payment status must always match Stripe.
+Hero path:      1) pick customer 2) add lines (defaults prefill) 3) send → client gets a
+                pay link (3 steps). Repeat: clone or recurring template → send (1–2 steps).
+Brilliant at:   (1) Invoice → paid status that is always right. (2) Sending in seconds.
+                (3) Reconciliation you never have to do.
+Depth:          Bulk send, CSV import/export, API and webhooks, tax and currency settings,
+                roles, audit log, PDF templates → Settings, "More" menus, API.
+Not now:        Microservices/Kubernetes (load is trivial), separate search or analytics
+                store (Postgres handles it), multi-region, built-in accounting/general
+                ledger (export to accounting tools instead), custom workflow builder,
+                mobile app (responsive web first).
+States:         First run: connect Stripe, set up the business profile, and send a sample
+                invoice. Empty: a prefilled draft. Failure: payment failures and bounced
+                emails show a next step. Scale: pagination and bulk jobs show progress.
+Quality bar:    See below.
+Technology:     See below.
+Open decisions: See below.
+```
 
-## Core stack
+**Quality bar**
+- **Money:** integer minor units plus a currency code. Issued invoices are immutable, and changes are credit notes. Invoice numbers are gapless per tenant.
+- **Latency:** pages load in under 300 ms at p95. Sending returns immediately, and delivery runs in the background.
+- **Availability:** a few minutes of downtime is tolerable. Lost or duplicated payments and emails are not.
+- **Security:** every row carries a `tenant_id`, enforced by Postgres row-level security as well as app code. Secrets live in a secrets manager.
 
-| Layer | Choice | Why |
-|---|---|---|
-| App | One deployable monolith (Rails, Django, or Next.js/NestJS, whichever the team knows best) | One repo, one deploy, one thing to debug |
-| Database | Managed PostgreSQL (RDS, Cloud SQL, or Neon) | Invoices are relational, and you need transactions and constraints |
-| Background jobs | Job queue backed by Postgres or Redis (Sidekiq, Celery, BullMQ, or Oban) | PDF generation, emails, reminders, and webhook processing |
-| File storage | S3 or GCS | Generated PDFs and attachments, with signed URLs |
-| Hosting | A PaaS (Render, Fly.io, Railway) or managed containers (ECS Fargate or Cloud Run) | No Kubernetes and no dedicated ops person |
-| Email | Postmark, SES, or Resend | Invoice delivery and reminders, with bounce tracking |
-| Auth | Your framework's auth, or Auth0/WorkOS/Clerk if you expect SSO requests | Don't hand-roll this |
-| Observability | Sentry, structured logs, uptime checks, and basic metrics | Enough for four people to be on call |
+**Technology**
+- **App:** one codebase in a mainstream framework (Rails, Django, or TypeScript/Next). Use your team's strongest one.
+- **Modules:** Billing (invoices, customers), Payments (Stripe), Notifications (email, PDF), Accounts (tenants, users, roles). Modules talk through plain interfaces, not network calls.
+- **Data:** managed Postgres with point-in-time recovery. Object storage holds PDFs, which can be regenerated from the invoice data.
+- **Jobs:** a Postgres-backed queue (such as Solid Queue, GoodJob, or pg-boss) handles PDFs, email, reminders, and recurring invoices. It runs transactionally with your data and has no Redis to operate.
+- **Stripe:** webhooks are the source of truth for payment state. Verify signatures and store event IDs so replays do nothing. Send idempotency keys on every outbound Stripe call. Run a nightly job that reconciles against Stripe.
+- **Rented:** Stripe, Postmark or SES for email, a managed auth provider or the framework's own auth with 2FA, and a PaaS (Render, Fly, or Heroku-style) rather than raw cloud.
+- **Safeguards:** tenant-isolation tests, input validation, reversible migrations, backups with a restore drill each quarter, an audit log for invoice changes, structured logs, and alerts on failed webhooks, a stuck queue, and send-failure rate.
+- **Environments:** CI with tests on the invoice → send → paid path, plus staging on Stripe test mode.
 
-## Module boundaries
+**Triggers to add complexity later**
+- Queue latency above 1 minute, or database CPU consistently above 60%: add a read replica or a dedicated worker pool.
+- PDF rendering starving web requests: move it to its own worker.
+- Search or reporting slowing the main database: add a replica or an analytics copy, rebuildable from Postgres.
+- A team larger than about 10 hitting merge conflicts between modules: extract a service along the existing module boundary.
 
-Keep clear internal modules so you can split services later if you ever need to:
-- **Accounts/Tenancy**: organizations, users, roles
-- **Customers & Catalog**: the clients your customers invoice, plus products and tax rates
-- **Invoicing**: draft → sent → paid/void lifecycle, numbering, line items, PDF rendering
-- **Payments**: Stripe integration and reconciliation
-- **Notifications**: emails and reminders
-- **Audit/Reporting**: immutable event log and exports
+**Open decisions**
+1. **Stripe model:** do your customers' clients pay your customers directly? That means Stripe Connect, and it changes onboarding, fees, and compliance. Or do you bill your own customers (Stripe Billing)? Please confirm which.
+2. **Tax and currency:** is this one country or several? VAT and sales-tax rules are the biggest hidden scope item.
+3. **Compliance:** do you need e-invoicing formats (such as Peppol or ZATCA) or specific data-residency rules? That decides the hosting region.
 
-## Multi-tenancy
-
-Use a shared database and shared schema with an `organization_id` on every tenant-owned table.
-- Enforce isolation in two places. Scope every query through a tenant-aware layer in the app. Add Postgres row-level security as a backstop.
-- Skip schema-per-tenant and database-per-tenant. At 200 tenants they add migration pain for no benefit.
-- Add tenant-isolation tests early. A cross-tenant leak is the worst bug this product can have.
-
-## Stripe design
-
-First decide which payment model you have, because it changes the integration a lot:
-
-1. **Your customers pay you** (SaaS subscription). Use Stripe Billing and Checkout, and keep the work minimal.
-2. **Your customers' clients pay your customers** (the invoice-payment flow). Use **Stripe Connect**, probably with Standard or Express accounts. This brings onboarding/KYC, platform fees, and payouts, and it is the bigger design decision.
-
-You likely need both. Either way:
-- **Webhooks are the source of truth.** Verify signatures, store the raw event, and dedupe by event ID. Process asynchronously and idempotently.
-- **Pass idempotency keys** on every Stripe write.
-- **Use Stripe-hosted pages** (Checkout or Payment Links) so you stay at the lightest PCI scope (SAQ-A). Never touch card data.
-- **Run a daily reconciliation job** that compares your invoice states with Stripe, to catch missed webhooks.
-
-## Invoice correctness rules
-
-These matter more than any infrastructure choice:
-- **Store money as integer minor units** plus a currency code. Never use floats.
-- **Make sent invoices immutable.** Corrections go through credit notes or new versions.
-- **Use gapless, per-tenant sequential numbering.** Many jurisdictions require it. Assign numbers in a transaction at the moment of sending, not at draft creation.
-- **Snapshot the data on the invoice** (customer address, tax rate, and so on) so later edits don't rewrite history.
-- **Append to an audit log** for every state change.
-- **Handle tax deliberately.** Consider Stripe Tax or TaxJar rather than building rules yourself.
-
-## Security and operations
-
-- Encrypt at rest and in transit, and keep secrets in the platform's secret manager.
-- Use least-privilege roles, and require MFA on your cloud, Stripe, and GitHub accounts.
-- Take automated Postgres backups with point-in-time recovery, and test a restore before launch.
-- Run CI that tests, lints, and deploys automatically, with staging and production environments.
-- Use feature flags and database migrations that are safe to deploy zero-downtime.
-- Manage infrastructure with simple IaC (Terraform or the PaaS's config file).
-- If you sell to EU customers, plan for GDPR: data export and deletion, a DPA, and a sub-processor list. SOC 2 can wait until customers ask.
-
-## What to defer
-
-- Microservices, Kubernetes, and event buses
-- Separate read replicas, caching layers, and search clusters (Postgres full-text search is enough)
-- A data warehouse (start with reporting queries on a replica or nightly export)
-- A public API and webhooks for your customers (add them once there's demand, but keep your internal service layer clean so it's easy)
-
-## Rough cost and staffing
-
-Expect roughly $200–600 a month in infrastructure at this scale. A sensible split for four people is two on product features, one on payments and billing correctness, and one on platform, frontend, and operations. Rotate ownership so nobody becomes a single point of failure.
-
-## Open questions that could change this design
-
-1. Do your customers collect payments from their clients through your platform (Connect), or do they only pay you?
-2. Which countries and currencies do you support? This affects tax, numbering, and e-invoicing mandates (for example Peppol in the EU).
-3. Do customers need integrations such as QuickBooks, Xero, or an ERP at launch?
-4. Does the team have a strong language or framework preference already?
-
-If you answer those, I can turn this into a concrete data model, a Stripe event-handling flow, or a phased delivery plan.
+I can go deeper on the data model, the Stripe webhook flow, or a 12-week delivery plan for four people. Which would help most?
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. Both reach the same sound core design (modular monolith, Postgres with RLS, idempotent Stripe webhooks, immutable invoices), but B fits the 4-person constraint more consistently and concisely, adding practical details like email delivery tracking and cross-tenant isolation tests, while A's diagram adds a replica, Redis, a CDN/WAF, and a load balancer that contradict its own minimalism advice.
+Blind pairwise judgment: **skill**. B reaches the same sound core decisions as A: a modular monolith on Postgres, RLS tenant isolation, integer money, immutable invoices, idempotent Stripe webhooks with reconciliation, and PITR backups with restore tests, but it is far more concise and adds useful concrete triggers for when to add complexity, while A pads the answer with Redis plus a replica, broad phasing, and many optional extras that dilute focus for a 4-person team.
 
 ### baseline
 
@@ -399,97 +366,78 @@ If you tell me the answers to these, I can turn this into a concrete schema, ser
 
 ### skill
 
-- Skill activated: False; references read: none
+- Skill activated: True; references read: insanely-great/references/engineering.md
 - Checks passed: 4/5 [True, False, True, True, True]
-- Judge note: The response never mentions input validation (e.g., validating invoice amounts, line items, or API payloads), so the safeguards check is not clearly satisfied despite strong coverage of auth, tenant isolation, backups and observability.
-- Words: 1033
+- Judge note: The response never mentions input validation (e.g., validating invoice amounts, line items or user-supplied fields), even though it covers auth, tenant isolation, backups with restore tests, and logging and alerts.
+- Words: 718
 
 <details><summary>Output</summary>
 
-# Recommended architecture: a modular monolith on managed services
+**Recommendation:** Build a modular monolith with one deployable and one Postgres database. Add a Postgres-backed job queue and rent the commodity parts (Stripe, email, hosting, auth). At about 60k invoices a month (roughly 2k a day), the load is small. Your constraint is four people's time and getting money handling right. Microservices, Kubernetes and event buses would add cost and no capability.
 
-## Why this shape
-Your load is small. 200 customers × ~300 invoices is about 60k invoices a month, or roughly one every 40 seconds on average. Even with month-end spikes, one app server and one Postgres instance handle that easily. Your main constraint is four people's time, not scale. So the design should minimize moving parts and push undifferentiated work (infra, payments, email, PDFs) onto managed services.
+**Quality bar (derived from the experience)**
+- **Correctness:** Money and invoice records must never be lost, duplicated or silently changed. This matters more than anything else.
+- **Latency:** Pages under 300 ms. Sending an invoice and getting a payment link should feel instant, with PDFs and email handled in the background.
+- **Availability:** About 99.9%. A short outage is tolerable if Stripe webhooks are retried and replayed afterward.
+- **Scale:** Roughly 60k invoices a month and tens of thousands of payment events. One small database handles this with room to spare.
+- **Maintainability:** Four people must be able to hold the whole system in their heads.
 
-## Components
+**Design (every component maps to a requirement)**
+- **App:** One codebase (for example Rails, Django or Next.js, whichever the team knows best). It is split into internal modules: customers, invoices, payments, notifications, accounts. The modules talk through plain function calls, not network calls.
+- **Database:** Managed Postgres with point-in-time recovery. It is the single source of truth.
+- **Background jobs:** A Postgres-backed queue (such as Solid Queue, Oban or pg-boss). It handles PDF generation, emails, reminders and webhook processing. There is no Redis because nothing here needs one yet.
+- **Files:** Object storage for PDFs and attachments. PDFs are rebuildable from the data.
+- **Hosting:** A managed platform (Render, Fly, Railway or ECS Fargate) with two app instances, one worker, and staging plus production environments.
+- **Rented services:**
+  - Stripe for payments
+  - Transactional email (Postmark or SES)
+  - Error tracking and uptime monitoring
+  - Auth: built-in sessions or a provider, with 2FA and SSO later
 
-**1. One application (modular monolith)**
-- One deployable, with clear internal modules: `billing/invoicing`, `customers`, `payments` (Stripe), `notifications`, `accounts/auth`, `reporting`.
-- Use a boring, productive framework your team already knows (Rails, Django, or Laravel; or TypeScript with NestJS or Next.js if that's your strength).
-- Keep module boundaries strict (no cross-module table access). That keeps a later split into services possible, though you probably won't need one.
+**Safeguards (never simplified away)**
+- **Tenant isolation:** Every table carries `tenant_id`, enforced by Postgres row-level security as well as application scoping. Add a test that proves tenant A cannot read tenant B.
+- **Money:** Store integer minor units plus a currency code. Issued invoices are immutable, and corrections are credit notes. Numbering is gap-free per tenant.
+- **Stripe:**
+  - Verify webhook signatures.
+  - Store each event ID and process it once.
+  - Send idempotency keys on every write call.
+  - Run a nightly reconciliation job against Stripe.
+- **Backups:** Run a restore test every quarter and write down the result.
+- **Operations:**
+  - Keep secrets in the platform's secret store.
+  - Make migrations reversible.
+  - Use structured logs.
+  - Alert on failed webhooks, a growing queue, failed emails and payment errors.
+- **Audit log:** An append-only record of invoice and payment changes.
+- **Tenant-level controls:** Data export (CSV/JSON) and account deletion. These are table stakes for B2B.
+- **Tests:** Cover the money path, webhook replay and tenant isolation. Skip exhaustive coverage elsewhere.
 
-**2. PostgreSQL (managed: RDS, Cloud SQL, or Neon/Supabase)**
-- The single source of truth. Invoices are relational and need transactions.
-- Multi-tenancy: shared schema with a `tenant_id` column on every table, enforced with Postgres row-level security as a safety net. This is much cheaper to operate than schema-per-tenant at 200 tenants.
-- Store money as integer minor units plus a currency code. Never use floats.
-- Invoice numbers should be gapless and sequential per tenant, which many jurisdictions require. Allocate them in a transaction with a per-tenant counter row.
-- Enable point-in-time recovery and test restores.
+**Triggers for more complexity**
+- Add a read replica or a cache when p95 query time exceeds 200 ms after indexing.
+- Split out a worker service when jobs slow down web requests.
+- Move to a dedicated search service when Postgres full-text search stops being enough.
+- Revisit service boundaries when the team passes about 10 engineers.
 
-**3. Background jobs (a Postgres-backed queue or Redis)**
-- Use these for recurring-invoice generation, PDF rendering, email sending, reminders and dunning, Stripe webhook processing, and exports.
-- Start with whatever your framework ships (Sidekiq, Celery, BullMQ, or Solid Queue/pg-boss if you want to skip Redis).
-- Make every job idempotent.
+**Not now**
+- Microservices and Kubernetes: no requirement needs them.
+- Event sourcing or a message bus: the audit log plus Postgres covers it.
+- Multi-region: nothing requires it.
+- A public API and webhooks for customers: add them once customers ask for integrations. The module boundaries keep this cheap to add.
+- Per-tenant databases: row-level security is enough at this size.
 
-**4. Stripe integration** (the part to get right)
-- **Decide the money flow first.** This changes the design:
-  - *Stripe Connect* (Standard or Express accounts): your customers get paid by their clients, and you facilitate it. This is the likely model for a B2B invoicing SaaS. It brings onboarding and KYC, but Stripe handles most of the compliance.
-  - *Plain Stripe Billing* for charging your customers a subscription fee for your product. You'll likely need this too.
-- Use Stripe Checkout or Payment Element and hosted pages so you stay at PCI SAQ-A and never touch card data.
-- **Webhooks are the source of truth for payment state.** Verify signatures, store each raw event with its Stripe event ID (unique constraint), acknowledge fast, and process asynchronously. Handle out-of-order and duplicate delivery.
-- Send an idempotency key on every write call to Stripe.
-- Run a nightly reconciliation job that compares your records against Stripe, to catch missed webhooks.
+**Open decisions for you**
+1. **How Stripe is used:** Do your customers collect payments from their own clients (Stripe Connect, which brings KYC, payouts and a heavier compliance load)? Or do you only bill your customers for the SaaS (Stripe Billing)? This is the biggest fork in the design.
+2. **Languages and frameworks:** What does the team already know best?
+3. **Regions and tax:** Are you selling across countries? VAT and e-invoicing rules (such as EU or Saudi e-invoicing mandates) can reshape the invoice model.
 
-**5. Document and file storage**
-- Generated PDFs and attachments go in S3 (or equivalent) with private buckets and short-lived signed URLs.
-- Render PDFs from HTML with a headless browser or a library (WeasyPrint, Puppeteer) in a background job. Store the generated PDF so a sent invoice is immutable.
-
-**6. Email**
-- Use a transactional provider (Postmark, SES, or Resend). Track bounces and delivery webhooks, because "did the client get the invoice?" will be a top support question.
-
-**7. Frontend**
-- A single web app. Server-rendered pages with light JS, or a React SPA if the team prefers it. Don't build separate mobile apps in year one.
-- Expose a REST API with API keys per tenant once customers ask for integrations. Don't build it up front, but design your internal service layer so it's easy to add.
-
-**8. Auth**
-- Use a managed or library-based solution (framework-native auth, or Auth0/WorkOS/Clerk if you want SSO later). Support email and password with MFA, tenant-scoped roles (owner, admin, accountant, viewer), and an audit log.
-
-## Infrastructure and operations
-- **Hosting:** a PaaS (Render, Fly.io, Railway, Heroku) or AWS with ECS Fargate/App Runner. Avoid Kubernetes. It's operational overhead you can't afford with four people.
-- **Environments:** production and staging (using Stripe test mode), with preview environments if your PaaS supports them.
-- **CI/CD:** GitHub Actions running tests, then an automated deploy to staging, then a one-click promotion to production. Use database migrations that are safe to run while the app is live.
-- **Observability:** Sentry for errors, structured logs, uptime checks, and a few business alerts (webhook failures, job queue depth, failed payments spiking).
-- **Backups and DR:** PITR on the database, versioned S3, and a documented restore drill.
-- **Secrets:** use the platform's secret manager. Restrict Stripe keys.
-
-## Cross-cutting concerns for invoicing specifically
-- **Immutability and audit trail:** once an invoice is sent, corrections go through credit notes, not edits. Keep an append-only event history.
-- **Tax:** use Stripe Tax or a service like TaxJar/Avalara rather than building tax logic. Add VAT/GST fields and e-invoicing formats (e.g. Peppol, ZUGFeRD) once you know your target countries.
-- **Data privacy:** GDPR-style export and delete flows, plus encryption at rest and in transit. Consider SOC 2 later, since B2B buyers will ask.
-- **Tenant isolation tests:** write automated tests that try cross-tenant access. A leak here is your worst-case incident.
-
-## What I'd deliberately leave out for now
-Microservices, Kubernetes, event sourcing or CQRS, a separate data warehouse, Kafka, and GraphQL. Add them only when a real bottleneck appears. Read replicas and a reporting replica are the first scaling step, long before any service split.
-
-## Suggested build order
-1. Tenancy, auth, customers, and the invoice model with PDF generation and email sending.
-2. Stripe payment collection with webhooks and reconciliation.
-3. Recurring invoices, reminders and dunning, and credit notes.
-4. Reporting, the API, and integrations such as accounting export (QuickBooks and Xero).
-
-## Questions that would change this
-- Do your customers collect money from their clients through you (Connect), or do you only bill them a subscription? This is the biggest fork.
-- Which countries and currencies? E-invoicing mandates and tax rules could reshape the roadmap.
-- What's the team's strongest language and framework? I'd choose the stack around that.
-- Any compliance requirements from your first customers (SOC 2, data residency)?
-
-If you tell me the answers, I can turn this into a concrete data model, a Stripe event-handling design, or an infrastructure diagram.
+I can go deeper on the data model, the Stripe Connect flow, or a first-quarter build plan.
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **baseline**. Both reach the same sound core design (modular monolith, managed Postgres, Stripe Connect vs. Billing as the first decision, idempotent webhooks, integer money, immutable invoices), but A stays tightly on architecture and adds a team split and cost estimate, while B pads with a product-spec template full of 'see below' lines and mislabels Sidekiq/Redis as a Postgres-backed queue; B's extra points (SPF/DKIM, PCI SAQ-A, accessibility) don't fully offset the loss of focus.
+Blind pairwise judgment: **baseline**. Both propose the same sound modular-monolith design. A gets the load math right (about 1 invoice per minute), while B wrongly says about 2 per hour, and A adds useful decision drivers B lacks: e-invoicing and compliance mandates, a cost estimate, and separating SaaS billing from invoice payments.
 
 ### baseline
 
@@ -574,77 +522,59 @@ I can go deeper on any part, such as the data model, the Stripe webhook flow, or
 
 ### skill
 
-- Skill activated: True; references read: none
-- Checks passed: 4/5 [True, False, True, True, True]
-- Judge note: The response covers auth, tenant isolation, backups with tested restores, and observability, but never mentions input validation (for example validating invoice line items, amounts, or API/CSV import payloads), so check 2 is not clearly satisfied.
-- Words: 882
+- Skill activated: True; references read: insanely-great/references/engineering.md
+- Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: No check fails; the only flaw is an arithmetic error: 60,000 invoices a month is about 83 an hour, not 2, though the proportionality conclusion still holds.
+- Words: 703
 
 <details><summary>Output</summary>
 
-**Recommendation:** Build a modular monolith on a single managed Postgres, with a background job queue and Stripe as the payment system of record. Don't use microservices, Kubernetes, or an event bus. At this scale (about 60k invoices a month at the very most, roughly 1 every 45 seconds) a single small app server and database have plenty of headroom. Your four people should spend their time on invoicing correctness, not infrastructure.
+**Recommendation:** Build a modular monolith: one web app, one background worker from the same codebase, and one managed Postgres. Rent everything that isn't your core experience: payments, email, auth, hosting. Your peak load is about 60,000 invoices a month, roughly 2 an hour on average, so anything beyond this would be complexity for a team of four to maintain.
 
-```
-Purpose:        Small-business finance staff send invoices and get paid faster, without chasing payments by hand.
-Real problem:   Money accuracy and trust (right totals, right tax, reliable delivery, reconciled payments), not throughput.
-Hero path:      sign up → connect Stripe → create customer → create invoice → send (5 steps); repeat: duplicate/recurring invoice → send (2 steps)
-Brilliant at:   1) Invoices that are always correct and auditable. 2) Payments that reconcile automatically.
-Depth:          see the capability table below
-Not now:        see the list below
-States:         first run (guided to first invoice), empty lists, sending/processing, payment failed, partial payment, refunded, overdue
-Quality bar:    see below
-Technology:     see below
-Open decisions: see the end
-```
+**Experience and quality bar**
+- **Experience:** A business creates an invoice in under a minute, sends it, and gets paid without chasing.
+- **Integrity:** An invoice or payment is never lost, duplicated, or wrong. Money is the hard requirement.
+- **Latency:** Pages respond in under 300 ms at p95. Sending and PDF generation run in the background, with status shown in the UI.
+- **Availability:** A 99.9% target is enough. An hour of downtime is annoying, not catastrophic, as long as webhooks are replayed afterward.
+- **Scale:** About 200 tenants and under 100k invoices a month. One small Postgres instance handles this comfortably.
 
-**Technology**
-- **App:** one deployable codebase, for example Rails, Django, or TypeScript with NestJS, using whatever the team already knows best. The modules are `billing/invoices`, `customers`, `payments` (Stripe), `notifications`, `accounts/auth`, and `reporting`. Modules talk through plain function calls with clear boundaries, so you can extract one later if you ever need to.
-- **Frontend:** a server-rendered app, or a light SPA if the team prefers. Either way it uses the same API.
-- **Database:** managed Postgres (RDS, Cloud SQL, or Neon) with point-in-time recovery, with a restore actually tested. Every table carries `account_id`. Enforce tenant isolation in one place, with Postgres row-level security or a mandatory scoped query layer.
-- **Money:** store integer minor units plus a currency code. Use an append-only ledger or audit table. Once an invoice is sent it is immutable, and corrections are credit notes.
-- **Jobs:** a Postgres-backed queue (Sidekiq/Redis or pg-boss/Oban-style) for PDF generation, email, reminders, recurring invoices, and webhook processing. Every job is idempotent.
-- **PDFs and files:** render in a worker and store in S3-compatible object storage with signed URLs.
-- **Email:** a transactional provider such as Postmark or SES. Set up SPF, DKIM, and DMARC, because deliverability is part of the product.
-- **Hosting:** a managed PaaS (Render, Fly, Railway, or ECS Fargate) with two app instances, one worker, managed Postgres, and CI/CD. Use infrastructure-as-code only for what exists.
+**Design**
+- **App:** One deployable (for example Rails, Django, or Next.js with a typed backend, whichever the team knows best) on a PaaS such as Render, Fly, or AWS App Runner. There is no Kubernetes and no microservices.
+- **Database:** Managed Postgres is the single source of truth.
+- **Jobs:** A Postgres-backed queue (Solid Queue, Oban, GoodJob, or pg-boss) runs PDF rendering, email, reminders, and webhook processing. There is no Redis, because nothing here needs it.
+- **Files:** Object storage (S3 or R2) holds the PDFs. PDFs can be rebuilt from invoice data, so treat them as derived.
+- **Payments:** Stripe, with its hosted payment page so card data never touches you. Webhooks are verified, stored first, then processed by the worker.
+- **Email:** Postmark or SES, with a verified sending domain and bounce handling.
+- **Auth:** A managed provider or a well-maintained library, with 2FA and roles per tenant (owner, member).
 
-**Stripe integration (the riskiest part)**
-- Use **Stripe Connect** if your customers collect money from their own clients. Standard or Express accounts keep you out of holding funds. If you only bill your own customers for the SaaS, use plain Stripe Billing. This is the biggest open decision.
-- Webhooks are the source of truth: verify the signature, store the raw event, deduplicate by event ID, and process it asynchronously. Send an idempotency key on every outgoing Stripe call.
-- Run a nightly reconciliation job that compares Stripe against your ledger and alerts on any mismatch.
-- Never touch card data. Use Stripe-hosted Checkout or Elements so you stay at PCI SAQ-A.
+**Domain rules to get right early**
+- **Money:** Store integer minor units plus a currency code. Never use floats.
+- **Invoices:** Once sent, an invoice is immutable. Corrections are credit notes. Numbering is sequential per tenant, with no gaps.
+- **Payment state:** Derive it from Stripe events and keep an append-only ledger of payments.
+- **Tax:** Model tax lines explicitly from day one, even if you only support simple rates at launch.
 
-**Capability depth**
+**Safeguards (non-negotiable)**
+- **Tenant isolation:** `tenant_id` on every row, enforced with Postgres row-level security and not just in application code. Add tests that try cross-tenant reads.
+- **Idempotency:** Webhook handlers dedupe on the Stripe event ID. Outbound Stripe calls carry idempotency keys, and email sends are keyed per invoice and action.
+- **Validation and secrets:** Validate all input at the boundary. Keep secrets in the platform's secret store, with separate Stripe test and live keys.
+- **Backups:** Point-in-time recovery is on, and you run a restore drill before launch and then quarterly.
+- **Migrations:** They are versioned and reversible, and they run in CI against a copy of the schema.
+- **Observability:** Structured logs and error tracking (Sentry). Alert on webhook failures, queue lag, failed sends, and the hero path (create → send → pay) breaking.
+- **Tests:** Cover the hero path, the Stripe webhook edge cases (duplicates, out of order, retries), and the money invariants.
 
-| Capability | Where it lives |
-|---|---|
-| Tax, numbering, currency defaults | Automatic or default, with override |
-| Payment reminders, receipts | Automatic, configurable |
-| Recurring invoices, templates | One level down |
-| CSV/API import and export, webhooks, bulk send | Advanced, with labeled paths |
-| Roles, 2FA, audit log, data export, account deletion | Account settings (kept) |
-| Draft, void, credit note, restore | Recovery, always available |
+**Triggers for more complexity**
+- **Read replica or separate reporting store:** Reporting queries slow the app, or p95 exceeds 300 ms.
+- **Separate worker service:** Job volume starves web requests.
+- **Redis or cache:** A measured hot read path justifies it.
+- **Extract a service:** A second team or a distinct scaling profile appears. Don't do it before then.
 
-**Quality bar**
-- Page loads under 300 ms at p95, and "send" is acknowledged under 1 s with the work done async.
-- Error tracking (Sentry), structured logs, uptime checks, and alerts on webhook failures and queue depth.
-- Tests on critical paths: totals and tax, invoice state machine, webhook handling, tenant isolation.
-- Daily backups plus point-in-time recovery, a restore drill each quarter, and secrets in a managed store.
-- Basic accessibility on invoices and the payment page, since your customers' clients see them.
+**Not now:** multi-region, event sourcing, GraphQL, a mobile app, a custom billing engine, a data warehouse. Each is deferred because no requirement above needs it.
 
-**Not now:** each of these has a clear trigger for revisiting it.
-- Microservices, Kubernetes, and Kafka: not justified by the load.
-- Multi-region and read replicas: add a replica when reporting queries hurt.
-- Built-in accounting or general ledger: integrate with QuickBooks or Xero later, after the first customers ask.
-- Multi-gateway payments: Stripe only until a customer needs otherwise.
-- Custom workflow builder and mobile apps: the responsive web app is enough.
-- Data warehouse: Postgres views cover reporting.
+**Open decisions**
+1. **Stripe model:** Does money go to your customers (Stripe Connect, which brings onboarding and compliance work) or to you (plain Stripe)? This is the biggest design fork.
+2. **Markets:** Which currencies and tax regimes will you support at launch?
+3. **Stack:** Which language and framework does the team already know best?
 
-**What would change this:** if volume grows 50 to 100 times, split out the worker tier and add replicas first. If you need heavy tax compliance, such as EU e-invoicing, add a dedicated provider, since regulations vary by country.
-
-**Open decisions for you:**
-1. Connect (you move your customers' money) or plain Stripe Billing (you only bill them)? This changes the compliance and data model.
-2. Which countries and currencies at launch? That sets the tax and e-invoicing scope.
-3. Which language and framework does the team know best?
-
-I can go deeper on any layer next, such as the data model and invoice state machine, the Stripe webhook design, or a 90-day build sequence.
+I can go deeper on the data model, the Stripe Connect flow, or a launch-slice plan for four people. Which would you like?
 
 </details>

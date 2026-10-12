@@ -7,6 +7,9 @@ Two judgments per output, both made without knowing which arm produced it:
   2. Pairwise: baseline and skill outputs for the same scenario and rep are
      shown as A and B in random order; the judge picks the more useful one.
 
+Grades are cached in <runs>/judgments.json by output hash, so rerunning one arm
+only re-grades the outputs that changed.
+
 Usage:
   python3 evals/judge.py --runs evals/runs/raw --model opus
 Writes:
@@ -15,6 +18,7 @@ Writes:
 
 import argparse
 import collections
+import hashlib
 import concurrent.futures
 import json
 import pathlib
@@ -147,14 +151,32 @@ def main() -> None:
     index = {(r["scenario"], r["arm"], r["rep"]): r for r in records}
     pair_keys = sorted({(s, rep) for (s, arm, rep) in index if (s, "baseline", rep) in index and (s, "skill", rep) in index})
 
+    sha = lambda r: hashlib.sha1(r["result"].encode()).hexdigest()[:12]
+    cache_file = runs / "judgments.json"
+    cache = json.loads(cache_file.read_text()) if cache_file.exists() else {"checks": {}, "pairs": {}}
+
+    def cached_grade(r):
+        hit = cache["checks"].get(f"{r['scenario']}|{r['arm']}|{r['rep']}")
+        ok = hit and hit.get("sha") == sha(r) and "error" not in hit
+        return hit if ok else {**grade(r, args.model), "sha": sha(r)}
+
+    def cached_compare(s, rep, seed):
+        base, skill = index[(s, "baseline", rep)], index[(s, "skill", rep)]
+        key = sha(base) + sha(skill)
+        hit = cache["pairs"].get(f"{s}|{rep}")
+        ok = hit and hit.get("sha") == key and hit.get("winner") in ("skill", "baseline", "tie")
+        return hit if ok else {**compare(base, skill, args.model, random.Random(seed)), "sha": key}
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        check_futs = {f"{r['scenario']}|{r['arm']}|{r['rep']}": pool.submit(grade, r, args.model) for r in records}
-        pair_futs = {f"{s}|{rep}": pool.submit(compare, index[(s, "baseline", rep)], index[(s, "skill", rep)], args.model, random.Random(rng.random()))
-                     for s, rep in pair_keys}
+        check_futs = {f"{r['scenario']}|{r['arm']}|{r['rep']}": pool.submit(cached_grade, r) for r in records}
+        pair_futs = {f"{s}|{rep}": pool.submit(cached_compare, s, rep, rng.random()) for s, rep in pair_keys}
         checks = {k: f.result() for k, f in check_futs.items()}
         pairs = {k: f.result() for k, f in pair_futs.items()}
 
     (runs / "judgments.json").write_text(json.dumps({"checks": checks, "pairs": pairs}, indent=2))
+    bad = [k for k, v in checks.items() if "error" in v] + [k for k, v in pairs.items() if v["winner"] not in ("skill", "baseline", "tie")]
+    if bad:
+        raise SystemExit(f"{len(bad)} judgments failed (for example a usage limit). Rerun to retry only those: {bad[:5]}")
     write_transcripts(records, checks, pairs)
 
     print(f"{'scenario':<22} {'baseline checks':>16} {'skill checks':>13} {'pairwise (skill-baseline-tie)':>30} {'activation':>11} {'words b→s':>14}")

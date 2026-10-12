@@ -19,7 +19,7 @@ Our web video player has too many controls: play/pause, scrubber, volume, captio
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A keeps every capability reachable, including a chapter list and the shortcuts overlay that B drops, which hurts keyboard and screen-reader users, and A's capability ledger and keyboard and focus details make it more actionable, while B miscounts its visible controls as 5 when it lists 6.
+Blind pairwise judgment: **baseline**. Both reach essentially the same sound layout without removing capabilities, but B is more concise and adds concrete accessibility requirements (aria-labels, keyboard focus, visible focus rings, keeping the bar visible while paused or a menu is open), whereas A spends much of its length restating the same placements in a redundant ledger.
 
 ### baseline
 
@@ -80,87 +80,75 @@ That takes the bar from 13 controls to 5 visible ones, with the rest in a single
 - Skill activated: True; references read: none
 - Checks passed: 6/6 [True, True, True, True, True, True]
 - Judge note: none
-- Words: 554
+- Words: 544
 
 <details><summary>Output</summary>
 
-**Recommendation:** Keep six controls on the surface and move everything else down a level or make it appear only when it's relevant. Nothing is removed. Captions stay on the surface because they're an accessibility control and people reach for them often. Audio description sits right next to them.
+Keep five controls on the surface: play/pause, scrubber, volume, a menu, and fullscreen. Everything else appears only when it's relevant or moves into that menu. Nothing is removed, so the player keeps all its capabilities. This is a recommendation for you to confirm, and I haven't touched any code.
 
-## New control layout
+**Simplification report**
+
+Before → after: 13 always-visible controls → 5, plus 2 that appear only when relevant.
+
+**New layout (bottom bar, fades out during playback)**
 
 ```
- ┌──────────────────────────────────────────────────────────────┐
- │                                          [ Skip Intro ]      │  ← appears only during the intro
- │                                                              │
- │                                                              │
- │  ▶   0:42 ━━━●━━┿━━━━━━━━━━━━━━━━━━━━━━━ −1:21:05             │
- │                                                              │
- │  🔊            [AirPlay]*      💬     ⋯      ⛶                 │
- └──────────────────────────────────────────────────────────────┘
-   * only when a Cast/AirPlay device is found
+[ ▶/❚❚ ]  0:42 ━━━●━━━━━━━━━ -1:18:05   [ 🔊 ]  [ CC ]  [ ••• ]  [ ⤢ ]
 ```
 
-The bar fades out during playback and returns on pointer movement or focus.
+- **Play/pause:** always visible. Space and a click on the video also toggle it.
+- **Scrubber:** shows elapsed and remaining time. Chapters appear as small tick marks, with the chapter title in the hover preview.
+- **Volume:** an icon that expands to a slider on hover.
+- **CC:** shown only when the video has subtitle or caption tracks. It opens the panel described below.
+- **•••:** a labeled menu holding the rest.
+- **Fullscreen:** always visible.
+- **Skip Intro:** a floating button above the bar. It shows only during the intro and fades out after a few seconds.
 
-**Surface (always visible)**
-1. **Play/pause**
-2. **Scrubber** with elapsed and remaining time. Chapters show as small tick marks, and hovering shows the chapter title.
-3. **Volume** is an icon that expands to a slider on hover or focus.
-4. **Subtitles & Audio (💬)** is one menu holding caption language and style, audio language, and the audio description track.
-5. **More (⋯)**
-6. **Fullscreen**
-
-**In context**
-- **Skip Intro** appears as a button over the video only while the intro plays.
-- **Cast/AirPlay** appears in the bar only when a device is detected.
-
-**More (⋯), one level down, labeled**
-- Playback Speed
-- Quality (defaults to Auto)
+**The ••• menu**
+- Playback speed
+- Quality (default **Auto**, with manual override)
 - Picture in Picture
-- Chapters (a list you can jump from)
-- Keyboard Shortcuts (also opens with `?`)
+- Cast / AirPlay (shown only when a device is found; I'd consider promoting it to the bar when one is)
+- Keyboard shortcuts
 
-## Capability ledger
+**CC panel (Audio & Subtitles)**
+- Subtitles/captions: choose a language or turn them off.
+- Audio: choose a language, including the audio description track.
 
-| Capability | Where it lives |
+**Capability ledger**
+
+| Capability | Placement |
 |---|---|
-| Play/pause, scrubber, volume, fullscreen | Surface |
-| Captions/subtitles | Surface (💬) |
-| Audio description | Inside 💬, next to the other audio and caption options |
-| Skip intro | In context, during the intro |
-| Cast/AirPlay | In context, when a device is found |
-| Chapters | Ticks on the scrubber, plus a list in More |
-| Speed, quality, PiP, shortcuts | More |
-| Removed | None |
+| Play/pause, scrubber, volume, fullscreen | Kept on the surface |
+| Captions/subtitles | In context: on the bar when tracks exist |
+| Audio description | Moved into the Audio & Subtitles panel |
+| Skip intro | In context: appears only during the intro |
+| Chapters | Moved onto the scrubber as ticks and hover titles |
+| Playback speed, quality, PiP | Moved into the ••• menu |
+| Cast/AirPlay | In context: appears when a device is found |
+| Keyboard shortcuts overlay | Moved into the ••• menu |
+| Quality selection | Automated: Auto by default |
+| Removed | 0 |
 
-Visible controls drop from 13 to 6, or 7 when a cast device is present.
+**Guardrails I kept on purpose**
+- Audio description sits in the Audio & Subtitles panel, one tap from the bar, so it's visible and labeled. It's an accessibility feature, so I didn't bury it in a general menu.
+- Keyboard control stays fully intact: Space, arrow keys, `M`, `F`, `C`, `<` and `>`. Only the overlay moved. The labeled menu entry keeps it discoverable.
+- The caption defaults should honor the OS preference, and the in-player control stays.
 
-## Details to keep
+**Not now / later**
+- Remembering speed and caption language per user: it needs storage, but it would remove repeat trips to the menu.
+- Auto-promoting Cast to the bar once a device is found: this is a design call for you.
 
-- **Keyboard:** all the keys stay (space, arrows, `M`, `C`, `F`, `<` and `>` for speed). The overlay is reachable from More, not only by pressing `?`.
-- **Accessibility:** every control keeps a screen-reader label, a focus ring, and a target of at least 44px. The bar stays visible while any control has keyboard focus.
-- **Defaults that replace controls:**
-  - Quality is Auto, so most people never open that menu.
-  - Captions follow the OS setting, but the in-app menu stays.
-  - Playback resumes where the user left off.
+**Decision for you:** do you want CC on the bar (my pick, since captions are used often) or inside ••• for a purer look?
 
-## Not now
-- **A gesture-only way to change speed**, such as press-and-hold. It would be a nice shortcut, but it must not be the only path.
-- **Moving quality to the surface.** Revisit only if usage data shows people change it often.
-
-## Decisions for you
-1. **Audio description:** I put it inside 💬. If your users rely on it heavily, I could give it its own icon.
-2. **Skip Intro:** I made it a button over the video instead of a bar control. Say so if you'd rather keep it in the bar.
-
-Confirm the layout and point me to the player's source. I haven't seen the code, and nothing exists in this directory yet. Once I have it, I'll implement the change.
+Once you confirm the cut, I can write the component spec or the implementation. If you point me at the player's source, I can start there.
 
 </details>
 
 
 ## Rep 2
 
-Blind pairwise judgment: **baseline**. Both answers keep accessibility (captions and audio description stay prominent) and lose no capability, but A delivers the same sound layout more concisely, while B adds an unexplained 'Rung' column, extra 'Not now' and confirmation sections, and more length without proportionally better decisions.
+Blind pairwise judgment: **skill**. B keeps every capability, including a full chapter list in the ••• menu, the `?` shortcut overlay, and Cast that appears when a device is found; it also adds key accessibility behavior such as keeping controls visible while paused or focused and following OS caption settings, whereas A drops the chapter list while claiming nothing is lost.
 
 ### baseline
 
@@ -226,88 +214,62 @@ I haven't looked at your player code. If you'd like me to implement this, point 
 
 - Skill activated: True; references read: none
 - Checks passed: 6/6 [True, True, True, True, True, True]
-- Judge note: The report claims 13 → 5 always-visible controls, but the layout shows 6 (play/pause, scrubber, volume, captions, settings, fullscreen); the reduction is still substantial, so no check fails.
-- Words: 558
+- Judge note: none
+- Words: 430
 
 <details><summary>Output</summary>
 
-**Recommendation:** Keep four controls always visible: play/pause, the scrubber, volume, and fullscreen. Add one "Settings" button for everything else. Surface Captions, Cast/AirPlay and Skip Intro only when they apply. No capability is removed, and each one moves to a place the user can find.
+Keep five always-visible controls plus a More (•••) menu. Skip intro and Cast/AirPlay show up only when they apply. Nothing is removed, and the other controls move one level down or happen automatically.
 
-## New control layout
+**Simplification report**
+Visible controls: 13 → 5, plus ••• and one contextual slot. Capabilities removed: 0.
+
+**New layout**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│                    (video)                           │
-│                                      [ Skip Intro ]  │ ← appears only during intro
-│                                                      │
-│  ▶   0:42 ━━━━●━━━━━━━┿━━━━━━━━━━━ -1:18:05            │
-│                                  🔊   💬   ⚙   ⛶    │
-└──────────────────────────────────────────────────────┘
-  Controls fade out after ~3s of inactivity while playing.
+[Skip Intro]                                   ← appears only during the intro, bottom right
+                                                  
+━━━●━━━━━━━|━━━━━━━|━━━━━━━━━━━━━  (scrubber; chapter ticks, title on hover)
+▶︎  🔊───            0:42 / 1:48:10         CC    ⛶    •••
 ```
 
-- **Left:** Play/pause, then the scrubber with elapsed and remaining time.
-- **Right:** Volume, Audio & Subtitles (💬), Settings (⚙), Fullscreen.
-- **Chapters:** Shown as small gaps in the scrubber. The chapter title appears when hovering or scrubbing.
-- **Cast/AirPlay:** Shown next to Settings only when a device is detected.
+- Left: play/pause, volume
+- Center: time
+- Right: Subtitles & Audio, fullscreen, More
+- Cast/AirPlay: its icon appears next to CC only when a device is found.
 
-**Settings (⚙) menu:**
-1. Speed
-2. Quality (default Auto)
-3. Picture in Picture
-4. Chapters (list)
-5. Keyboard Shortcuts
+**Capability ledger**
 
-**Audio & Subtitles (💬) menu:**
-- Subtitles/Captions (Off, Auto, or a language)
-- Audio language
-- Audio Description
+| Capability | Where it goes |
+|---|---|
+| Play/pause, scrubber, volume, fullscreen | Kept on the surface |
+| Captions/subtitles | Kept on the surface (CC button). Opens a popover with subtitles and audio tracks. |
+| Audio description track | Moved into the CC popover, next to subtitles and audio language, so it's one tap away. |
+| Chapters | Moved. Ticks on the scrubber and a title on hover. The full chapter list is in ••• → Chapters. |
+| Skip intro | In context. It appears only during the intro and fades out after. |
+| Cast/AirPlay | In context. It appears only when a device is found. |
+| Playback speed | Moved to ••• → Speed |
+| Quality selector | Automated. It defaults to Auto based on bandwidth, with an override in ••• → Quality. |
+| Picture-in-picture | Moved to ••• → Picture in Picture |
+| Keyboard shortcuts overlay | Moved to ••• → Keyboard Shortcuts, and the `?` key. The shortcuts themselves still work everywhere (space, arrows, `f`, `m`, `c`). |
 
-## Simplification report
+**Behavior details**
+- Controls fade after about 3 seconds of inactivity. They stay visible while paused, while the pointer is over them, or while the keyboard is focused.
+- Everything is reachable by keyboard and has a screen-reader label. The popovers respect reduced-motion.
+- Captions and audio description remember the user's last choice. They also default to the OS accessibility setting.
 
-Always-visible controls: **13 → 5**, plus up to 2 that appear only when relevant.
+**Decisions for you**
+1. Is it OK to keep CC on the surface? I recommend it, because captions are an accessibility need and many people use them all the time.
+2. Should the volume slider expand on hover, or always show? I recommend expanding on hover on desktop. On touch, hide it and rely on the hardware keys.
 
-| Capability | Where it lives | Rung |
-|---|---|---|
-| Play/pause, scrubber, volume, fullscreen | Surface | 3 |
-| Captions/subtitles | 💬 menu (visible whenever tracks exist) | 4 |
-| Audio description | 💬 menu, next to audio language | 5 |
-| Skip intro | Appears only during the intro | 4 |
-| Cast/AirPlay | Appears only when a device is found | 4 |
-| Chapters | Markers on the scrubber, plus list in ⚙ | 3/5 |
-| Speed | ⚙ menu (and `<` / `>` keys) | 5 |
-| Quality | Defaults to Auto, override in ⚙ | 2/5 |
-| Picture in Picture | ⚙ menu (and `P` key) | 5 |
-| Shortcuts overlay | `?` key, plus a labeled item in ⚙ | 6 |
-
-**Removed: 0.**
-
-## Judgment calls
-
-- **Captions get their own button.** Captions and audio description are accessibility features. I'd rather keep them one tap away than bury them in Settings. Putting captions inside ⚙ would cut one more icon, but I recommend against it.
-- **Keyboard control stays complete.** Space, arrow keys, `M`, `F`, `C`, `P` and the speed keys all keep working. Experts lose nothing, and the `?` overlay still has a visible path in the menu.
-- **Quality defaults to Auto.** Most people never need to choose, so the control moves out of the way and the override remains.
-- **Touch targets and labels.** Every icon keeps an accessible name and a focus ring. Controls stay reachable by keyboard and screen reader even while faded out.
-
-## Not now
-
-- **Remembering speed and caption choices across videos.** It would be a good default, but it adds state and needs a settings decision.
-- **Auto-hiding the cursor in fullscreen.** It's a small polish item I'd do after the layout ships.
-
-## Please confirm
-
-1. Is it OK to keep captions as a visible 💬 button, rather than moving them into ⚙?
-2. Should I implement this? If so, point me at the player's source. I don't see it in this working directory.
-
-I can also write the component and CSS once you share the codebase.
+Once you confirm the layout, I can write the component changes, or give you per-state detail first (mobile, fullscreen, and so on).
 
 </details>
 
 
 ## Rep 3
 
-Blind pairwise judgment: **baseline**. B delivers essentially the same well-judged layout as A (captions on the bar, the rest in a menu or shown in context, shortcuts preserved, accessibility notes) more concisely and consistently, while A pads with a redundant ledger, a 'Not now' section, an internally inconsistent '5 controls' list of six, and questions that re-ask what it already recommended; A's one real edge is keeping a chapter list view, which B drops.
+Blind pairwise judgment: **skill**. A keeps both captions and audio description one tap away in a combined popover, uses a clear ledger to show that nothing is removed, and keeps Cast placement consistent, while B buries audio description in the overflow menu and describes Cast placement confusingly.
 
 ### baseline
 
@@ -379,72 +341,70 @@ If you want me to implement this, point me at the player's source. The working d
 - Skill activated: True; references read: none
 - Checks passed: 6/6 [True, True, True, True, True, True]
 - Judge note: none
-- Words: 583
+- Words: 509
 
 <details><summary>Output</summary>
 
-**Recommendation:** Show five controls by default, add one that appears only when it's relevant, and put everything else in a labeled "More" menu. Nothing is removed. Captions and audio description stay reachable and visible because they're accessibility features, so they shouldn't be cut or buried. Since this reorganizes your existing features, please confirm the layout before I touch code.
+**Recommendation:** Keep the bar to five always-visible controls and one ••• menu. Everything else is automated, appears only when relevant, or moves into the menu. Nothing is removed. Captions and audio description are accessibility features, so they stay one tap away on the bar.
 
-## New layout
+**Before → after:** 13 controls visible → 5 visible + ••• (plus 2 that appear only when relevant).
+
+**New layout**
 
 ```
-                     (center, on pause/start: large play)
-
- [Skip Intro]  ← appears only during the intro, bottom-right above the bar
-
- ▶︎  0:42  ━━━━●━━┿━━━━━━━━━━━━  −1:12:08     🔊   CC   •••   ⛶
- play      scrubber (chapter ticks)         volume captions more fullscreen
+┌──────────────────────────────────────────────────────┐
+│                                      [Skip Intro]    │  ← appears only during intro
+│                                                      │
+│  ──────●─────────────────────────────  12:04 / 48:10 │  ← scrubber, with chapter ticks
+│  ▶︎     🔊───        [AirPlay]   💬    •••     ⛶     │
+└──────────────────────────────────────────────────────┘
 ```
 
-**Always visible (5, plus time):**
-1. Play/Pause
-2. Scrubber with elapsed and remaining time. Chapters show as ticks, and hovering shows the chapter title.
-3. Volume. It's a icon that expands on hover, and hidden on touch because the hardware handles it.
-4. Captions (CC). One tap toggles them on or off. The language is chosen in More.
-5. Fullscreen
-6. More (•••)
+Left to right:
+1. **Play/pause** (also on click or Space).
+2. **Volume**, as an icon that expands to a slider on hover.
+3. **AirPlay/Cast**, shown only when a device is found.
+4. **Subtitles & Audio** (💬), a single popover that holds captions and the audio description track.
+5. **••• menu**
+6. **Fullscreen**
 
-**Appears in context:**
-- **Skip Intro:** shown only while the intro plays, then gone.
-- **Cast/AirPlay:** promoted to the bar only when a device is detected. Otherwise it stays in More.
+The scrubber runs above the row. Controls auto-hide during playback and return on movement or focus.
 
-**More menu (labeled, one level down):**
+**••• menu contents**
 - Speed
-- Audio & Subtitles (language, audio description track, caption style)
-- Quality (shows "Auto" as the current value)
-- Chapters (list view)
+- Quality (Auto by default)
+- Chapters (list)
 - Picture in Picture
-- Cast / AirPlay
 - Keyboard Shortcuts
 
-## Capability ledger
+**Capability ledger**
 
-| Control | Where it lives | Rung |
-|---|---|---|
-| Play/pause, scrubber, volume, captions, fullscreen | Bar | Surface |
-| Skip intro | Bar, during the intro only | In context |
-| Cast/AirPlay | Bar when a device is found, otherwise More | In context / one level down |
-| Quality | Defaults to Auto and adapts to bandwidth. Manual override is in More. | Automatic / one level down |
-| Chapters | Ticks on the scrubber, full list in More | Surface / one level down |
-| Speed, PiP, audio description, shortcuts overlay | More | One level down |
-| **Removed** | None | None |
+| Capability | Placement |
+|---|---|
+| Play/pause, scrubber, volume, fullscreen | Kept on the bar |
+| Captions/subtitles | On the bar, in the 💬 popover |
+| Audio description | On the bar, in the same 💬 popover, so it stays easy to find |
+| Cast/AirPlay | In context: appears only when a device is available |
+| Skip intro | In context: appears only during the intro, and can auto-dismiss |
+| Chapters | Ticks and titles on the scrubber, plus a full list in ••• |
+| Quality | Automated (Auto adapts to bandwidth), with a manual override in ••• |
+| Playback speed | In ••• |
+| Picture-in-picture | In ••• (a keyboard shortcut is also available) |
+| Keyboard-shortcuts overlay | In ••• as "Keyboard Shortcuts", and also opened with `?` |
+| **Removed** | **None** |
 
-**Count:** 13 visible controls → 5 always visible, plus 1 contextual and the More menu.
+**Details that keep it clean**
+- Captions remember the user's last choice. If the OS or browser has captions turned on, the player starts with them on.
+- Speed and quality choices persist across sessions.
+- Every control has a visible focus state, an ARIA label and a 44px minimum target. Keyboard users get full control (Space, ←/→, ↑/↓, M, F, C).
+- The 💬 button is always visible, even when a title has only one language. In that case the popover simply shows "Off" and the one track.
 
-## Details to keep it finished
-- **Auto-hide:** The bar fades after about 3 seconds of inactivity. It never hides while paused, while the More menu is open, or when a keyboard user is focused on it.
-- **Keyboard:** Space, arrow keys, `M`, `C`, `F`, and `?` all keep working, so expert speed is unchanged. The shortcuts overlay is also reachable from More, so it doesn't depend on knowing `?`.
-- **Audio description:** Remember the choice per user. Turn it on automatically if a saved preference or the OS setting asks for it.
-- **Accessibility:** Every control gets an ARIA label, targets are at least 44px, and animation respects reduced motion.
+**Not now**
+- Customizable control order: it adds a settings burden without solving a real need.
+- A separate chapters button: ticks on the scrubber cover it.
 
-## Not now
-- **Merging captions into the More menu:** I advise against it. It's the control most affected by accessibility needs, and it should stay one tap away.
-- **Auto-hiding the volume control on desktop:** Skip this until you've tested it with real viewers.
+**Decision for you:** if your analytics show PiP or speed are used by a large share of viewers, I'd promote that one to the bar. I'd keep the others in •••.
 
-## Questions for you
-1. Do you want Captions on the bar as proposed, or is it OK to move it into More? I recommend keeping it on the bar.
-2. Is the player used mainly on desktop, touch, or both? That decides whether volume is shown at all.
-
-If you confirm the layout, share the player's source path and I'll implement it.
+I can turn this into per-state specs (hover, touch, mobile, fullscreen) or into implementation notes for your player component. I'd need the codebase first, since I haven't seen it.
 
 </details>
