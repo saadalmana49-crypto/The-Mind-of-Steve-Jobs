@@ -31,6 +31,11 @@ if lines >= 500:
 if len(skill_md) / 4 > 5000:
     fail(f"SKILL.md is about {len(skill_md) // 4} tokens; keep it under 5000.")
 
+desc_line = next(l for l in skill_md.splitlines() if l.startswith("description:"))
+desc_value = desc_line.split(":", 1)[1].strip()
+if not desc_value.startswith(("'", '"')) and ": " in desc_value:
+    fail("SKILL.md description contains ': ' without quotes, which is invalid YAML for strict parsers.")
+
 for ref in sorted((SKILL / "references").glob("*.md")):
     if f"references/{ref.name}" not in skill_md:
         fail(f"{ref.name} is not referenced from SKILL.md, so agents will never load it.")
