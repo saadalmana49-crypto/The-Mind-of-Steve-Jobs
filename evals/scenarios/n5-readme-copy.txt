@@ -1,0 +1,1 @@
+Rewrite the opening of our README. Current text: "FlowMax is a revolutionary, AI-powered, blazing-fast, next-generation workflow orchestration platform that seamlessly empowers teams to unlock unprecedented productivity." FlowMax is an open-source Python library that runs scheduled jobs with retries and a web UI to see job history.

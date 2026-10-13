@@ -17,7 +17,11 @@ We're designing a home air-quality monitor (measures CO2, PM2.5, VOC, humidity) 
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. B makes sharper product calls that A misses: NDIR rather than eCO2 sensing, thermally isolated humidity, no account required, and an explicit Not-now list. It also keeps what people need, including non-colour-only accessibility, signed atomic OTA with rollback, a physical reset for recovery, and offline end-of-life behaviour, all more concisely. A is solid but relies on a colour ring without addressing accessibility, and its first-week push guidance contradicts itself.
+Blind pairwise (baseline:skill): **skill**. A is more focused and makes sharper calls (works with no account or phone, no scores, a single mute button, quiet notification defaults), and it explicitly keeps accessibility (color never the only signal, text size, high contrast) and recovery paths (reset, remove/re-pair, firmware rollback, behavior if the service shuts down), while B pads the week with daily prompts, brings back a score, and omits accessibility, though B's CO-vs-CO2 safety disclaimer and placement guidance are points A should have included.
+
+Blind pairwise (baseline:v1): **v1**. B makes sharper product calls that A misses: NDIR rather than eCO2 sensing, thermally isolated humidity, no account required, and an explicit Not-now list. It also keeps what people need, including non-colour-only accessibility, signed atomic OTA with rollback, a physical reset for recovery, and offline end-of-life behaviour, all more concisely. A is solid but relies on a colour ring without addressing accessibility, and its first-week push guidance contradicts itself.
+
+Blind pairwise (v1:skill): **skill**. B directly answers the device-versus-app question with a clear device/app/service split, and adds setup-failure copy, notification rules, and resale/handoff states; A is tighter and technically sharper (NDIR, thermally isolated RH), but B gives more actionable coverage despite small slips like a 'meeting' example and a reset sequence 'in the manual' when the box has no paperwork.
 
 ### baseline
 
@@ -131,6 +135,103 @@ If helpful, I can turn this into a screen-by-screen flow for the app, a wirefram
 
 ### skill
 
+- Skill activated: True; references read: insanely-great/references/hardware-and-systems.md
+- Checks passed: 4/4 [True, True, True, True]
+- Judge note: none
+- Words: 1194
+
+<details><summary>Output</summary>
+
+**Recommendation:** Make the device a complete, glanceable air-quality appliance that works with no phone and no account. Make the app the place for setup polish, history, and explanation. Target first value within 5 minutes of opening the box. By day 7 the user should have learned one thing about their home that they acted on.
+
+# Product brief
+
+**Purpose:** For a person at home, who wants to know whether the air in their room is fine right now and what to do if it isn't. They get a clear verdict from across the room and a plain-language reason on their phone.
+
+**Real problem:** Four numbers (ppm, µg/m³, VOC index, %RH) mean nothing to most people. They want to know "is it OK?" and "what should I do?"
+
+**Hero path:** 5 steps: unbox, plug in, read the light, scan the QR, name the room. Repeat task: glance at the device, 0 taps.
+
+## Unboxing to first value (assumes USB-C power; battery is an open decision)
+
+1. **Box:** the device is on top, with no paperwork under it. A one-line card reads "Plug in. Look at the light." The QR code is on the device base and the card.
+2. **Plug in (0 setup):** it boots in under 10 seconds with current firmware. It shows state before any pairing: "Warming up, about 3 min" with a slow pulse. This isn't a delay on the user's side; the sensors need warm-up.
+3. **Day-0 honesty:** the PM2.5 and CO2 readings are usable within minutes. The VOC sensor needs hours to a day to learn the baseline. The device shows VOC as "Learning" rather than a wrong number. The app explains this once.
+4. **Pair (1 scan):** the user scans the QR or taps the phone to the device. Wi-Fi credentials come from the phone, with no typing where the OS allows it. Account creation is deferred. Sign-in with the phone's platform identity is optional and needed only for remote access and multiple phones.
+5. **Name the room** from 6 presets plus custom text. It then gets a silent firmware update at night.
+
+**Setup failure states (written copy):**
+- Wi-Fi is 5 GHz only or fails: "Your home network didn't accept the device. Try again, or use it without Wi-Fi. It works either way."
+- Pairing times out: "Can't find the monitor. Hold it near your phone and make sure it's plugged in."
+
+## What lives where
+
+| On the device | In the app | In the service |
+|---|---|---|
+| **One verdict light** (green/amber/red) plus a short word on a small display: "Good", "Stuffy", "Smoky". Color is never the only signal; the word carries it too. | History and trends per metric | Sync across phones and household members |
+| **Worst-metric display:** it shows the one metric driving the verdict, such as "CO2 1,450 ppm". | "Why": a plain-language cause and a suggested action ("CO2 rose during the meeting. Open a window for 10 min.") | Firmware updates, staged rollout, rollback |
+| **Safety-level alert:** a loud tone when a threshold is crossed. Defaults are set from published guidance. | Alert thresholds, quiet hours, notification policy | Optional remote alerts (needs account) |
+| **One physical control:** a mute/dim button (tap = silence the alert for 1 hr, hold = night mode). No power switch; it just runs. | Rooms, naming, multi-device, sharing | |
+| **Offline buffer:** about 30 days of readings stored locally, synced later | Export (CSV), delete data, data statement, language, text size, high contrast | |
+| **Auto-calibration** for CO2 (baseline drift), with no user action | Calibration status; manual recalibration in Settings → Advanced | |
+
+**Why a button and not more:** mute must work blind, in a hurry, and at night. Everything else changes by context, so it goes in software.
+
+## The first week
+
+| Day | What happens | Mechanism |
+|---|---|---|
+| **0** | Plug in, see the verdict, pair. | The device is useful immediately. |
+| **1** | VOC finishes learning. One notification: "Your monitor has finished learning your room. Here's your first day." | One notification, no streak or badge. |
+| **2–3** | The first real event shows up (cooking, a closed-door night). The app shows an event card with cause and action. | Event detection runs on the app/service side, so the rules can improve. |
+| **4** | A plain suggestion: "CO2 is highest from 11pm to 6am. Cracking a window or door may help." | An insight shown only if the data supports it. |
+| **7** | A weekly summary with the best and worst hours, and one thing to try. | One screen, with a "turn off summaries" control. |
+
+**Notification rules:** default to events that matter (a threshold held for 10 minutes), never marketing. A daily cap of 3 is the default and can be changed. Quiet hours default to 10pm–7am.
+
+## Depth (kept, with its place)
+
+- **Raw values and units:** a tap into any metric (one level down); the device shows the worst metric.
+- **Thresholds, CSV export, local API / Home integrations, manual calibration:** Settings → Advanced.
+- **Account, data deletion, sharing:** Settings → Account.
+- **Factory reset:** the button hold sequence in the manual only, plus Settings → Device.
+
+## States to design
+
+- **Empty:** "Collecting your first readings". No blank charts.
+- **Offline:** the device keeps working, and the app shows "Last synced 2:14pm".
+- **Sensor fault:** "PM sensor needs attention" with a next step, never a zero.
+- **Firmware update:** it never interrupts an alert, and it rolls back if it fails to boot.
+- **Handoff or resale:** Settings → Device → Remove. It erases data and re-pairs.
+
+## Not now (with the signal to revisit)
+
+- **Air purifier / smart-home automation:** revisit when users ask "what do I do about it?" repeatedly.
+- **Social features, scores and streaks:** a score hides what's wrong, so skip them.
+- **Outdoor air comparison:** useful, but it's a data-source decision. Revisit after launch.
+- **Voice assistant:** revisit after integrations.
+
+## Quality bar
+
+- **Sensors:** validate CO2, PM2.5 and VOC against reference instruments in real rooms. Test placement near kitchens, windows and vents.
+- **Time:** first value in 5 minutes, tested with people who have never seen it.
+- **Privacy:** state what is collected in one paragraph. Local operation needs no account.
+- **Longevity:** say what the device still does if the service shuts down. The local display and local access should keep working.
+
+## Open decisions (I need your input)
+
+1. **Battery or plug-in?** Plug-in simplifies the design and keeps readings continuous. A battery lets the user place it anywhere.
+2. **Display type:** a small segmented or e-ink display is cheap and readable; a color screen costs more.
+3. **Which sensors and their accuracy / price target?** Cheap PM sensors drift, which affects trust.
+4. **Home ecosystem support (Matter, etc.)** at launch or later?
+5. **Alert thresholds:** which guidance standard to follow, and for which region?
+
+I can go deeper on the setup screens and copy, the notification system, or the sensor and BOM tradeoffs. Tell me which and I'll write it out.
+
+</details>
+
+### v1
+
 - Skill activated: True; references read: insanely-great/references/hardware-and-systems.md, insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
@@ -195,7 +296,11 @@ Next I can write the per-screen app spec, the device display states and physical
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. A makes clear, opinionated decisions (device works without an app or account, NDIR CO₂, honest 7-day calibration, a one-notification-per-day budget, explicit scope cuts) and covers accessibility, offline use, and recovery concisely; B is broader but hedges, contradicts itself on calibration time (~24h vs. a week), crowds integrations into week one, and omits accessibility.
+Blind pairwise (baseline:skill): **skill**. B is more focused and better judged: it centers the product on a clear payoff (showing that the user's action helped), keeps accessibility (color is never the only signal, screen-reader support), recovery and failure states (permission denied, resale, service shutdown), and data export and deletion, and flags its thresholds as proposals; A is solid but broader, omits accessibility, and spreads effort across more features without a sharper core.
+
+Blind pairwise (baseline:v1): **v1**. A makes clear, opinionated decisions (device works without an app or account, NDIR CO₂, honest 7-day calibration, a one-notification-per-day budget, explicit scope cuts) and covers accessibility, offline use, and recovery concisely; B is broader but hedges, contradicts itself on calibration time (~24h vs. a week), crowds integrations into week one, and omits accessibility.
+
+Blind pairwise (v1:skill): **skill**. B labels its assumptions as assumptions, avoids claiming causes the sensors cannot detect (it says "Unknown" rather than A's "bedroom door closed"), adds the key "did it work?" feedback loop, and covers more real failure and recovery states (notifications denied, resale or wipe, service shutdown), all at a similar length.
 
 ### baseline
 
@@ -312,6 +417,90 @@ I can turn this into screen-by-screen wireframes, a user-journey map, or a notif
 
 ### skill
 
+- Skill activated: True; references read: insanely-great/references/hardware-and-systems.md, insanely-great/references/experience-design.md
+- Checks passed: 4/4 [True, True, True, True]
+- Judge note: none
+- Words: 982
+
+<details><summary>Output</summary>
+
+**Recommendation:** Make the device a complete, glanceable air-quality display that works with no app and no account. The app adds history, explanation, and alerts. The first week should end with the user understanding one thing about their home. For example: "my bedroom CO2 hits 1,600 ppm by 3am with the door shut." The thresholds, timings, and hardware choices below are my proposals, not facts about your product.
+
+## Product brief
+
+**Purpose:** For people who suspect their home's air is stuffy or unhealthy, it shows right now whether the air is OK. Within a week it tells them what's causing the problem and what to do.
+
+**Real problem:** Most people don't want four sensor readings. They want to know whether to open a window, and later whether it worked.
+
+**Hero path (5 steps, target about 5 minutes to first reading):**
+1. Open the box. The device is on top, with a USB-C cable and no printed manual beyond a QR card.
+2. Plug it in. It boots and shows one color and one word, "Warming up", with a progress ring.
+3. Scan the QR code. The phone's native pairing sheet joins it to Wi-Fi using credentials the phone already has. No codes to type.
+4. Name the room by picking from a list: Bedroom, Living room, and so on.
+5. See the first live reading in the app and on the device.
+
+If Wi-Fi fails, the device keeps working. The app is not the price of basic function.
+
+**Brilliant at:** (1) an honest at-a-glance status, (2) telling you *why* the air is bad, (3) proving that your action helped.
+
+## Device vs. app
+
+| On the device | In the app |
+|---|---|
+| One status: a color ring (good/fair/poor) plus a plain word | History, trends, room comparison |
+| The single worst pollutant, named when status isn't "good" ("CO2 high") | Explanations and suggested actions |
+| Large CO2 number, readable from across the room | PM2.5, VOC, and humidity detail |
+| A physical mute switch for the alert chime | Alert policy: thresholds, quiet hours, who's notified |
+| Local alerts (light and optional chime) that work offline | Setup, naming, Wi-Fi changes, sharing, export, deletion |
+| Automatic dimming at night via an ambient light sensor | A manual brightness override, plus accessibility controls |
+
+The device has one physical control, the mute switch. There is no power button: it runs when plugged in. Factory reset is a documented pinhole, for recovery only.
+
+Color is never the only signal. The word and the number are always shown. The app supports text scaling, VoiceOver and TalkBack labels, and a non-color status mode.
+
+## First week
+
+**Day 0, first hour.** The device shows live values after about 1 minute. CO2 and PM2.5 are readable quickly. VOC and humidity compensation need a learning period, which depends on the sensor you pick. Until then, the app and device label VOC "Learning, ready in about 24 h" instead of showing a number that could mislead (assumption: a VOC index sensor with baseline learning). Firmware updates silently at first connection.
+
+**Day 1.** One notification, and only if something is worth acting on, such as "Bedroom CO2 passed 1,200 ppm at 11:40pm. Cracking a window usually helps." No tips, no "welcome" pushes.
+
+**Days 2–3.** The app shows a daily timeline with annotated events. A cooking spike in PM2.5 is labeled "Likely cooking" only if the pattern fits, and otherwise it's labeled "Unknown". Users can tag events with one tap. Tags feed the explanations.
+
+**Day 4.** The first "did it work?" moment. After a high-CO2 alert, the app follows up: "CO2 dropped from 1,450 to 700 ppm in 18 minutes after the window opened." This is the payoff of the product.
+
+**Day 7.** A weekly summary: the best and worst hour, the main cause, and one suggested change. It ends with an offer to add a second monitor, with the price and shipping shown before any purchase.
+
+## Depth, kept but placed
+- **Export (CSV) and delete-my-data** are in Settings → Data, from day one.
+- **Local API or integrations** (Home Assistant, HomeKit/Matter) are in Settings → Advanced.
+- **Custom thresholds** are in Settings → Alerts. The defaults come from published guidance, with the source cited on the screen.
+- **Multiple users and multiple homes:** share by invitation, with household roles.
+
+## Failure states to design
+- **Wi-Fi drops.** The device keeps displaying and buffers data on-board, then syncs later. The app shows "Offline since 2:14pm. Readings are saved on the device."
+- **Sensor fault or blocked inlet.** Plain words: "PM2.5 sensor can't read. Check the vents for dust." Never show a stale number.
+- **Notification permission denied.** The app explains the lost value once, and the device's local alerts still work.
+- **Resale or gift.** Factory reset plus "Remove from my account" wipes the data.
+- **Service shutdown.** The device keeps working standalone. State this on the box.
+
+## Not now
+- Voice assistant: the status is already glanceable.
+- Smart-purifier control: wait until users ask for it.
+- Social or community comparison: a privacy risk with no clear user need.
+- A built-in screen beyond the ring and one number: it adds cost and complexity.
+
+## Open decisions
+1. Is the CO2 sensor true NDIR or an estimate? This drives accuracy and cost, and the first-week story depends on it.
+2. Is the target price near or below that of existing consumer monitors? It decides whether you can afford a number display.
+3. Is a battery needed for portability? Without one, the device is simpler and cheaper, but it can't go room to room.
+4. Which regulations apply: privacy regimes, radio certification, and any health-claim limits?
+
+Before committing, I'd test the hero path with 5 people who have never seen the product. Want me to detail the app's screens or the notification rules next?
+
+</details>
+
+### v1
+
 - Skill activated: True; references read: insanely-great/references/hardware-and-systems.md, insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
@@ -402,7 +591,11 @@ I can detail any layer next: the per-screen app flows, the notification rules, t
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. B makes sharper product calls: it says what to defer and why, recommends answers to its own open questions, and covers accessibility (status not by colour alone, 44 pt targets, screen-reader labels), safe updates and data deletion, all of which A omits; A is easier to read but adds scope like achievements and early integrations without that focus.
+Blind pairwise (baseline:skill): **skill**. A makes sharper, better-justified decisions: a standalone device with one verdict, a 4-tap setup, at most one notification a day, and proposed values clearly flagged. It also explicitly covers accessibility, recovery, end-of-life, and the CO safety disclaimer. B is solid but adds week-one scope creep (integrations, achievements, rating prompts) and omits accessibility.
+
+Blind pairwise (baseline:v1): **v1**. B makes sharper product calls: it says what to defer and why, recommends answers to its own open questions, and covers accessibility (status not by colour alone, 44 pt targets, screen-reader labels), safe updates and data deletion, all of which A omits; A is easier to read but adds scope like achievements and early integrations without that focus.
+
+Blind pairwise (v1:skill): **skill**. B gives more concrete, actionable guidance (a box safety disclaimer that it is not a CO alarm, factory-reset and resale recovery, a rollback partition, notification limits, a fix for CO2 auto-calibration in closed rooms, and accurate WHO thresholds), and it marks unvalidated numbers as proposed, so its extra length earns its place over A's compressed but less complete brief.
 
 ### baseline
 
@@ -520,6 +713,123 @@ I can turn any section into screen-by-screen wireframe descriptions, a notificat
 </details>
 
 ### skill
+
+- Skill activated: True; references read: insanely-great/references/hardware-and-systems.md
+- Checks passed: 4/4 [True, True, True, True]
+- Judge note: none
+- Words: 1327
+
+<details><summary>Output</summary>
+
+**Recommendation:** The device should work as a standalone appliance. You plug it in, it shows one verdict on the air, and the app adds history, explanation, and setup. Setup should take about 3 minutes and 4 taps. The first week should be honest about sensors that need time to calibrate, and it should send at most one notification a day by default.
+
+I haven't been given your price, sensor parts, or target buyer. Everything below marked *(proposed)* is a placeholder to validate.
+
+## Product brief
+
+**Purpose:** For people who suspect their home air is stale or polluted, this tells them at a glance, from across the room, whether the air is fine. If it isn't, it tells them what to do.
+
+**Real problem:** Four raw numbers mean nothing to most people. They need a verdict, a cause, and an action.
+
+**Hero path:** Unbox, plug in, and see a live reading in under 60 seconds with no phone. Fully set up in the app takes 4 taps. The repeat task is a glance, which takes 0 taps.
+
+**Brilliant at:**
+1. A glanceable verdict.
+2. Telling you why the air is bad ("CO2 rising since 9pm, door closed").
+3. Honesty about what the sensors know so far.
+
+## Unboxing to day 1
+
+**Box:** The device is on top. Underneath are a USB-C cable and a card with a QR code and one sentence: "Plug in. Scan." There is no manual up front. A safety line is printed on the box and the device: "Not a carbon monoxide or smoke alarm."
+
+**Minute 0 (plug in, no app):**
+- The device powers on by itself, with no power switch.
+- The display shows "Warming up" for about 30–60 seconds *(proposed; depends on the PM and CO2 sensors)*.
+- It then shows the worst-metric verdict (Good, Fair, Stuffy, or Poor) as a color plus a word. The color is never the only cue.
+- VOC shows "Learning" until its baseline settles. Many VOC index sensors need hours to learn, so confirm this for your part.
+
+**Minute 1 (setup):**
+1. Scan the QR code, or open the app. The phone detects the device over Bluetooth, with no code to type.
+2. Tap **Connect**. The app reuses the phone's current Wi-Fi network and asks for the password once.
+3. Pick a room name from suggestions (Bedroom, Living room, Kitchen, Office) or type your own.
+4. Tap **Done**. The app opens on the live reading with no tour.
+
+No account is needed to finish this. The device keeps recording history locally, and the app pulls it over Bluetooth. An account is requested only when someone wants remote access, sharing, or a second device. That prompt is in context and says why.
+
+**Placement tip:** After setup, one card says "Best 1–2 m off the floor, away from windows, vents, and cooking." It is dismissible.
+
+## What lives where
+
+| Device | App |
+|---|---|
+| **Display:** one verdict, one color, auto-dimming at night. | History and trends. |
+| **One button:** each press shows the next reading (CO2 → PM2.5 → VOC → humidity). It has no other function. | Explanations ("Why is VOC high?"). |
+| **Optional chime:** off by default, and enabled in the app. | Notification policy and quiet hours. |
+| Local storage of at least 7 days of readings *(proposed)*. | Setup, naming, Wi-Fi changes. |
+| Works with no phone and no network. | Accounts, sharing, CSV export. |
+| **Recovery:** a recessed reset pin for factory reset. | Firmware updates and device health. |
+| | CO2 calibration (**Device → Advanced**). |
+
+Updates install silently overnight, with a rollback partition so a failed update never bricks the device.
+
+## The first week
+
+- **Day 1:** The first reading is live. The app says "VOC is still learning, ready by tomorrow morning" *(timing proposed)*. It sends no notifications on the first day, except a recovery notice if the device goes offline.
+- **Day 2–3 (first insight, only if the data supports it):** For example, "Bedroom CO2 peaked at 1,600 ppm last night with the door closed." The insight is a template filled with real readings. It is never generic advice. Its one action is **Set a reminder**, which is the only notification type enabled by default.
+- **Day 3–5 (CO2 baseline):** CO2 sensors with automatic self-calibration need to see fresh air regularly. A bedroom kept closed all week may not. If the app detects this, it suggests: "Open a window for 10 minutes so we can calibrate." A **Calibrate now** option sits under Device → Advanced.
+- **Day 7:** One weekly summary. It shows best and worst hours, the top cause by room, and one change to try. Export and sharing links sit at the bottom.
+
+## Notification defaults
+
+- One alert type is on by default: sustained poor air, for example CO2 above 1,500 ppm for more than 20 minutes. At most 1 per hour, and none from 10pm to 7am. The 20-minute and 1-per-hour limits are *(proposed)*.
+- The alert text says what to do: "Bedroom air is stuffy (1,540 ppm CO2). Open a window or door."
+- Per-metric thresholds sit under **Settings → Alerts**. They are visible and labeled, not hidden.
+
+## Thresholds *(proposed, to validate with an air-quality expert)*
+
+- **CO2:** under 800 ppm is Good, 800–1,000 Fair, 1,000–1,500 Stuffy, over 1,500 Poor.
+- **PM2.5:** the WHO 2021 24-hour guideline of 15 µg/m³ is the Good/Fair line.
+- **Humidity:** 30–60% is comfortable.
+- **VOC:** a relative index, shown as "better or worse than usual", not as absolute numbers.
+
+## States to design
+
+| State | What the user sees |
+|---|---|
+| **Empty (new device)** | "Learning your home. Insights start tomorrow." |
+| **Offline (Wi-Fi down)** | The device keeps showing and recording. The app says "Last synced 2h ago. Readings are safe on the device." |
+| **Sensor fault** | The display shows the metric with "—". The app says what failed and how to fix it, or to contact support. |
+| **App not installed** | The device is fully useful. The display shows a small, dismissible "Get the app for history" hint after day 2. |
+| **Handing over (resale)** | Factory reset wipes all data. Account removal is available in the app. |
+
+## Quality bar
+
+- **Setup:** target 3 minutes, tested with people who have never seen the product.
+- **Accuracy:** an accuracy claim per sensor, stated plainly and tested in real rooms (kitchens, bedrooms), not only in a lab.
+- **Privacy:** the app states what is collected. Export and deletion are always available.
+- **End of life:** the device keeps its display and local recording if the cloud service ends. Say so before purchase.
+- **Accessibility:** text and verdicts never rely on color alone, and the app supports screen readers and large text.
+
+## Not now
+
+- **Smart-home integrations:** add them after the core loop is proven. When you do, build them as an API, not as extra in-app screens.
+- **Air-purifier control:** this is a different product, so defer it.
+- **A touchscreen:** the single button covers the need. A touchscreen would add cost and a second input to explain.
+- **Social or community features:** nothing in the purpose requires them.
+
+## Open decisions
+
+1. **Display type:** e-ink is readable in daylight and draws almost no power. An LED matrix or OLED is brighter at night. Which fits your price and bedroom use?
+2. **Power:** USB-C only, or a battery for portability? A battery adds a charge-state design and complexity.
+3. **Cloud:** is history local-only, or synced for remote access? This decides the account prompt and the privacy copy.
+4. **Ambient-light sensor:** do you add one for auto-dimming, or use a time-based schedule?
+5. **Single device or multi-room:** this changes how much of the first week is about comparing rooms.
+
+If you want, I can detail the display layouts, the app screen map, or the insight rules next.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/hardware-and-systems.md, insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
 - Checks passed: 4/4 [True, True, True, True]

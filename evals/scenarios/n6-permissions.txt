@@ -1,0 +1,1 @@
+Our B2B admin console lets admins configure roles with 40 individual permission toggles each. Admins keep making mistakes: people end up with too much or too little access. Simplify permissions management.

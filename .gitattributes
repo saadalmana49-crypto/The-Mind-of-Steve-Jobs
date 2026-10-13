@@ -1,0 +1,5 @@
+# The skill is Markdown. GitHub's language bar ignores Markdown by default,
+# which made this repository look like a Python project.
+*.md linguist-detectable
+# Generated eval transcripts: collapse in diffs, exclude from language stats.
+evals/runs/** linguist-generated

@@ -1,13 +1,13 @@
 {
   "name": "insanely-great",
   "description": "Insanely Great: an Agent Skill inspired by Steve Jobs' philosophy of simplicity, product excellence, and thoughtful design. Helps agents build technology products that are powerful underneath and effortless to use: remove complexity, keep capability.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "saadalmana49-crypto",
     "url": "https://github.com/saadalmana49-crypto"
   },
-  "homepage": "https://github.com/saadalmana49-crypto/insanely-great",
-  "repository": "https://github.com/saadalmana49-crypto/insanely-great",
+  "homepage": "https://github.com/saadalmana49-crypto/The-Mind-of-Steve-Jobs",
+  "repository": "https://github.com/saadalmana49-crypto/The-Mind-of-Steve-Jobs",
   "license": "MIT",
   "keywords": [
     "product",

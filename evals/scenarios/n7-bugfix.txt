@@ -1,0 +1,6 @@
+Fix this bug: our function returns 0 when there's no discount.
+
+def total(price, qty, discount):
+    if discount:
+        return price * qty * (1 - discount)
+    return price * qty * discount

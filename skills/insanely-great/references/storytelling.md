@@ -77,6 +77,11 @@ What it doesn't do (yet).
 
 ## Honesty
 
+- **Show how to start, and never invent it.**
+  - An opening rewrite ends with one line on how to start. Use the real install command if you know it. Otherwise use a marked pointer, for example `Get started: see [Quickstart](#quickstart)` or `pip install <package-name>  # confirm the package name`.
+  - Write a full quickstart only when asked. Then use the product's real API, or clearly marked placeholders.
+  - List any detail you assumed but couldn't verify, so the user can check it.
+
 - **Every claim must be checkable.** Numbers need conditions ("on an M-series laptop, 10k files").
 - **No "revolutionary", "the best", or "game-changing" without evidence.** Let the demo make the case.
 - **Describe limits and known issues plainly.** Trust is part of the product.

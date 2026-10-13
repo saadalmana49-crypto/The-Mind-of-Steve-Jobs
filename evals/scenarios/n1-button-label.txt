@@ -1,0 +1,1 @@
+The primary button on our signup form says "Submit". Suggest a better label. Just give me the label.

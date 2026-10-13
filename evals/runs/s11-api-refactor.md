@@ -25,7 +25,11 @@ def export_report(report_id, fmt="csv", include_headers=True, headers_uppercase=
 
 ## Rep 1
 
-Blind pairwise judgment: **baseline**. B removes the misuse at its root: the options type selects the format, so it cannot conflict with a separate `fmt` string the way A's design still allows. B also separates pure rendering from delivery and async, gives concrete typed code, and keeps the same safe deprecation-shim migration without A's padded ledger and table.
+Blind pairwise (baseline:skill): **skill**. B explicitly preserves every capability (including email and S3 together), removes the contradictory header-flag pair, specifies clear error messages for the deprecated adapter, and asks the decisive open questions (gzip scope, async without callback, delivery ordering and partial failure), while A's render/deliver split is sound but leaves those edge cases unaddressed.
+
+Blind pairwise (baseline:v1): **baseline**. B removes the misuse at its root: the options type selects the format, so it cannot conflict with a separate `fmt` string the way A's design still allows. B also separates pure rendering from delivery and async, gives concrete typed code, and keeps the same safe deprecation-shim migration without A's padded ledger and table.
+
+Blind pairwise (v1:skill): **skill**. A's design makes invalid combinations impossible to write: the format object carries its own options, and a separate async function owns callback_url, whereas B still lets a mismatched fmt/options pair or a callback without async fail only at runtime and pads with ledger/table filler; both keep all capability and a safe deprecation path, but A is more concise, more concrete and asks sharper questions.
 
 ### baseline
 
@@ -102,6 +106,81 @@ I haven't seen the function body or any callers. This directory is empty of your
 ### skill
 
 - Skill activated: True; references read: none
+- Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: none; minor gap: explicit validation is only shown for the deprecated adapter, while the new API relies on dataclass and keyword TypeErrors and has no runtime check that `format`/`deliver` items are the expected types.
+- Words: 499
+
+<details><summary>Output</summary>
+
+**Recommendation:** Collapse the 18 flags into three ideas: what format, where it goes, and whether it runs in the background. Make the combinations that are currently misusable impossible to write. Keep the old function as a deprecated adapter so none of the 40 callers break.
+
+I only have the signature, not the body or the call sites, so the mapping below is my reading of the flag names.
+
+## Why people misuse it today
+- `fmt="csv"`, `pdf=True` and `xlsx=True` all say the same thing, and they can contradict each other.
+- `pdf_landscape`, `delimiter`, `xlsx_sheet_name` and `s3_key` only mean something alongside another flag. Nothing tells the caller that.
+- `callback_url` only applies with `async_mode=True`.
+- Sync and async calls return different things from one function.
+
+## New interface
+```python
+@dataclass(frozen=True)
+class Csv:
+    delimiter: str = ","
+    quote_all: bool = False
+    headers: Literal["as_is", "upper", "none"] = "as_is"  # replaces include_headers + headers_uppercase
+
+@dataclass(frozen=True)
+class Pdf:
+    landscape: bool = False
+    page_size: str = "A4"
+
+@dataclass(frozen=True)
+class Xlsx:
+    sheet_name: str = "Report"
+
+@dataclass(frozen=True)
+class Email:
+    to: str
+    subject: str | None = None
+
+@dataclass(frozen=True)
+class S3:
+    bucket: str
+    key: str
+
+def export_report(report_id, format=Csv(), *, deliver=(), gzip=False) -> ExportResult: ...
+def export_report_async(report_id, format=Csv(), *, deliver=(), gzip=False, callback_url=None) -> JobHandle: ...
+```
+
+The common call is `export_report(42)`. A full-power call looks like this:
+```python
+export_report(42, Pdf(landscape=True), deliver=[Email("a@x.com", "Q3"), S3("reports", "q3.pdf")])
+```
+
+- **Invalid states can't be written.** You can't pass landscape to a CSV, a bucket without a key, or a callback to a synchronous call.
+- **Missing required values fail at the call.** `S3` needs both bucket and key, and `Email` needs `to`.
+- **Capability is unchanged.** Every format option, email, S3 (or both together), gzip, and async with a callback are still available.
+- **Header options become one setting.** `headers` replaces the two header booleans, which allowed the nonsensical `include_headers=False, headers_uppercase=True`.
+
+## Migration
+1. Rename the existing implementation to a private `_export(...)`, and have both new functions call it. This is pure logic plus delivery, so the internals barely change.
+2. Keep the old `export_report` as an adapter that maps old arguments to the new objects and emits `DeprecationWarning`. It raises on contradictions with specific text, for example: `export_report: pdf_landscape=True requires pdf=True (or fmt="pdf")`. Silent guessing hides existing bugs.
+3. Grep the 40 call sites for which flags are actually used. If nobody passes some of them, you can drop those with evidence instead of carrying them over.
+4. Move callers over service by service, then delete the adapter after one release cycle.
+
+## Questions for you
+- Does `gzip` apply to every format, or only CSV? If it's CSV-only, it moves into `Csv`.
+- Can an async export run without a `callback_url`, with the caller polling the `JobHandle`? I assumed yes.
+- Is there anything the old function does when `email_to` and `upload_s3` are both set, such as ordering or partial-failure behavior? `deliver=[...]` needs to preserve it.
+
+If you paste the function body, I can write the adapter and the contradiction checks.
+
+</details>
+
+### v1
+
+- Skill activated: True; references read: none
 - Checks passed: 4/5 [True, True, True, True, False]
 - Judge note: The response promises loud failures and 'a clear error' but never shows error messages that tell the caller how to fix the call (e.g., 'use fmt="pdf" instead of pdf=True'), and it says the wrapper may keep the old precedence with only a warning; it also miscounts the original parameters as 18 when there are 19.
 - Words: 527
@@ -156,7 +235,11 @@ If you confirm, I can send the function body and a grep of the call sites. I'll 
 
 ## Rep 2
 
-Blind pairwise judgment: **baseline**. B gives a cleaner, more concrete design: real dataclasses, separate sync and async functions, rendering split from delivery, and header options kept on Xlsx; it also flags the return-type behavior change, while A pads its answer with a self-scoring table whose figures are shaky (it miscounts the parameters as 18, claims zero contradictory combinations while `wait` and `callback_url` still interact, and claims no lost capabilities while moving header options to CSV only).
+Blind pairwise (baseline:skill): **skill**. A has a safer migration plan: it keeps the old signature working with byte-identical output, flags the positional-argument trap, and carries over auth and idempotency safeguards, whereas B's legacy shim is renamed (which breaks callers) and raises on combinations callers use today, though B's API is slightly cleaner in places (headers on Xlsx, async delivery).
+
+Blind pairwise (baseline:v1): **baseline**. B gives a cleaner, more concrete design: real dataclasses, separate sync and async functions, rendering split from delivery, and header options kept on Xlsx; it also flags the return-type behavior change, while A pads its answer with a self-scoring table whose figures are shaky (it miscounts the parameters as 18, claims zero contradictory combinations while `wait` and `callback_url` still interact, and claims no lost capabilities while moving header options to CSV only).
+
+Blind pairwise (v1:skill): **skill**. A gives the cleaner design: format options live on typed dataclasses, delivery and async are separate functions with required arguments, and it catches the positional-argument hazard during migration; B's single function still leaves `callback_url`/`wait` interplay ambiguous and pads the answer with self-congratulatory metrics like '0 contradictions'.
 
 ### baseline
 
@@ -240,6 +323,91 @@ If you point me at the library and its callers, I can write the shim and migrate
 
 ### skill
 
+- Skill activated: True; references read: none
+- Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: none; minor gap: `export_report_async` has no way to chain email or S3 delivery, so an old call combining `async_mode=True` with `upload_s3=True` or `email_to` has no clear new equivalent.
+- Words: 665
+
+<details><summary>Output</summary>
+
+**Recommendation:** Split the function by what the caller is doing. The 18 flat parameters are really three things: choose a format, deliver the result, and run it in the background. Because the format options live on the format and delivery is a separate step, the contradictory calls can't be written. Examples are `pdf_landscape=True` with `fmt="csv"`, or `s3_bucket` with `upload_s3=False`. The old signature stays as a deprecated adapter, so none of the 40 callers break.
+
+I only have the signature, not the body or the callers. Everything below is based on the signature alone.
+
+## Engineering plan
+
+**Quality bar:** No caller breaks. Invalid combinations fail at the call site. Output is byte-identical to today's for every valid old call.
+
+**Common call (1 argument, was 1 plus flags):**
+```python
+export_report(report_id)                      # CSV, headers on
+export_report(report_id, Pdf(landscape=True))
+export_report(report_id, Csv(delimiter=";"), gzip=True)
+```
+
+**Design:**
+```python
+@dataclass(frozen=True)
+class Csv:
+    headers: bool = True
+    uppercase_headers: bool = False
+    delimiter: str = ","
+    quote_all: bool = False
+
+@dataclass(frozen=True)
+class Pdf:
+    landscape: bool = False
+    page_size: str = "A4"
+
+@dataclass(frozen=True)
+class Xlsx:
+    sheet_name: str = "Report"
+
+def export_report(report_id, format: Csv | Pdf | Xlsx = Csv(), *, gzip=False) -> ExportedReport: ...
+
+# Delivery is a separate step that takes the result.
+def email_report(exported, *, to, subject=None): ...
+def upload_report(exported, *, bucket, key): ...
+
+# Background work is its own function, with its own required argument.
+def export_report_async(report_id, format=Csv(), *, callback_url, gzip=False): ...
+```
+
+| Old parameter | New home |
+|---|---|
+| `fmt`, `pdf`, `xlsx` (3 ways to say format) | The type of `format` |
+| `include_headers`, `headers_uppercase`, `delimiter`, `quote_all` | `Csv(...)` |
+| `pdf_landscape`, `pdf_page_size` | `Pdf(...)` |
+| `xlsx_sheet_name` | `Xlsx(...)` |
+| `gzip` | Stays on `export_report` and works for any format |
+| `email_to`, `email_subject` | `email_report(...)`, where `to` is required |
+| `upload_s3`, `s3_bucket`, `s3_key` | `upload_report(...)`, where bucket and key are required |
+| `async_mode`, `callback_url` | `export_report_async(...)`, where `callback_url` is required |
+
+Export is now pure and returns an `ExportedReport` with bytes, content type and filename. Email and S3 are the only side effects, and each retries on its own. Previously, one failed upload could fail the whole export call.
+
+**Safeguards:**
+- `format` rejects anything that isn't `Csv`, `Pdf` or `Xlsx`. The error reads: `format must be Csv(), Pdf() or Xlsx(), got 'pdf'`.
+- `Pdf.page_size` is validated against a fixed set. The error reads: `page_size must be one of A3, A4, A5, Letter, Legal`.
+- Uploads should use an idempotent key, so a retry can't write a duplicate. Please check the current behavior.
+- Delivery keeps whatever auth and permission checks the old body had. Move them with the code.
+
+**Migration:**
+1. Rename the current function to `_export_report_impl` and build the new API on top of it. No behavior changes.
+2. Keep `export_report(report_id, fmt="csv", ...)` as a thin adapter. It translates old arguments to new calls and emits `DeprecationWarning: export_report(pdf=True) is deprecated; use export_report(report_id, Pdf())`.
+3. For contradictory old calls such as `pdf=True, fmt="csv"`, the adapter should match today's behavior and also warn. I need to see the body to know which format wins.
+4. Grep the 40 call sites. Only about five of the 18 parameters are probably in real use, and that tells us which examples to put in the docs. Move callers over in batches, then delete the adapter after one release cycle.
+
+One catch: the new `format` is the second positional argument, where `fmt` used to be. The adapter should take a different name or use `*` so old positional calls don't silently change meaning.
+
+**Triggers for more complexity:** Add a new format as a new dataclass, not new flags. Add a delivery target such as SFTP as a new `upload_*` function. If callers keep chaining export, email and upload, add a `deliver=[...]` helper then and not before.
+
+**Please confirm the cut.** Do you want a separate `export_report_async` function, or should async stay as an option on `export_report`? If you paste the function body, I'll write the real implementation and the adapter.
+
+</details>
+
+### v1
+
 - Skill activated: True; references read: insanely-great/references/engineering.md, insanely-great/references/simplicity.md
 - Checks passed: 4/5 [True, True, True, True, False]
 - Judge note: The response promises a 'clear ValueError' but never shows error messages that tell callers how to fix the call, and it makes strict validation conditional on approval; it also miscounts the original parameters (19, not 18) and leaves callback_url with wait=True as a possible contradiction despite claiming zero.
@@ -308,7 +476,11 @@ Once you confirm, I can write the implementation, the adapter, the pinning tests
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. Both answers diagnose the misuse correctly and propose typed options with a deprecation adapter, but A preserves capabilities that B silently drops: B leaves XLSX without header settings and asserts single-destination delivery without asking. A also adds behavior-pinning tests before migration and explicitly asks about email-plus-S3 and async-without-callback usage, making it the safer guide for a 40-caller change.
+Blind pairwise (baseline:skill): **skill**. B keeps every existing capability, including email and S3 delivery together, which A's single-destination `deliver` drops, and it adds relevant safeguards (SSRF allowlist on `callback_url`, an authorization check, and a log-only migration to find which callers rely on contradictory flags), though it is wordier and its delivery design is slightly inconsistent between the sync and async paths.
+
+Blind pairwise (baseline:v1): **v1**. Both answers diagnose the misuse correctly and propose typed options with a deprecation adapter, but A preserves capabilities that B silently drops: B leaves XLSX without header settings and asserts single-destination delivery without asking. A also adds behavior-pinning tests before migration and explicitly asks about email-plus-S3 and async-without-callback usage, making it the safer guide for a 40-caller change.
+
+Blind pairwise (v1:skill): **v1**. A gives a focused, concise redesign that keeps every capability, makes contradictory combinations impossible, and asks the right open questions; B drifts into unrequested scope (SSRF allowlists, idempotency keys, authorization), invents details like the allowed page-size list, contradicts itself about a single `format` argument versus option objects, and drops header options for XLSX.
 
 ### baseline
 
@@ -393,6 +565,79 @@ If you point me at the repo, I can write the wrapper and update the call sites.
 </details>
 
 ### skill
+
+- Skill activated: True; references read: none
+- Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: Only minor: the TypeError for a wrong-format option (e.g., delimiter on Pdf) is Python's generic message rather than one that tells the caller how to fix the call.
+- Words: 641
+
+<details><summary>Output</summary>
+
+**Recommendation:** split the function by job. One call builds a file in a chosen format. Delivery (email, S3) and async are separate steps. Format options go in per-format objects, so a PDF export can't be given a CSV delimiter. I've only seen the signature, not the body or the 40 call sites, so the mapping below is an assumption to check against real usage.
+
+## Engineering plan
+
+**Why it gets misused.** The 18 parameters hide three problems:
+- `fmt`, `pdf` and `xlsx` all pick the format, so `fmt="csv", pdf=True` is expressible and its meaning is a guess.
+- Options only apply to one format (`delimiter`, `quote_all`, `pdf_page_size`, `xlsx_sheet_name`), and nothing says which.
+- Delivery options depend on each other: `s3_bucket` without `upload_s3`, `callback_url` without `async_mode`, `email_subject` without `email_to`.
+
+**Interfaces**
+
+```python
+# Common call (most callers): 2 words
+export_report(report_id)                         # CSV with headers, returns Export
+export_report(report_id, Pdf(landscape=True))
+export_report(report_id, Csv(delimiter=";", quote_all=True, uppercase_headers=True))
+export_report(report_id, Xlsx(sheet_name="Q3"), gzip=True)
+
+# Delivery: separate, explicit, composable
+export.email(to="ops@corp.com", subject="Q3")
+export.upload_s3(bucket="reports", key="q3.csv")
+
+# Async: its own function, because it returns a job, not a file
+export_report_async(report_id, Csv(), deliver=[Email(...), S3(...)], callback_url=...)
+```
+
+- `Csv`, `Pdf` and `Xlsx` are frozen dataclasses. Each holds only its own options: `Csv(include_headers=True, uppercase_headers=False, delimiter=",", quote_all=False)`, `Pdf(landscape=False, page_size="A4")` and `Xlsx(sheet_name="Report")`.
+- Passing `delimiter` to a PDF is a `TypeError` at the call site, not a silent no-op.
+- `gzip` stays a keyword-only argument, since it applies to every format.
+- Result: a typical call has 1–3 arguments, and the maximum is 3 positional/keyword slots plus option objects.
+- `export_report` returns an `Export` and does no I/O beyond building the file. Email, S3 and callbacks are side effects that live in the delivery methods.
+
+**Capability ledger.** Every current option is kept and has a labeled home. None are removed.
+
+| Old | New home |
+|---|---|
+| `fmt`, `pdf`, `xlsx` | one `format` argument (the three overlapping concepts merge into one) |
+| csv/pdf/xlsx options | fields on `Csv`, `Pdf`, `Xlsx` |
+| `gzip` | keyword argument |
+| `email_*` | `Export.email()` |
+| `upload_s3`, `s3_*` | `Export.upload_s3()` |
+| `async_mode`, `callback_url` | `export_report_async()` |
+
+**Safeguards**
+- **Validation at construction:** an empty `to`, a malformed address, or an S3 key starting with `/` fails immediately. Example error: `Pdf(page_size="A9") → ValueError: page_size must be one of A3, A4, A5, Letter, Legal`.
+- **`callback_url`:** require `https` and check it against an allowlist, because an arbitrary URL is an SSRF risk. I haven't seen how the current code handles this.
+- **Idempotency:** `email()` and async delivery accept an `idempotency_key`, so a retry doesn't send twice.
+- **Authorization:** confirm the caller can read `report_id` before building anything. I can't see whether the current body does this.
+
+**Migration (callers never break)**
+1. Add the new API. Keep `export_report_legacy` with the old signature as an adapter that translates arguments and emits `DeprecationWarning` with the replacement call in the message.
+2. The adapter rejects contradictions the old code accepted (such as `fmt="csv", pdf=True`) with a clear error. Run it first in log-only mode to find which of the 40 callers actually hit that case.
+3. Write a codemod (libcst) for the common patterns. It should convert most of the 40 sites mechanically and flag the rest for hand review.
+4. Announce a deprecation window (for example, two release cycles). Check for callers outside the 40 you know of, such as scheduled jobs and other repos, before deleting the adapter.
+
+**Triggers for more complexity**
+- A fourth format: add one more option dataclass.
+- A third delivery target (SFTP, Slack): add a `deliver` protocol.
+- Per-tenant defaults: add a config object. Not before.
+
+**Decision for you:** are you comfortable with a breaking-but-adapted change? If so, I can write the new module, the adapter and the codemod. If you share the function body and a few call sites, I can check the mapping against how it's really used.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/simplicity.md, insanely-great/references/engineering.md
 - Checks passed: 5/5 [True, True, True, True, True]

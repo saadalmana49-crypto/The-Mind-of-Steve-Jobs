@@ -124,6 +124,20 @@ For expert tools:
 5. **Put destructive actions last.** Label them plainly and confirm them.
 6. **Keep developer and beta options in a labeled Advanced section.**
 
+## Removing cleanly
+
+Sometimes the evidence says a feature should go: nobody uses it, or something better replaces it. Remove it properly:
+1. **Check what analytics can't see.** Look for:
+   - API and integration calls,
+   - scheduled jobs and exports,
+   - contract or compliance commitments,
+   - accessibility fallbacks (an "old" theme may be someone's high-contrast option),
+   - sampling or ad-blocker gaps in the data.
+2. **Announce it** with a date and the reason, and show an in-product notice to anyone still touching it.
+3. **Preserve data.** Offer export or migrate it, for example saved settings, dashboards, or files in the old format.
+4. **Turn it off behind a flag first,** with a rollback, and watch support tickets and errors for a full cycle.
+5. **Delete the code, the data, the docs, and the tests,** so the complexity is actually gone.
+
 ## When not to simplify
 
 - **Safety-critical steps:** confirmations, warnings, irreversible actions.

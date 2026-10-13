@@ -2,7 +2,7 @@
 
 **Remove complexity, keep capability.** An Agent Skill inspired by Steve Jobs' philosophy of simplicity, product excellence, and thoughtful design.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Agent Skills](https://img.shields.io/badge/format-Agent%20Skills-black.svg)](https://agentskills.io/specification) [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Agent Skills](https://img.shields.io/badge/format-Agent%20Skills-black.svg)](https://agentskills.io/specification) [![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](CHANGELOG.md)
 
 Insanely Great gives AI coding agents the product judgment to build things that are powerful underneath and easy to use on top. It works on any technology product:
 - an API, a CLI, or a SaaS platform,
@@ -107,7 +107,7 @@ The name is Jobs' phrase for the standard the Macintosh team aimed for. Steven L
 **Any agent, with the [skills CLI](https://github.com/vercel-labs/skills):**
 
 ```bash
-npx skills add saadalmana49-crypto/insanely-great
+npx skills add saadalmana49-crypto/The-Mind-of-Steve-Jobs
 ```
 
 It asks which agents to set up. It installs one copy in `~/.agents/skills/`, which Codex, Gemini CLI, Cursor, and others read, and links it for Claude Code. Add `-g -y` to install globally without prompts.
@@ -115,26 +115,26 @@ It asks which agents to set up. It installs one copy in `~/.agents/skills/`, whi
 **Claude Code, as a plugin:**
 
 ```text
-/plugin marketplace add saadalmana49-crypto/insanely-great
+/plugin marketplace add saadalmana49-crypto/The-Mind-of-Steve-Jobs
 /plugin install insanely-great@insanely-great
 ```
 
 **Gemini CLI:**
 
 ```bash
-gemini skills install https://github.com/saadalmana49-crypto/insanely-great.git --path skills/insanely-great
+gemini skills install https://github.com/saadalmana49-crypto/The-Mind-of-Steve-Jobs.git --path skills/insanely-great
 ```
 
 **Codex:** ask the built-in installer:
 
 ```text
-$skill-installer install https://github.com/saadalmana49-crypto/insanely-great/tree/main/skills/insanely-great
+$skill-installer install https://github.com/saadalmana49-crypto/The-Mind-of-Steve-Jobs/tree/main/skills/insanely-great
 ```
 
 **Any agent, by hand:** clone once and symlink, so `git pull` keeps it current:
 
 ```bash
-git clone https://github.com/saadalmana49-crypto/insanely-great.git ~/insanely-great
+git clone https://github.com/saadalmana49-crypto/The-Mind-of-Steve-Jobs.git ~/insanely-great
 mkdir -p ~/.agents/skills ~/.claude/skills
 ln -s ~/insanely-great/skills/insanely-great ~/.agents/skills/insanely-great   # Codex, Gemini CLI, Cursor, Copilot, Windsurf
 ln -s ~/insanely-great/skills/insanely-great ~/.claude/skills/insanely-great   # Claude Code
@@ -187,25 +187,33 @@ skills/insanely-great/
     └── sources.md             graded sources, verified quotes, misattributions
 ```
 
-There are no scripts and no network calls. The agent always carries only the name and description, about 240 tokens. The main file (about 4.4k tokens) loads when the skill is used, and each reference loads only when its topic comes up.
+The skill itself is only Markdown, following the [Agent Skills specification](https://agentskills.io/specification): no scripts and no network calls. The Python files elsewhere in the repository (`evals/` and `scripts/`) are test and CI tooling. They are never installed with the skill. The agent always carries only the name and description, about 260 tokens. The main file (about 3k tokens) loads when the skill is used, and each reference loads only when its topic comes up.
 
 ## Evaluation
 
-[`evals/`](evals/) holds 14 realistic scenarios. Each was run in Claude Code (model `sonnet`) with and without the skill, 3 times each, and graded blind by a separate judge (`opus`) against checks written in advance.
+[`evals/`](evals/) holds 24 realistic scenarios. Each was run in Claude Code (model `sonnet`) 3 times without the skill, with version 1.0.0, and with version 1.1.0. A separate judge (`opus`) graded every answer blind, against checks written in advance.
 
-| | Without the skill | With the skill |
-|---|---|---|
-| Checklist items passed | 146 / 192 (76%) | 189 / 192 (98%) |
-| Blind pairwise preference | 8 wins | 34 wins |
-| Skill activated on its own | — | 42 / 42 runs |
-| Average answer length | 743 words | 727 words |
+| | No skill | Version 1.0.0 | Version 1.1.0 |
+|---|---|---|---|
+| Checklist items passed | 259 / 324 (80%) | 307 / 324 (95%) | 320 / 324 (99%) |
+| Skill activated on its own | — | 60 / 72 runs | 64 / 72 runs |
+| Average answer length | 628 words | 619 words | 680 words |
 
-The largest gains came from three changes:
+In blind head-to-head comparisons, the judge preferred version 1.1.0 over no skill in 64 of 72, and over version 1.0.0 in 51 of 72.
+
+Across versions, the largest gains came from:
 - keeping accessibility and advanced options when asked for "minimal",
 - giving product plans a purpose, a hero path, and designed states,
-- not presenting unsourced quotes.
+- not presenting unsourced quotes,
+- in 1.1.0, keeping the price breakdown in a simplified checkout, merging overlapping controls, and writing out error text.
 
-The skill lost 8 comparisons, mostly where the baseline produced a cleaner code design or a more complete review. On several scenarios, the base model was already strong. All of it is in [evals/results.md](evals/results.md), with every transcript in [evals/runs/](evals/runs/) and the method and limitations in [evals/README.md](evals/README.md). These numbers measure Claude Code. Other agents were checked for installation and discovery only.
+The weak spots:
+- 1.1.0 answers are about 10% longer than 1.0.0's.
+- 1.1.0 lost to 1.0.0 in two of three runs on product planning, settings, and permissions.
+- The skill often doesn't activate for short README rewrites.
+- The ten scenarios added for 1.1.0 were also used to revise it, so its gains there are partly tuning.
+
+All of it is in [evals/results.md](evals/results.md), with every transcript in [evals/runs/](evals/runs/) and the method and limitations in [evals/README.md](evals/README.md). These numbers measure Claude Code. Other agents were checked for installation and discovery only.
 
 ## Updating
 

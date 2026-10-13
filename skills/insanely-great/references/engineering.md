@@ -72,6 +72,14 @@ An interface is good when the common case is obvious and the uncommon case is po
 - **Make failure paths first-class:** timeouts, retries with backoff where they're safe, idempotency keys for operations that must not run twice, clear error types.
 - **Test what the experience depends on:** the hero path, the failure paths, and the data invariants. Test the behavior, not the implementation.
 
+## Concrete, not aspirational
+
+- **Write the error text.** "Clear errors" means the exact message, for example: `ExportError: pdf options given with format="csv". Use PdfOptions with format="pdf", or remove the options.`
+- **Show the arithmetic for every estimate,** for example: 5,000 users × 20 uploads a day = 100,000 a day, or about 1.2 a second on average. Then size for the peak hour, not the average.
+- **Make invalid states impossible to express.** If options belong to a format, let the options type select the format, instead of checking a separate string. If two settings must be set together, make them one object.
+- **Keep pure logic apart from side effects.** Rendering, calculation, and validation should be pure functions. Delivery, storage, and network calls go at the edges, where they can be retried and tested separately.
+- **Never invent facts.** Don't make up APIs, numbers, or library behavior you weren't given. Mark placeholders, or ask.
+
 ## 5. Configuration
 
 Every configuration option is a decision handed to someone else:

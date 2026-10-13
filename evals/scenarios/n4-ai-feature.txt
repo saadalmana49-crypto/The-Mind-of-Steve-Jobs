@@ -1,0 +1,1 @@
+We're adding an AI writing assistant to our document editor. Product managers want: a tone selector with 12 tones, a length slider, 8 templates, a model picker (4 models), a temperature slider, a custom system-prompt field, a history panel, and a "magic" button. Design the UX.

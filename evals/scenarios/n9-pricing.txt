@@ -1,0 +1,1 @@
+We sell a SaaS product with 6 plans: Free, Starter, Basic, Pro, Business, and Enterprise. Customers can't tell which one to pick, and sales spends hours explaining. Simplify our pricing. We have about 4,000 paying customers on the current plans.

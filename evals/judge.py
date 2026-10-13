@@ -4,8 +4,9 @@
 Two judgments per output, both made without knowing which arm produced it:
   1. Checklist: each output is graded alone against the scenario's checks in
      evals/rubric.json (written before the final runs).
-  2. Pairwise: baseline and skill outputs for the same scenario and rep are
-     shown as A and B in random order; the judge picks the more useful one.
+  2. Pairwise: two arms' outputs for the same scenario and rep are shown as A
+     and B in random order; the judge picks the more useful one. Pairs default
+     to baseline:skill; add others with --pairs (for example v1:skill).
 
 Grades are cached in <runs>/judgments.json by output hash, so rerunning one arm
 only re-grades the outputs that changed.
@@ -93,17 +94,21 @@ def grade(record: dict, model: str) -> dict:
     return ask(prompt, model)
 
 
-def compare(base: dict, skill: dict, model: str, rng: random.Random) -> dict:
+def compare(x: dict, y: dict, model: str, rng: random.Random) -> dict:
     flip = rng.random() < 0.5
-    a, b = (skill, base) if flip else (base, skill)
-    verdict = ask(PAIR_PROMPT.format(prompt=(SCENARIOS / f"{base['scenario']}.txt").read_text().strip(),
+    a, b = (y, x) if flip else (x, y)
+    verdict = ask(PAIR_PROMPT.format(prompt=(SCENARIOS / f"{x['scenario']}.txt").read_text().strip(),
                                      a=a["result"], b=b["result"]), model)
     pick = verdict.get("preferred", "error")
     winner = {"A": a["arm"], "B": b["arm"]}.get(pick, pick)
-    return {"winner": winner, "reason": verdict.get("reason", ""), "skill_was": "A" if flip else "B"}
+    return {"winner": winner, "reason": verdict.get("reason", ""), "order": f"A={a['arm']}"}
 
 
-def write_transcripts(records: list, checks: dict, pairs: dict) -> None:
+def pair_key(sid: str, rep, x: str, y: str) -> str:
+    return f"{sid}|{rep}" if (x, y) == ("baseline", "skill") else f"{sid}|{rep}|{x}:{y}"
+
+
+def write_transcripts(records: list, checks: dict, pairs: dict, arms: list) -> None:
     by_scenario = collections.defaultdict(list)
     for r in records:
         by_scenario[r["scenario"]].append(r)
@@ -114,18 +119,20 @@ def write_transcripts(records: list, checks: dict, pairs: dict) -> None:
                  "## Checks", ""]
         lines += [f"{i + 1}. {c}" for i, c in enumerate(RUBRIC[sid])]
         for rep in sorted({r["rep"] for r in rs}):
-            pair = pairs.get(f"{sid}|{rep}")
             lines += ["", f"## Rep {rep}", ""]
-            if pair:
-                lines += [f"Blind pairwise judgment: **{pair['winner']}**. {pair['reason']}", ""]
-            for arm in ("baseline", "skill"):
+            for k, p in sorted(pairs.items()):
+                parts = k.split("|")
+                if parts[0] == sid and parts[1] == str(rep):
+                    label = parts[2] if len(parts) > 2 else "baseline:skill"
+                    lines += [f"Blind pairwise ({label}): **{p['winner']}**. {p['reason']}", ""]
+            for arm in arms:
                 r = next((x for x in rs if x["rep"] == rep and x["arm"] == arm), None)
                 if not r:
                     continue
                 c = checks.get(f"{sid}|{arm}|{rep}", {})
                 passed = c.get("checks", [])
                 lines += [f"### {arm}", "",
-                          f"- Skill activated: {r['skill_invoked']}" + (f"; references read: {', '.join(r['reads']) or 'none'}" if arm == "skill" else ""),
+                          f"- Skill activated: {r['skill_invoked']}" + (f"; references read: {', '.join(r['reads']) or 'none'}" if arm != "baseline" else ""),
                           f"- Checks passed: {sum(1 for x in passed if x)}/{len(RUBRIC[sid])} {passed}",
                           f"- Judge note: {c.get('notes', '')}",
                           f"- Words: {len(r['result'].split())}", "",
@@ -139,18 +146,19 @@ def main() -> None:
     parser.add_argument("--model", default="opus")
     parser.add_argument("--jobs", type=int, default=6)
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--pairs", default="baseline:skill", help="comma-separated arm pairs, e.g. baseline:skill,v1:skill")
     args = parser.parse_args()
 
     runs = pathlib.Path(args.runs)
     records = [json.loads(p.read_text()) for p in sorted(runs.glob("*__*__r*.json"))]
     failed = [f"{r['scenario']} {r['arm']} r{r['rep']}" for r in records
-              if len(r["result"].split()) < 30 or re.search(r"hit your (session|usage) limit", r["result"])]
+              if not r["result"].strip() or re.search(r"hit your (session|usage) limit", r["result"][:200])]
     if failed:
         raise SystemExit("Refusing to judge failed runs (rerun them first):\n  " + "\n  ".join(failed))
-    rng = random.Random(args.seed)
+    arms = sorted({r["arm"] for r in records}, key=lambda a: (a != "baseline", a != "skill", a))
     index = {(r["scenario"], r["arm"], r["rep"]): r for r in records}
-    pair_keys = sorted({(s, rep) for (s, arm, rep) in index if (s, "baseline", rep) in index and (s, "skill", rep) in index})
-
+    pairs_wanted = [tuple(p.split(":")) for p in args.pairs.split(",") if p]
+    rng = random.Random(args.seed)
     sha = lambda r: hashlib.sha1(r["result"].encode()).hexdigest()[:12]
     cache_file = runs / "judgments.json"
     cache = json.loads(cache_file.read_text()) if cache_file.exists() else {"checks": {}, "pairs": {}}
@@ -160,48 +168,56 @@ def main() -> None:
         ok = hit and hit.get("sha") == sha(r) and "error" not in hit
         return hit if ok else {**grade(r, args.model), "sha": sha(r)}
 
-    def cached_compare(s, rep, seed):
-        base, skill = index[(s, "baseline", rep)], index[(s, "skill", rep)]
-        key = sha(base) + sha(skill)
-        hit = cache["pairs"].get(f"{s}|{rep}")
-        ok = hit and hit.get("sha") == key and hit.get("winner") in ("skill", "baseline", "tie")
-        return hit if ok else {**compare(base, skill, args.model, random.Random(seed)), "sha": key}
+    def cached_compare(sid, rep, x, y, seed):
+        rx, ry = index[(sid, x, rep)], index[(sid, y, rep)]
+        key = sha(rx) + sha(ry)
+        hit = cache["pairs"].get(pair_key(sid, rep, x, y))
+        ok = hit and hit.get("sha") == key and hit.get("winner") in (x, y, "tie")
+        return hit if ok else {**compare(rx, ry, args.model, random.Random(seed)), "sha": key}
 
+    jobs = [(sid, rep, x, y) for (x, y) in pairs_wanted
+            for (sid, arm, rep) in sorted(index) if arm == x and (sid, y, rep) in index]
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
         check_futs = {f"{r['scenario']}|{r['arm']}|{r['rep']}": pool.submit(cached_grade, r) for r in records}
-        pair_futs = {f"{s}|{rep}": pool.submit(cached_compare, s, rep, rng.random()) for s, rep in pair_keys}
+        pair_futs = {pair_key(sid, rep, x, y): pool.submit(cached_compare, sid, rep, x, y, rng.random())
+                     for sid, rep, x, y in jobs}
         checks = {k: f.result() for k, f in check_futs.items()}
-        pairs = {k: f.result() for k, f in pair_futs.items()}
+        pairs = {**cache["pairs"], **{k: f.result() for k, f in pair_futs.items()}}
 
-    (runs / "judgments.json").write_text(json.dumps({"checks": checks, "pairs": pairs}, indent=2))
-    bad = [k for k, v in checks.items() if "error" in v] + [k for k, v in pairs.items() if v["winner"] not in ("skill", "baseline", "tie")]
+    cache_file.write_text(json.dumps({"checks": checks, "pairs": pairs}, indent=2))
+    bad = [k for k, v in checks.items() if "error" in v] + \
+          [k for k, v in pairs.items() if k in pair_futs and v["winner"] not in set(sum(map(list, pairs_wanted), [])) | {"tie"}]
     if bad:
         raise SystemExit(f"{len(bad)} judgments failed (for example a usage limit). Rerun to retry only those: {bad[:5]}")
-    write_transcripts(records, checks, pairs)
+    write_transcripts(records, checks, pairs, arms)
 
-    print(f"{'scenario':<22} {'baseline checks':>16} {'skill checks':>13} {'pairwise (skill-baseline-tie)':>30} {'activation':>11} {'words b→s':>14}")
-    totals = collections.Counter()
-    for sid in sorted({r["scenario"] for r in records}):
-        row = collections.Counter()
-        words = collections.defaultdict(list)
-        for r in (x for x in records if x["scenario"] == sid):
-            c = checks[f"{sid}|{r['arm']}|{r['rep']}"].get("checks", [])
-            row[f"{r['arm']}_pass"] += sum(1 for x in c if x)
-            row[f"{r['arm']}_total"] += len(RUBRIC[sid])
-            words[r["arm"]].append(len(r["result"].split()))
-            if r["arm"] == "skill":
-                row["activated"] += r["skill_invoked"]
-                row["skill_runs"] += 1
-        for k, p in pairs.items():
-            if k.startswith(sid + "|"):
-                row[f"win_{p['winner']}"] += 1
-        totals.update(row)
-        avg = lambda xs: round(sum(xs) / len(xs)) if xs else 0
-        print(f"{sid:<22} {row['baseline_pass']:>8}/{row['baseline_total']:<7} {row['skill_pass']:>6}/{row['skill_total']:<6} "
-              f"{row['win_skill']:>12}-{row['win_baseline']}-{row['win_tie']:<15} {row['activated']:>6}/{row['skill_runs']:<4} "
-              f"{avg(words['baseline']):>6}→{avg(words['skill'])}")
-    print(f"{'TOTAL':<22} {totals['baseline_pass']:>8}/{totals['baseline_total']:<7} {totals['skill_pass']:>6}/{totals['skill_total']:<6} "
-          f"{totals['win_skill']:>12}-{totals['win_baseline']}-{totals['win_tie']:<15} {totals['activated']:>6}/{totals['skill_runs']}")
+    # Summary: checklist pass rate, words, tokens and cost per arm; wins per pair.
+    def stat(arm, sids):
+        rs = [r for r in records if r["arm"] == arm and r["scenario"] in sids]
+        passed = sum(sum(1 for x in checks[f"{r['scenario']}|{arm}|{r['rep']}"]["checks"] if x) for r in rs)
+        total = sum(len(RUBRIC[r["scenario"]]) for r in rs)
+        n = len(rs) or 1
+        costed = [r["cost_usd"] for r in rs if r.get("cost_usd") is not None]  # older runs predate cost tracking
+        cost = sum(costed) / (len(costed) or 1)
+        return passed, total, round(sum(len(r["result"].split()) for r in rs) / n), (cost, len(costed)), \
+            sum(r["skill_invoked"] for r in rs), len(rs)
+
+    sids_all = sorted({r["scenario"] for r in records})
+    print(f"{'scenario':<22}" + "".join(f"{a + ' checks':>16}" for a in arms) + "".join(f"{x + '>' + y:>18}" for x, y in pairs_wanted))
+    for sid in sids_all + ["TOTAL"]:
+        sids = sids_all if sid == "TOTAL" else [sid]
+        row = f"{sid:<22}"
+        for a in arms:
+            p_, t, *_ = stat(a, sids)
+            row += f"{(str(p_) + '/' + str(t)) if t else '-':>16}"
+        for x, y in pairs_wanted:
+            w = collections.Counter(v["winner"] for k, v in pairs.items() if k == pair_key(k.split('|')[0], k.split('|')[1], x, y) and k.split("|")[0] in sids)
+            row += f"{str(w[y]) + '-' + str(w[x]) + '-' + str(w['tie']):>18}"
+        print(row)
+    print()
+    for a in arms:
+        p_, t, words, (cost, costed), act, n = stat(a, sids_all)
+        print(f"{a:<10} checks {p_}/{t}  avg words {words}  avg cost ${cost:.3f} ({costed} runs with cost data)  activated {act}/{n}")
 
 
 if __name__ == "__main__":

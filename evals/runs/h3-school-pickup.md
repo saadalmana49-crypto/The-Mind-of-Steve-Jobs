@@ -18,7 +18,11 @@ Plan a mobile app that helps parents coordinate school pickups with other parent
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A is more focused and keeps essentials in scope (accessibility, account recovery and deletion, undo, offline and error states, idempotent confirms), while B pushes accessibility to 'Later' and adds in-app chat that recreates the group-chat problem, even though B usefully adds metrics, a consent flow, and cold-start risk.
+Blind pairwise (baseline:skill): **skill**. A makes sharper product judgment: it cuts v1 to one core job and five screens, and it keeps essentials such as accessibility, export and delete, undo, idempotent claims, an SMS fallback and offline/error states, while B spreads across chat, offers and roughly fifteen screens and pushes accessibility to 'Later'.
+
+Blind pairwise (baseline:v1): **v1**. A is more focused and keeps essentials in scope (accessibility, account recovery and deletion, undo, offline and error states, idempotent confirms), while B pushes accessibility to 'Later' and adds in-app chat that recreates the group-chat problem, even though B usefully adds metrics, a consent flow, and cold-start risk.
+
+Blind pairwise (v1:skill): **skill**. B centers the real failure mode (a stranded child or an unauthorized pickup) with concrete safeguards like escalating unclaimed slots, SMS fallback, an audit trail with undo, hidden contact details, and first-come-claim as an open decision, while keeping recovery, export/deletion, and accessibility; A is solid but less sharp on the safety-critical states.
 
 ### baseline
 
@@ -130,6 +134,78 @@ If you'd like, I can turn this into wireframes, a detailed data schema, or a sca
 
 - Skill activated: True; references read: none
 - Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: The empty state covers a schedule with no pickups but not a class where few parents have joined, so a cover request could go to almost no one with no invite-more-parents prompt; also, the 'Purpose' line runs two sentences, though the Recommendation's opening sentence works as a one-sentence purpose.
+- Words: 766
+
+<details><summary>Output</summary>
+
+# Product brief: carpool and pickup coordination for one class
+
+**Recommendation:** Build one thing, a shared pickup calendar for a single class. It answers "who is picking up my kid today?" and fills the gaps automatically. Skip chat, payments, and school-wide features in v1. Parents already have group chats, but chats don't tell you who is covering Thursday.
+
+**Purpose:** For parents in one class, at the moment they're juggling a work conflict or a sick day. They get a covered pickup in two taps, and they get a clear answer about who has their child.
+
+**Real problem:** Pickup swaps happen in a WhatsApp thread, where a request gets buried and nobody confirms. The failure is a child waiting with no one coming, or an unapproved person arriving.
+
+**Hero path (3 steps):** Open the app, tap the day that's uncovered ("Need cover"), and confirm. Nearby parents get a push notification, and the first to tap "I've got them" claims the slot. The requester sees "Dana is picking up Mia" and the teacher-facing note updates.
+**Repeat task (1 tap):** A recurring week ("Tue/Thu: Sam's mom") is set once, and exceptions are one tap.
+
+## Brilliant at (1–3)
+1. **Knowing who has each child today**, visible on the home screen at a glance.
+2. **Asking for cover** and having it claimed without back-and-forth.
+3. **Authorized-person safety:** only people the child's guardian approves can be named as pickup.
+
+## Screens (v1 = 5)
+1. **Today (home):** One card per child, showing "Picked up by: Dana, 3:15 pm" and its status (confirmed, unclaimed, running late). A big "Need cover" button sits below the cards.
+2. **Week:** A grid of days by child, with tap-to-assign and tap-to-request. Recurring patterns are set here.
+3. **Request cover (sheet):** Pick the day, then optionally add a note. Send. It shows the response state afterward.
+4. **Class:** The parent list, joined by an invite link or code from the class organizer. Each guardian sees only the parents' names and the children's first names. Contact details are hidden unless the parent opts in.
+5. **Settings:** Approved pickup people, notifications, text size and contrast, export, delete account and data. These controls must be fully present, not hidden.
+
+## Depth (where capabilities live)
+- **Running late / on my way:** In context, as a button on the day's card.
+- **Reciprocity ("you owe Dana one"):** One level down, a small tally in Class. Automatic, no settings.
+- **Calendar sync and widget:** Settings → Advanced.
+- **Multiple children or classes:** Switcher on Today (default is all).
+- **Pickup verification (PIN or photo at handoff):** Per-pickup, optional, in the card's ••• menu.
+
+## Not now
+- **In-app chat:** Duplicates existing group chats. Revisit if users still leave the app to confirm swaps.
+- **Payments or fuel splitting:** Adds regulation and disputes.
+- **School-wide or multi-class networks:** Scale only after one class works.
+- **Live GPS tracking:** A privacy risk for minors. Revisit only with explicit guardian opt-in.
+- **Teacher/school integration:** Valuable, but needs school buy-in. Start with a shareable read-only daily list.
+
+## States
+- **Empty:** "No pickups planned. Add your usual week." (one button)
+- **Offline:** Show the last known schedule, marked "Updated 2:10 pm".
+- **Unclaimed at T-2h:** Escalate to a second push, then show a clear red "Still uncovered" on Today.
+- **Error:** "Couldn't send your request. We'll retry. Your other plans are saved."
+- **Success:** The card turns green with a name and time.
+
+## Quality bar
+- **Safety:** Children's data is minimal (first name only, no photos by default). Parental consent and legal rules for minors' data (e.g. COPPA/GDPR, depending on region) need review before launch.
+- **Reliability:** Pushes must be delivered promptly, with SMS fallback for an unclaimed slot. Claims must be idempotent, so two parents can't both claim one slot.
+- **Access:** Dynamic type, screen reader labels, and 44 pt targets.
+- **Audit trail:** Every change is logged ("Dana claimed Tue"), with undo for 5 minutes.
+
+## Technology (assumption: small team)
+Cross-platform mobile client (React Native or Flutter), a managed backend with row-level access by class, and push plus SMS. Choose these after you confirm the experience.
+
+## Open decisions
+1. Which region and what age range of children? This drives the legal requirements.
+2. Does the **school** need to be informed, or is this parent-only?
+3. Who is the class organizer, and how are parents verified?
+4. Is first-come claiming right, or should the requester choose among volunteers?
+
+I can go deeper on the data model, notification rules, or the privacy and consent flow. Tell me which, and confirm the v1 cut above.
+
+</details>
+
+### v1
+
+- Skill activated: True; references read: none
+- Checks passed: 5/5 [True, True, True, True, True]
 - Judge note: none
 - Words: 718
 
@@ -222,7 +298,11 @@ I can go deeper on any of these: a screen-by-screen wireframe spec, the data mod
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. A is more focused and decisive: it centers the product on a single Today view and makes swaps and running-late one tap, keeps authorized pickups as the safety core, and covers states, accessibility, and data deletion concisely; B is thorough but sprawls into 16 screens, defers running-late alerts, and adds an unverified timeline.
+Blind pairwise (baseline:skill): **skill**. A makes sharper product judgment: it focuses on one hero question, gives explicit reasons for cutting chat and GPS, and covers empty, offline and error states, accessibility, consent and deletion, and atomic slot-claiming, while B is a broader, less prioritized feature list with 16 screens that omits accessibility.
+
+Blind pairwise (baseline:v1): **v1**. A is more focused and decisive: it centers the product on a single Today view and makes swaps and running-late one tap, keeps authorized pickups as the safety core, and covers states, accessibility, and data deletion concisely; B is thorough but sprawls into 16 screens, defers running-late alerts, and adds an unverified timeline.
+
+Blind pairwise (v1:skill): **v1**. A covers the same core (Today view, one-tap swaps, authorized pickups, offline, accessibility, account and data deletion, atomic claims) more concisely and stays internally consistent, while B contradicts itself by having the school see pickup names in v1 even though it defers school-side integration to v2.
 
 ### baseline
 
@@ -321,6 +401,83 @@ If you'd like, I can next sketch wireframes for the Today and New Request screen
 
 ### skill
 
+- Skill activated: True; references read: none
+- Checks passed: 4/5 [False, True, True, True, True]
+- Judge note: The labeled Purpose is split across two sentences, the first a fragment, so there is no clean one-sentence purpose statement; the closest is the Recommendation's opening line about 'Who's picking up my child today?'.
+- Words: 723
+
+<details><summary>Output</summary>
+
+# School Pickup Coordinator: Product Brief
+
+**Recommendation:** Build a small app around one question: "Who's picking up my child today?" Parents in a class share a pickup calendar and swap turns in two taps. The app handles reminders and the authorized-pickup check. It leaves out chat, social feeds, and live tracking.
+
+**Purpose:** For parents in one class, at the moment they're wondering who has pickup tomorrow or can't make today. They get a confirmed answer without scrolling a group chat.
+
+**Real problem:** Today this lives in WhatsApp threads. Requests get buried, nobody confirms, and a child can end up waiting. Carpools run on goodwill and memory.
+
+**Hero path**
+- *Ask for cover (3 steps):* tap "Need pickup help", pick the day, send. The request goes to the class and shows as an open slot. Any parent taps "I'll do it" and it's confirmed for both.
+- *Repeat task:* a recurring carpool rota, set once. Daily use is zero taps, because the home screen already shows today.
+
+**Brilliant at (1–3)**
+1. A glanceable "Today / Tomorrow" view showing who collects which child, and whether it's confirmed.
+2. Swapping or covering a pickup in two taps, with no negotiation thread.
+3. Safe handoff. The school or teacher sees only parent-approved pickup names, and the app never lets an unlisted person appear as confirmed.
+
+**Screens (5 tabs or fewer)**
+1. **Today:** pickup cards with child, pickup person, time, and status (Confirmed / Open / Running late). Primary button: "I'm running late", which notifies the group.
+2. **Week:** calendar grid with open slots highlighted. Tap a slot to claim it. "Need help" lives here.
+3. **Class:** the parent list, each child's approved pickup people, and an invite link. Each parent controls their own child's list.
+4. **Activity:** requests, confirmations, and swaps as a plain log with no free-form chat. Each item has an action button.
+5. **Settings:** notifications, recurring rota, calendar sync, data export, account deletion, text size and contrast controls.
+
+*Onboarding (once):* sign in with phone number, join by class invite code, add child, add approved pickup people. About 4 screens.
+
+**Depth (where each capability lives)**
+- Recurring rotas: automatic once set, edited in Week → ⋯
+- Calendar sync (Apple/Google) and export: Settings
+- Multiple children or classes: a switcher at the top of Today
+- Reminders: default 30 minutes before pickup, adjustable in Settings
+- Admin tools (remove a member, rotate the invite code): Class → ⋯, visible to class organizers only
+
+**Not now**
+- In-app chat: it recreates the buried-message problem. Revisit if "Need help" requests don't get claimed.
+- Live GPS tracking: privacy risk and battery cost. Revisit only if parents ask and the school agrees.
+- School-side integration and check-in: v2, once parent adoption is proven.
+- Payments for carpool fuel: complexity with little demand evidence yet.
+
+**States**
+- *Empty:* "No pickups set. Add your first or invite another parent."
+- *Offline:* cached schedule shown, with "Last updated 2:14 pm".
+- *Unclaimed request:* escalates after 2 hours to a push that reads "Still needs cover tomorrow".
+- *Error:* "Couldn't send. Your request is saved and will go out when you're back online."
+
+**Quality bar**
+- Notifications arrive within seconds, with a fallback SMS for urgent same-day requests.
+- Child data is minimal: first name and photo (optional). No school address is stored.
+- Class membership is checked on every read, so parents see only their own class.
+- Accessibility: Dynamic Type, VoiceOver labels, 44pt tap targets, no color-only status.
+- Consent from each parent before their child's name appears to others. Data export and deletion are available.
+
+**Technology (suggested)**
+- React Native or Flutter, so one codebase covers iOS and Android.
+- A managed backend with row-level access control, such as Postgres with Supabase or Firebase.
+- Push via APNs/FCM.
+- Claiming a slot must be atomic so two parents can't both take it.
+
+**Open decisions**
+1. Is the school involved, or is this parent-run only? The answer changes how trust and verification work.
+2. Is the unit one class, or a whole school? I'd start with one class.
+3. What are your constraints: a timeline, platform, or team size?
+4. Do you agree with cutting chat and tracking from v1?
+
+I can go deeper on any of these: wireframes for the Today screen, the data model, or a build plan.
+
+</details>
+
+### v1
+
 - Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
 - Checks passed: 5/5 [True, True, True, True, True]
 - Judge note: Authorized pickups are recommended as the safety core but left as an open v1 decision instead of committed, and the empty state doesn't address a class where few parents have joined.
@@ -393,7 +550,11 @@ I can go deeper on per-screen layouts, the data model and notification rules, or
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A is more focused and decisive: it centers on the core question of who has my child today, makes cover a three-tap task, covers empty/offline/error states, accessibility, and data export/deletion, and justifies each cut, while B is broader and more generic, omits accessibility, and defers multi-child support despite stronger admin-approval and custody coverage.
+Blind pairwise (baseline:skill): **skill**. A is more focused on the core question of who has my kid today, with a tight v1 scope and reasoned cuts, and it covers states others miss (empty, offline with queued requests, error recovery, accessibility settings, data export and deletion) while flagging its assumptions and placeholder values instead of presenting them as fact; B is solid but broader and less prioritized, and it omits accessibility and failure states.
+
+Blind pairwise (baseline:v1): **v1**. A is more focused and decisive: it centers on the core question of who has my child today, makes cover a three-tap task, covers empty/offline/error states, accessibility, and data export/deletion, and justifies each cut, while B is broader and more generic, omits accessibility, and defers multi-child support despite stronger admin-approval and custody coverage.
+
+Blind pairwise (v1:skill): **skill**. Both share the same sound core (Today glance, confirmed cover requests, no chat or GPS), but B covers safety that A misses (owner approval of new joiners instead of open invite-link joining, hidden addresses, gate identity verification, child-data law) and lays out screens and features more clearly, at a length its content justifies.
 
 ### baseline
 
@@ -500,6 +661,86 @@ I can go further on any piece: wireframes for key screens, a data model, or a de
 </details>
 
 ### skill
+
+- Skill activated: True; references read: none
+- Checks passed: 5/5 [True, True, True, True, True]
+- Judge note: The empty state doesn't address a class where few parents have joined, and two deferred items (payments, multiple schools) lack reasons.
+- Words: 754
+
+<details><summary>Output</summary>
+
+# Product brief: class pickup coordinator (working name "Pickup")
+
+**Recommendation:** Build a carpool and pickup tool for a single class, not a general parent social network. The core job is answering "who is getting my kid today, and are they actually coming?" Make that one question a single glance for each parent. Keep v1 to one class group, one daily schedule, and a swap or cover request. Chat, payments, and school-wide features come later.
+
+## Product brief
+
+**Purpose:** For parents in one class, at the moment of "I can't make pickup today" or "who has my kid?", it gives them a confirmed person and a time, without a group-chat scroll.
+
+**Real problem:** Pickup is arranged in WhatsApp threads. Requests get buried, nobody confirms, and the school office hears about changes by phone. I'm assuming that's the pain, so please check it against the parents you know.
+
+**Hero path (3 steps):** Open the app and see today's pickups → tap "Need cover" on your child → a parent taps "I've got them." Everyone affected is notified, and the school contact is told if you've enabled that.
+
+**Repeat task (1 step):** Recurring arrangements, such as "Dana picks up Tue/Thu," are set once and run automatically.
+
+**Brilliant at:**
+1. A Today screen that answers "who has my kid?" at a glance.
+2. Cover requests that end in a confirmed name, not a thread of maybes.
+3. Standing weekly arrangements that rarely need touching.
+
+## Screens
+
+1. **Today** (home): a card per child with the pickup person, time, and status (Confirmed / Needs cover / Running late). A prominent "Need cover" button sits on each card.
+2. **Request cover:** pick the date and child, with the time prefilled. Choose "Ask the class" or "Ask [specific parent]." The app suggests parents who live nearby or have covered before.
+3. **Respond:** a push notification opens a screen with one tap to accept or decline.
+4. **Week:** a calendar of standing and one-off arrangements. Editing a standing arrangement happens here.
+5. **Class:** parent list with children, contact, and a "who may collect my child" list per family.
+6. **Running late / I'm here:** two big buttons for the pickup moment. Each notifies the other parent and, if enabled, the teacher.
+7. **Settings:** profile, notifications, privacy, export, delete account. Also text size, contrast, and language.
+8. **Onboarding:** join the class with an invite link or code, add your children, set the authorized pickup list. About 2 minutes.
+
+## Features
+
+- **Must-have:** cover requests with accept/decline, standing arrangements, late and arrived alerts, an authorized-pickup list, and push notifications with a reminder if a request is unanswered after 30 minutes (placeholder value to tune).
+- **Safety and trust (not optional):**
+  - The teacher or school sees only confirmed names for the day.
+  - Parents can't see each other's addresses by default.
+  - The class owner approves new joiners.
+  - Children's data is minimal (first name, class) and covered by a privacy policy.
+  - Legal requirements for children's data vary by country, so we need to confirm them for your market.
+- **Depth, in labeled places:** calendar export, bulk "same every week" edits, and a school-office view. All of these go under Week or Settings → Advanced.
+
+## States
+
+- **Empty:** "No pickups to arrange today. Add a standing arrangement to get started."
+- **Unanswered request:** "No one has accepted yet. Ask someone directly?"
+- **Offline:** show the last known schedule with its timestamp, and queue the request.
+- **Error:** "Couldn't send your request. Tap to try again. Your request is saved."
+
+## Not now
+
+- In-app chat (the request thread already carries the context).
+- Payments or fuel splitting.
+- Live location tracking (a privacy risk, and not needed to coordinate).
+- Multiple schools or districts.
+- A points or fairness system (revisit if parents ask "who owes whom?").
+
+## Technology
+
+Cross-platform mobile (React Native or Flutter), a managed backend with row-level access rules per class, and push notifications. This is a recommendation, not a constraint I've seen from you.
+
+## Open decisions
+
+1. Does the school need to be involved, or is this parent-only in v1?
+2. Who verifies identity at the gate? The app can only confirm intent.
+3. Do you have a target country? It affects child-data law and whether WhatsApp is the incumbent.
+4. Who is the first class, and what team size and timeline are you working with?
+
+I can turn this into a wireframe spec for the Today and Request screens, or a data model and backend plan.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/product-thinking.md, insanely-great/references/experience-design.md
 - Checks passed: 5/5 [True, True, True, True, True]

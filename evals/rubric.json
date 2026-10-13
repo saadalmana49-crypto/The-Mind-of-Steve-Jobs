@@ -20,6 +20,70 @@
     "Treats child safety (who is authorized to pick up) as essential rather than cutting it.",
     "Covers first-run or empty states (for example a class where few parents have joined)."
   ],
+  "n1-button-label": [
+    "Gives one specific label that names the outcome (for example 'Create account'), not a generic verb.",
+    "Stays brief: a few sentences at most, with no product brief, framework, or unrelated redesign."
+  ],
+  "n10-data-pipeline": [
+    "Consolidates the near-duplicate DAGs and standardizes on one retry mechanism and one logging approach.",
+    "Keeps or adds safeguards: data-quality checks, idempotent tasks, backfill or replay, alerting.",
+    "Proposes an incremental migration with validation that outputs match, not a big-bang rewrite.",
+    "Diagnoses the causes of the weekly breakage, or proposes measuring them, before redesigning.",
+    "Prefers built-in platform features (for example Airflow's native retries) over custom frameworks where they meet the need."
+  ],
+  "n2-justified-removal": [
+    "Supports removing the four features given the usage evidence, rather than arguing to keep them without new evidence.",
+    "Checks for hidden dependencies before removal (API or integration use, scheduled jobs, contracts, data still referenced), not only UI analytics.",
+    "Plans customer communication and a deprecation notice or window.",
+    "Preserves user data or offers export or migration where relevant.",
+    "Includes a staged rollout or rollback plan (for example feature flags) and code and data cleanup."
+  ],
+  "n3-checkout": [
+    "Delivers a simpler single-page or fewer-step checkout design.",
+    "Keeps an order summary or itemized review before payment.",
+    "Keeps the shipping cost visible before payment, not only the total.",
+    "Keeps access to the return policy and legally required terms, or explains the legal and trust risk instead of silently dropping them.",
+    "Tells the user which requested removals it pushed back on, and why."
+  ],
+  "n4-ai-feature": [
+    "Puts a simple default experience on the surface: one obvious entry point and sensible defaults.",
+    "Keeps advanced controls (model picker, temperature, custom system prompt) in a labeled advanced area, rather than deleting them or showing them all by default.",
+    "Consolidates overlapping controls (for example tones, templates, and length) into fewer concepts.",
+    "Covers states such as streaming, errors, and review, undo, or revert of AI changes.",
+    "Defines what the 'magic' button does concretely, or replaces it with something clearer."
+  ],
+  "n5-readme-copy": [
+    "Removes the hype words (revolutionary, AI-powered, blazing-fast, next-generation, seamlessly, unprecedented).",
+    "States plainly what FlowMax is and does: an open-source Python library that runs scheduled jobs with retries, with a web UI for job history.",
+    "Does not invent facts, numbers, benchmarks, or features that were not provided, or clearly marks placeholders.",
+    "Includes a concrete example (code or command) or a clear quickstart pointer."
+  ],
+  "n6-permissions": [
+    "Introduces role templates or presets for common roles instead of raw toggles by default.",
+    "Keeps fine-grained custom permissions available for admins who need them.",
+    "Helps prevent mistakes, for example a plain-language summary or preview of what a role can do, warnings for risky permissions, or least-privilege defaults.",
+    "Includes an audit log or change history and a way to review or revert access changes.",
+    "Groups the 40 permissions into understandable categories."
+  ],
+  "n7-bugfix": [
+    "Identifies the bug correctly: the no-discount branch multiplies by the discount, which returns 0.",
+    "Provides a correct minimal fix, for example returning price * qty when there is no discount.",
+    "Stays focused: no product brief, redesign, or unrelated refactoring beyond the fix (a short note on edge cases or a test is fine)."
+  ],
+  "n8-notifications": [
+    "Consolidates the 14 kinds into a small number of user-meaningful categories.",
+    "Keeps user control (per-category settings), so users can keep the notifications they want.",
+    "Keeps critical or transactional notifications (security, payments, direct messages) reliable while reducing noise.",
+    "Uses smarter delivery (batching or digests, frequency caps, quiet hours, relevance) instead of only removing notifications.",
+    "Proposes measurement (for example opt-out rate) or a rollout plan."
+  ],
+  "n9-pricing": [
+    "Reduces to a small number of clearly differentiated plans (for example 3 or 4), each explainable in a sentence.",
+    "Differentiates plans along an axis customers use to choose (for example team size, usage, or needs).",
+    "Handles existing customers: grandfathering, a migration path, or advance notice of any price change.",
+    "Keeps an enterprise or custom path for large customers.",
+    "Keeps a free tier or trial path, or explains why it is removed."
+  ],
   "s1-new-product": [
     "States a one-sentence purpose that names who it is for, the moment of use, and the outcome.",
     "Defines a hero path to first value as explicit, counted steps.",

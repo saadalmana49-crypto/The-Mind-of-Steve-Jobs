@@ -1,0 +1,1 @@
+Analytics for the last 12 months show zero usage across our 30,000 accounts for four features in our web app: legacy XML import, the "classic" theme, fax export, and the old v1 dashboard. We want to remove them. Plan the removal.

@@ -24,7 +24,10 @@ Lashinsky reports that after the troubled 2008 MobileMe launch, Jobs gathered th
 5. **Element audit.** For each element, ask: is this capability someone needs, or complexity? Mark complexity to remove or merge. Place each capability on the ladder (see simplicity.md): keep, default, automate, move in context, move one level down, move to Advanced.
 6. **Concept audit.** List the nouns the user must learn. Look for duplicates (two ways to organize, two names for one thing) and for implementation leaking into the UI.
 7. **Consistency.** Check names, placement, behavior, and visual language across screens and platforms.
-8. **Details.** Copy, feedback, speed, accessibility (contrast, labels, keyboard, target size), edge cases.
+8. **Details.**
+   - **Recovery:** back, saved progress, undo, input kept after an error.
+   - **Accessibility:** contrast, labels, keyboard, target size, errors not shown by color alone.
+   - **The rest:** copy, feedback, speed, edge cases. Write the exact replacement copy for every message you criticize.
 9. **Capability check.** If the review proposes cuts, list every capability affected and where it goes. Removing something people rely on, especially an expert workflow, is itself a finding (Major or Blocker).
 10. **Whole product.** Do the email, docs, billing, support, and the leaving or export path feel like the same product?
 11. **Trust.** Look for dark patterns: hidden skip buttons, forced card capture, confirmshaming, surprise charges, and cancellation that is hard to find.

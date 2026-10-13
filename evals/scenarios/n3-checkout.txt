@@ -1,0 +1,1 @@
+Our e-commerce checkout has 5 steps and we're losing customers. Make it a single page and as minimal as possible. We also want to drop the order summary, the return-policy link, the separate shipping-cost line (just show the total), and the "I agree to the terms" checkbox. Give me the new checkout design.

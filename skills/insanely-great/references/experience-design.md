@@ -59,6 +59,13 @@ A product is simple when a newcomer succeeds on the first try *and* an expert wo
 - **Advanced features follow the same rules** as everything else: consistent names, visible entry points, the same behavior everywhere.
 - **Measure both paths:** steps to first value for a newcomer, and time on the most frequent task for an expert.
 
+## Money moments
+
+Checkout, upgrades, and cancellations are where simplification most often turns into a trust problem.
+- **Fewer steps is good. Less information is not.** Before people pay, show what they are buying and the itemized cost: subtotal, shipping, taxes, fees.
+- **Keep the terms, return, and cancellation information people are entitled to,** one tap away. Where the law requires explicit consent, keep it explicit.
+- **Make the price people see the price they pay.** No surprises on the last step.
+
 ## Speed is part of the design
 
 Hertzfeld recounts Jobs pressing the engineer working on the Mac's boot time. Multiplied across millions of users, ten seconds saved per boot added up to lifetimes ("Saving Lives", FL-SAVE). Use the same arithmetic to decide what to optimize:

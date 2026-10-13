@@ -9,9 +9,13 @@ and activate it on its own, the same way it would for a real user. In the
 Both arms load no user settings, no user skills, no plugins, no hooks and no MCP
 servers, and only the Read and Skill tools are available.
 
+Any arm other than `baseline` installs a skill: the repository's skill by default,
+or another version with --skill-dir (for before/after comparisons).
+
 Usage:
   python3 evals/run.py --arm baseline --out evals/runs/raw
   python3 evals/run.py --arm skill --reps 2 --model sonnet --scenarios s1,s4
+  python3 evals/run.py --arm v1 --skill-dir /path/to/old/insanely-great
 
 Requires: Claude Code (`claude`) signed in. Standard library only.
 """
@@ -30,11 +34,11 @@ SKILL_DIR = ROOT / "skills" / "insanely-great"
 SCENARIO_DIR = ROOT / "evals" / "scenarios"
 
 
-def run_one(scenario: pathlib.Path, arm: str, rep: int, model: str, out: pathlib.Path) -> dict:
+def run_one(scenario: pathlib.Path, arm: str, rep: int, model: str, out: pathlib.Path, skill_dir: pathlib.Path) -> dict:
     prompt = scenario.read_text().strip()
     work = pathlib.Path(tempfile.mkdtemp(prefix=f"ig-{scenario.stem}-{arm}-"))
-    if arm == "skill":
-        shutil.copytree(SKILL_DIR, work / ".claude" / "skills" / SKILL_DIR.name)
+    if arm != "baseline":
+        shutil.copytree(skill_dir, work / ".claude" / "skills" / "insanely-great")
     cmd = [
         "claude", "-p", prompt,
         "--setting-sources", "project",
@@ -74,6 +78,11 @@ def run_one(scenario: pathlib.Path, arm: str, rep: int, model: str, out: pathlib
                     record["reads"].append(path.split(".claude/skills/")[-1])
         elif event.get("type") == "result":
             record["result"] = event.get("result", "")
+            usage = event.get("usage", {})
+            record["cost_usd"] = event.get("total_cost_usd")
+            record["output_tokens"] = usage.get("output_tokens")
+            record["input_tokens"] = sum(usage.get(k, 0) or 0 for k in
+                                         ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))
     if not record["result"]:
         record["stderr"] = proc.stderr[-2000:]
     shutil.rmtree(work, ignore_errors=True)
@@ -84,7 +93,8 @@ def run_one(scenario: pathlib.Path, arm: str, rep: int, model: str, out: pathlib
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--arm", choices=["baseline", "skill"], required=True)
+    parser.add_argument("--arm", required=True, help="baseline, skill, or any label for a skill version")
+    parser.add_argument("--skill-dir", default=str(SKILL_DIR), help="skill folder to install (non-baseline arms)")
     parser.add_argument("--reps", type=int, default=1)
     parser.add_argument("--model", default="sonnet")
     parser.add_argument("--scenarios", default="", help="comma-separated ids, e.g. s1,s4 (default: all)")
@@ -96,10 +106,12 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     wanted = {s.strip() for s in args.scenarios.split(",") if s.strip()}
     scenarios = [p for p in sorted(SCENARIO_DIR.glob("*.txt")) if not wanted or p.stem.split("-")[0] in wanted]
+    if not scenarios:
+        raise SystemExit(f"No scenarios match {sorted(wanted)}")
     jobs = [(s, rep) for s in scenarios for rep in range(1, args.reps + 1)]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futures = [pool.submit(run_one, s, args.arm, rep, args.model, out) for s, rep in jobs]
+        futures = [pool.submit(run_one, s, args.arm, rep, args.model, out, pathlib.Path(args.skill_dir)) for s, rep in jobs]
         for future in concurrent.futures.as_completed(futures):
             r = future.result()
             status = "skill" if r["skill_invoked"] else "-"

@@ -1,0 +1,1 @@
+Our nightly ETL runs 23 Airflow DAGs (4 of them near-duplicates), uses a custom retry framework, and three different logging libraries. Something breaks almost every week. Simplify the architecture.

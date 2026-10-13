@@ -19,7 +19,11 @@ Our app's settings screen feels cluttered. Make it minimal, like Apple would: cu
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A reduces clutter through grouping and progressive disclosure while keeping everything people need, including accessibility, security, export/delete, and per-notification control, and it places default view on the list itself; B cuts things people may need (in-app sound control, timezone/date overrides, a discoverable beta opt-in) and contradicts itself on counts, though A also miscounts its top-level rows.
+Blind pairwise (baseline:skill): **skill**. B simplifies the top level by automating defaults and moving rare controls one level down, without removing timezone/date overrides, sound and haptic control, or granular notifications, and it flags its assumptions; A has internal inconsistencies (it says '6 rows' but lists 8, and its '14 items' cut count doesn't add up) and drops controls some users rely on.
+
+Blind pairwise (baseline:v1): **v1**. A reduces clutter through grouping and progressive disclosure while keeping everything people need, including accessibility, security, export/delete, and per-notification control, and it places default view on the list itself; B cuts things people may need (in-app sound control, timezone/date overrides, a discoverable beta opt-in) and contradicts itself on counts, though A also miscounts its top-level rows.
+
+Blind pairwise (v1:skill): **skill**. A is internally consistent: its 7-row count is correct, and it flags the questions a product owner needs to decide, such as whether developer mode is staff-only, whether sounds and haptics should be split, and whether delete has a grace period. B miscounts its own rows (it says six but lists seven), gives a misleading '0 controls visible' metric, and contradicts itself by auto-dismissing tips while still keeping the 'Show tips' toggle.
 
 ### baseline
 
@@ -81,6 +85,88 @@ I can also sketch this as a wireframe or write the component and navigation code
 </details>
 
 ### skill
+
+- Skill activated: True; references read: none
+- Checks passed: 6/6 [True, True, True, True, True, True]
+- Judge note: none
+- Words: 672
+
+<details><summary>Output</summary>
+
+**Recommendation:** Show 7 rows at the top level instead of 37 controls. Do it by automating what the app can infer (timezone, date format, accessibility defaults) and by merging overlapping controls. Move the rare controls one level down. I'd remove no capability. Security, accessibility, export, delete and language all stay, because they're essential.
+
+## Simplification report
+
+**Before → after:** 26 settings (37 controls, counting the 12 notification toggles) → 7 top-level rows, with about 14 visible controls on the screens people use most.
+
+### New structure
+
+```
+Settings
+├─ [Photo]  Display name            ← profile card at top; tap to edit name/photo
+│           email@example.com
+├─ Sign-in & Security
+│    Change password
+│    Two-factor authentication
+│    Connected devices
+├─ Notifications
+│    Allow notifications   [master toggle]
+│    Activity · Messages · Reminders · Weekly digest   [4 grouped toggles]
+│    Customize…  → the original 12 toggles
+├─ Appearance
+│    Theme: System (default) / Light / Dark
+│    Text size: follows system (default), with override
+│    Increase contrast: follows system, with override
+│    Reduce motion: follows system, with override
+│    Sounds & haptics   [one toggle]
+├─ Language & Region
+│    Language: system (default), with override
+│    Time zone & date format: automatic, with "Change…"
+├─ Privacy & Data
+│    Export my data
+│    Delete account       [confirmation, with a grace period if possible]
+└─ About
+     Version · Open-source licenses · Keyboard shortcuts · Advanced
+```
+
+**Advanced** is a labeled row inside About and holds Beta features and Developer mode.
+
+### Capability ledger
+
+| Setting | Decision | Where it lives |
+|---|---|---|
+| Name, photo, email | Kept | Profile card |
+| Password, 2FA, devices | Kept | Sign-in & Security |
+| Theme | Kept, defaults to System | Appearance |
+| Text size, reduce motion, high contrast | Kept, default to the OS setting | Appearance |
+| Notification preferences (12) | Moved | One level down in "Customize…". The top screen has a master toggle and 4 groups. |
+| Weekly digest | Merged | One of the 4 notification groups |
+| Sound effects + haptic feedback | Merged | One "Sounds & haptics" toggle |
+| Language | Kept, defaults to the system language | Language & Region |
+| Timezone, date format | Automated | Detected from the device and region. "Change…" is the override. |
+| Default view (list/grid) | Moved to context | A toggle in the view's own toolbar. It remembers the last choice. |
+| Show tips | Moved to context | Each tip has a "Don't show tips" action. A "Reset tips" action goes in Advanced. |
+| Keyboard shortcuts | Moved | About, and the `?` key or Help menu. Keep the shortcuts themselves. |
+| Beta features, developer mode | Moved | About → Advanced |
+| Export, delete | Kept | Privacy & Data |
+| Version, licenses | Kept | About |
+
+### What I did not cut, and why
+- Accessibility controls stay even though the OS has equivalents. The app renders its own text and motion. The OS value is the default and the override stays.
+- Security, export, delete and licenses are guardrails. They are organized here, not hidden.
+- Nothing is removed outright. Removing anything would need usage evidence I don't have.
+
+### Needs your confirmation
+1. **The 4 notification groups are my assumption.** Send me the 12 toggles and I'll map them to real groups. The aim is defaults that are right for most people.
+2. **Sound and haptic merge:** is anyone likely to want one without the other? If so, split them inside "Sounds & haptics" rather than at the top.
+3. **Is developer mode used by customers or only by staff?** If staff only, it could leave the shipping UI entirely. I'd check usage first.
+4. **Does delete have a grace period?** If it doesn't, add a confirmation step that spells out what is lost.
+
+I can also write the exact UI copy for each row and the notification detail screen if you want it.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 6/6 [True, True, True, True, True, True]
@@ -156,7 +242,11 @@ I can write the per-screen detail (copy, defaults, states) or the implementation
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. A makes the top level as minimal as requested while keeping the in-app accessibility controls (text size, reduce motion, high contrast), language, and discoverable beta features, whereas B drops the accessibility controls and language in favor of system settings, adding caveats only after the fact, and hides beta features behind a 7-tap easter egg.
+Blind pairwise (baseline:skill): **skill**. B simplifies the top level to 8 rows while keeping accessibility controls, security, recovery, and the full notification options, and it flags its assumptions; A cuts text size, reduce motion, high contrast, and language by deferring to the OS and only mentions the accessibility risk as a caveat.
+
+Blind pairwise (baseline:v1): **v1**. A makes the top level as minimal as requested while keeping the in-app accessibility controls (text size, reduce motion, high contrast), language, and discoverable beta features, whereas B drops the accessibility controls and language in favor of system settings, adding caveats only after the fact, and hides beta features behind a 7-tap easter egg.
+
+Blind pairwise (v1:skill): **v1**. B gives a tighter, more Apple-like structure (profile header plus 6 rows) that loses no capability: it keeps separate sound and haptic switches and moves default view onto the list itself, and its item count (26) is correct where A's (25) is wrong, though B's '~20 decisions to 0' metric is somewhat invented.
 
 ### baseline
 
@@ -222,6 +312,79 @@ I can turn this into a screen-by-screen spec, or update the code if you point me
 </details>
 
 ### skill
+
+- Skill activated: True; references read: none
+- Checks passed: 6/6 [True, True, True, True, True, True]
+- Judge note: none
+- Words: 587
+
+<details><summary>Output</summary>
+
+**Recommendation:** Keep every capability, but cut the top level from 25 items (36 controls) to 8 rows. Do it by grouping, setting sensible defaults, and moving rare items one level down. I recommend removing nothing outright, because I have no usage data and several items are accessibility, security, or legal essentials.
+
+## New structure
+
+**Settings**
+1. **Profile** (header row: photo, name, email). Tapping opens an edit screen.
+2. **Sign-in & Security**
+   - Change password
+   - Two-factor authentication
+   - Connected devices
+3. **Notifications**
+   - One master switch.
+   - Then 3–4 grouped toggles instead of 12. The groups are placeholders such as "Mentions & replies", "Activity", and "Product news". I haven't seen your 12 toggles, so you need to map them.
+   - Weekly digest is one row here.
+   - "Customize" at the bottom of the screen opens the full 12 for people who want them.
+4. **Appearance**
+   - Theme (default: System)
+   - Default view (List / Grid)
+   - Sounds & haptics (one switch, default on)
+5. **Accessibility**
+   - Text size (default: follows the OS)
+   - Reduce motion (default: follows the OS)
+   - High contrast (default: follows the OS)
+6. **Language & Region**
+   - Language
+   - Time zone and date format, both set to "Automatic" with an override.
+7. **Data & Account**
+   - Export my data
+   - Delete account (red, at the bottom, with a confirmation that states what will be lost)
+8. **Advanced & About**
+   - Beta features
+   - Developer mode
+   - Keyboard shortcuts
+   - Version
+   - Open-source licenses
+
+## Capability ledger
+
+| Item | Outcome |
+|---|---|
+| Name, photo, email | Moved into the Profile header |
+| Password, 2FA, devices | Kept, grouped under Sign-in & Security |
+| Theme, default view | Kept, in Appearance |
+| Text size, reduce motion, high contrast | Kept and made visible. They default to the OS, but the app renders its own content, so it still needs the controls. |
+| 12 notification toggles | Grouped into 3–4. All 12 remain under "Customize". |
+| Weekly digest | Moved into Notifications |
+| Sound effects, haptics | Merged into one switch. This is the one item that loses a choice, since someone may want sound without haptics. Confirm that's acceptable, or keep two toggles. |
+| Timezone, date format | Automated from the device and region, with an override |
+| Show tips | Automated. Tips appear once and are dismissed in context ("Don't show tips" on the tip itself). |
+| Beta, developer mode, shortcuts | Moved to Advanced. Also open shortcuts with `?` or ⌘/. |
+| Export, delete | Kept together, never hidden |
+| Version, licenses | Kept. Licenses are a legal requirement. |
+
+**Numbers:** top level goes from 25 items to 8 rows. The 12 notification toggles reduce to 3–4 on the main path, and the 12 stay reachable. Nothing is removed.
+
+## What I assumed or couldn't verify
+- Sound and haptics could be set to Auto instead of merged, if you'd rather not remove the choice.
+- Check whether any enterprise or support workflows rely on Developer mode or Beta being near the top level. Neither is likely, but I haven't seen the app.
+- If analytics show that almost nobody uses Default view or High contrast, the next step is to move them down, not to remove them. High contrast is an accessibility feature and should stay.
+
+Do you want me to draft the notification grouping if you send the 12 toggles, or write the screen copy for each row?
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 6/6 [True, True, True, True, True, True]
@@ -301,7 +464,11 @@ I can detail any screen, such as the notification groups or the Advanced copy, o
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A simplifies to 7 top-level rows while keeping the accessibility controls, the language/timezone overrides and the granular notification access people need, and it flags what it hasn't verified; B removes in-app accessibility settings and manual locale overrides on the untested assumption that the OS covers them, and it hides developer options behind an easter egg.
+Blind pairwise (baseline:skill): **skill**. Answer A simplifies the screen to 7 rows while keeping accessibility (text size, reduce motion, high contrast), language override, and granular notification control, and it flags its own assumptions; Answer B cuts in-app accessibility and language/region overrides, which some users need when OS settings don't cover their case.
+
+Blind pairwise (baseline:v1): **v1**. A simplifies to 7 top-level rows while keeping the accessibility controls, the language/timezone overrides and the granular notification access people need, and it flags what it hasn't verified; B removes in-app accessibility settings and manual locale overrides on the untested assumption that the OS covers them, and it hides developer options behind an easter egg.
+
+Blind pairwise (v1:skill): **v1**. Both reach a similar 7-row structure, but A preserves every capability, while B merges sound and haptics into one toggle, losing separate control despite claiming nothing was removed; A also counts the controls correctly and leaves the accessibility and merge trade-offs as explicit decisions for the user.
 
 ### baseline
 
@@ -371,6 +538,79 @@ I can also draft the notification groupings, or sketch the screens as a SwiftUI 
 </details>
 
 ### skill
+
+- Skill activated: True; references read: none
+- Checks passed: 6/6 [True, True, True, True, True, True]
+- Judge note: none
+- Words: 531
+
+<details><summary>Output</summary>
+
+**Recommendation:** Settings goes from about 36 controls on one screen to 7 rows. Each row opens to a short detail screen. Nothing is deleted outright. Anything the app can work out for itself becomes automatic, and the rest moves to where it's used or one level down. Accessibility, security, export and delete, language, and licenses all stay visible.
+
+## Simplification report
+
+**Before → after:** 36 controls at the top level (the 12 notification toggles count separately) → 7 rows.
+
+## New structure
+
+**Top level**
+1. **Profile** (a card at the top): photo and name. Email is shown under the name and edits on tap.
+2. **Account & Security**
+   - Password
+   - Two-factor authentication
+   - Devices
+   - Your Data: Export my data, Delete account (confirmation required)
+3. **Notifications**
+   - 3–4 category toggles, such as Activity, Messages, and Product news. I can't see what your 12 toggles control, so I'm assuming they group this way.
+   - Weekly digest is one of those categories.
+   - "Customize" per category is one level down for anyone who wants the granular toggles.
+4. **Appearance & Accessibility**
+   - Theme (System by default)
+   - Text size (follows the OS by default)
+   - Reduce motion (follows the OS by default)
+   - High contrast (follows the OS by default)
+   - Sounds & haptics (one toggle)
+5. **Language & Region**
+   - Language (override)
+   - Time zone and date format are set from the device. "Change" is shown only if the user wants to override them.
+6. **Advanced**
+   - Beta features
+   - Developer mode
+   - Show tips
+7. **About**
+   - Version
+   - Open-source licenses
+   - Keyboard shortcuts (also opens with ⌘/ on desktop)
+
+**In context, not in Settings:** Default view (list/grid) becomes a toggle on the content screen, remembered per user.
+
+## Capability ledger
+
+| Item | Result |
+|---|---|
+| Time zone, date format | **Automated.** Device values are used. Manual override is under Language & Region. |
+| Default view | **Moved** to the content screen. |
+| Sound effects + haptics | **Merged** into one toggle. This loses separate control, which is a trade-off. If users need one without the other, split them again under a "Sounds & haptics" detail screen. |
+| 12 notification toggles | **Grouped.** Granular control remains under "Customize". |
+| Weekly digest | **Moved** into Notifications. |
+| Keyboard shortcuts | **Moved** to About, plus ⌘/. Keyboard users keep a labeled path. |
+| Beta, developer mode, show tips | **Moved** to Advanced. |
+| Reduce motion, high contrast, text size | **Kept** and defaulted to OS settings. These are guardrails, not clutter. |
+| Security, export, delete, language, licenses | **Kept** in full. |
+| Removed | **None.** |
+
+## What I need from you
+
+- **Notification groups:** Tell me what the 12 toggles control and I'll define the real categories. Check usage data before locking them in.
+- **"Show tips":** This is the best removal candidate. If tips are dismissible in place, the setting could go entirely. I haven't removed it without your approval.
+- **Sounds and haptics:** Confirm the merge, or tell me if users need them separately.
+
+I can also write the exact row labels and helper copy for each screen.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/simplicity.md
 - Checks passed: 6/6 [True, True, True, True, True, True]

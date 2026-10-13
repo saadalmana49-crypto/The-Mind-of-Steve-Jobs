@@ -17,7 +17,11 @@ We're a 3-person startup building a CLI that deploys web apps to any cloud (a li
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. Both pick the same three priorities, but A stays more focused and adds key risks (measure where the 4 minutes goes first, auto-teardown for previews), while B muddies its recommendation by floating built-in Postgres as a fourth slot even though it then calls Postgres too heavy for a 3-person team.
+Blind pairwise (baseline:skill): **skill**. Both reach the same sound recommendation, but B is more actionable: a concrete deploy-speed target, an example of a good error message, preview cost controls, a fallback scope cut, and a revisit signal for each deferred item, all without inventing facts.
+
+Blind pairwise (baseline:v1): **v1**. Both pick the same three priorities, but A stays more focused and adds key risks (measure where the 4 minutes goes first, auto-teardown for previews), while B muddies its recommendation by floating built-in Postgres as a fourth slot even though it then calls Postgres too heavy for a 3-person team.
+
+Blind pairwise (v1:skill): **skill**. Both pick the same sound priorities. A is more actionable: it profiles the deploy stages, gives a concrete error-message example, sets a clear revisit signal for each deferred item, caps preview costs, and offers a fallback scope for a 3-person team, while B repeats its recommendation and adds less concrete detail.
 
 ### baseline
 
@@ -65,6 +69,57 @@ A quick check before you commit: look at where users drop off, and talk to five 
 
 ### skill
 
+- Skill activated: True; references read: none
+- Checks passed: 4/4 [True, True, True, True]
+- Judge note: none
+- Words: 656
+
+<details><summary>Output</summary>
+
+# Decision memo: next quarter
+
+**Recommendation:** Build **faster deploys (8)**, **better error messages (11)**, and **preview environments per PR (3)**, in that order. The first two make the core loop, which is deploy, fail, fix, and redeploy, fast and clear. The third builds on that loop and gives you a feature people will talk about.
+
+## Why
+
+- **Every user hits the deploy loop, and it's your whole product.** At about 4 minutes per deploy, each failed attempt costs 4 minutes of waiting. A bad error message adds a trip to the docs or a support ticket on top of that. Fixing both helps all 600 weekly users, and no other item does.
+- **Faster deploys.** Start by profiling where the 4 minutes go (build, image push, provisioning, health check). Then set a target, for example a median under 90 seconds for a redeploy with no dependency changes. Layer caching and skipping unchanged steps usually give the biggest gains. Show a live per-stage timer so the wait is visible.
+- **Better errors.** Every failure should say what failed, why, and the next step. Example: `Deploy failed at health check: your app didn't respond on port 3000 within 60s. Your app is listening on 8080. Fix: set PORT=3000 or run "<cli> config set port 8080".` Start with your top 10 failure causes from logs. This is cheap and needs no new infrastructure.
+- **Preview environments.** They suit your product well: a lighter Heroku with one command per PR. They also reward the speed work, because a preview that takes 4 minutes feels broken. They make people use you daily and bring teammates in, which sets up team accounts later.
+
+## Not now
+
+| Item | Reason | Signal to revisit |
+|---|---|---|
+| Web dashboard (1) | Large surface area for 3 people, and it splits focus from the CLI | Users ask to see status or logs without a terminal |
+| Kubernetes (2) | A big commitment that adds support burden | Several paying users blocked specifically on it |
+| Team accounts/RBAC (7) | Real, but a security-sensitive build | Previews bring teams, and teams ask for permissions |
+| Windows (5) | Unknown share of your users | Install or support data shows Windows demand |
+| Plugin system (4) | Premature before the core is stable | Repeated requests for the same extension points |
+| Terraform export (6) | An escape hatch, not a growth driver | Users hit a ceiling and ask to leave |
+| Built-in Postgres (9) | Data is a high-risk area (backups, restores, on-call) | Most apps fail to deploy because they lack a database |
+| AI config assistant (10) | Better errors and defaults should come first | Setup is still the top drop-off after the quarter |
+| Slack (12) | Small and easy, so a good later add-on | A natural fit once previews exist, such as PR links |
+
+## Risks
+
+- Speed gains depend on your architecture, so profile in week one before committing to a target.
+- Previews cost money to run. Auto-delete them on merge or close, and cap idle time and the number per project.
+- Three items may be too many for 3 people. If you must cut one, cut previews to a thin slice: GitHub only, one preview per PR, one command.
+
+## What would change this
+
+I don't have your data, so I'm assuming the usual pattern. Check these first:
+- If most users never complete their first deploy, put onboarding and errors ahead of everything.
+- If churned users mostly cite Windows, a missing database, or Kubernetes, that item beats previews.
+- If a paying customer is blocked on RBAC, bring it forward.
+
+Which does your usage data show: where new users drop off, and what churned users say? With that I can firm up the order and sketch the first two weeks.
+
+</details>
+
+### v1
+
 - Skill activated: True; references read: insanely-great/references/focus-and-strategy.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
@@ -107,7 +162,11 @@ I can break down the 4-minute deploy, draft the error-message audit, or spec pre
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. B makes the same core picks with more concrete, actionable detail: it profiles where the 4 minutes go, scopes preview v1 tightly, and names risks and triggers for changing course. It also avoids A's inconsistency of recommending four items, including risky built-in Postgres for a 3-person team, while advising to keep the quarter to two major items plus one smaller one.
+Blind pairwise (baseline:skill): **skill**. B stays focused on three well-sequenced items with concrete detail (an example error message, a speed target, preview risks like cleanup and cost caps, and signals for revisiting each deferred item) and clearly labels its placeholders, while A adds risky built-in Postgres for a 3-person team and contradicts its own advice to cap the quarter at two major items plus one smaller one.
+
+Blind pairwise (baseline:v1): **v1**. B makes the same core picks with more concrete, actionable detail: it profiles where the 4 minutes go, scopes preview v1 tightly, and names risks and triggers for changing course. It also avoids A's inconsistency of recommending four items, including risky built-in Postgres for a 3-person team, while advising to keep the quarter to two major items plus one smaller one.
+
+Blind pairwise (v1:skill): **v1**. Both pick the same three items, but B shows sharper judgment: it says to profile where the 4 minutes go before committing, since user build time may be unfixable; it flags that three items for three people leaves little slack and names a fallback; and it scopes previews to a concrete v1 (GitHub only, stateless apps, auto-teardown), while A asserts unsupported claims like previews being 'what Heroku users miss most.'
 
 ### baseline
 
@@ -153,6 +212,53 @@ If you share your drop-off data, support requests, or which segment pays you, I 
 
 ### skill
 
+- Skill activated: True; references read: none
+- Checks passed: 4/4 [True, True, True, True]
+- Judge note: none
+- Words: 679
+
+<details><summary>Output</summary>
+
+## Decision memo: next quarter
+
+**Recommendation:** Build **(11) better deploy-failure messages**, **(8) faster deploys**, and then **(3) preview environments per PR**. The first two make the core loop good for the 600 developers you already have. The third builds on that loop and gives teams a reason to adopt you together.
+
+### Why
+- **The deploy is the product.** A 4-minute deploy that fails with a vague error is the worst version of your core promise. Every other item on the list sits on top of this loop.
+- **Error messages (11) come first because they are cheap and useful right away.** Aim for about 2 weeks. Every failure should say what failed, why, and the next command to run. For example:
+  `Deploy failed at build: PORT not set. Your app must listen on $PORT. Run 'yourcli env set PORT=8080' or see <docs link>.`
+  Start with your top 10 failure causes by frequency. You likely have this in logs, but I haven't seen it.
+- **Faster deploys (8) come second, because they make previews viable.** Previews run on every push, so 4 minutes per push is painful. The usual wins are layer caching, skipping unchanged builds, and reusing images. Set a target and measure it. For example, a p50 under 90 seconds for a code-only change. That target is my suggestion, not something I derived from your data.
+- **Previews (3) come third because they are what Heroku users miss most.** Each PR gets a URL and is torn down on merge. They are used by a whole team on every PR, which brings in more developers per account. They also work without a dashboard, because the PR comment carries the URL.
+
+### Not now
+| Item | Reason | Signal to revisit |
+|---|---|---|
+| 9 Built-in Postgres | A managed database means backups, tested restores, upgrades and on-call. That is too heavy for 3 people. | Users keep naming it as why they left. Then document a recommended provider first. |
+| 2 Kubernetes | A large surface area, and it serves a different user than a "lighter Heroku". | Several paying prospects ask for it. |
+| 7 Teams and RBAC | Needs an identity model and a billing story, which you may not have yet. | Teams ask for it as a condition of paying. |
+| 1 Dashboard | A second product to build and maintain. The CLI plus PR comments cover most of it. | Users ask for visibility, not control. Start with a read-only status page. |
+| 4 Plugins | Premature while the core is still changing. | The core is stable and requests for extensions pile up. |
+| 10 AI config assistant | Fix the errors and defaults first. Good defaults make config unnecessary. | Setup is still the top drop-off after those fixes. |
+| 5 Windows | Valuable only if your users are on it. | Windows is more than about 15% of installs or inbound requests. (The threshold is a placeholder.) |
+| 6 Terraform export, 12 Slack | Nice to have. A basic deploy webhook covers Slack. | Enterprise or ops-heavy users ask for them. |
+
+### Risks
+- **Previews are bigger than they look.** They need ephemeral infrastructure, cleanup of orphaned environments, secrets handling, and a cost cap per PR. Build them for one cloud and one Git host first.
+- **Speed work can sprawl.** Time-box it and ship the caching win before anything clever.
+
+### What would change this
+I haven't seen your usage data, so this assumes your main problem is retention and growth of the core loop. If any of these is true, the answer changes:
+- Churn interviews point to a missing capability, such as Postgres.
+- Windows is a large share of installs.
+- Paying customers are blocked on RBAC.
+
+Two numbers would sharpen this a lot: your top failure causes, and the share of users who deploy more than once a week. Share those and I can turn this into a week-by-week plan for the three of you.
+
+</details>
+
+### v1
+
 - Skill activated: True; references read: insanely-great/references/focus-and-strategy.md
 - Checks passed: 4/4 [True, True, True, True]
 - Judge note: none
@@ -197,7 +303,11 @@ If you want, I can break each of the three into a week-by-week plan with success
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. Both pick the same sound three priorities, but B adds more actionable detail: specific error-message guidance, auto-deleting previews and limiting targets to control cost, time-boxing speed work, and concrete revisit triggers for each deferred item, while being upfront about missing data; A's extra length over a tighter answer is modest and its claim that previews have 'real pull' is unsupported.
+Blind pairwise (baseline:skill): **skill**. Both reach the same sound priorities, but B is more actionable: a concrete error-message example, a narrow v1 scope for preview environments, auto-teardown for preview costs, and explicit signals for revisiting each deferred item, while A asserts unsupported claims like previews being 'the one feature with real pull'.
+
+Blind pairwise (baseline:v1): **v1**. Both pick the same sound three priorities, but B adds more actionable detail: specific error-message guidance, auto-deleting previews and limiting targets to control cost, time-boxing speed work, and concrete revisit triggers for each deferred item, while being upfront about missing data; A's extra length over a tighter answer is modest and its claim that previews have 'real pull' is unsupported.
+
+Blind pairwise (v1:skill): **skill**. Both pick the same sound three priorities, but B is more concretely actionable: it suggests profiling where deploy time goes, gives an example error message, scopes a narrow previews v1 with teardown, and explains why these three fit a 3-person team's capacity, all while staying about as concise and avoiding invented facts.
 
 ### baseline
 
@@ -238,6 +348,54 @@ Set success metrics up front: median deploy time (for example, under 2 minutes),
 </details>
 
 ### skill
+
+- Skill activated: True; references read: none
+- Checks passed: 4/4 [True, True, True, True]
+- Judge note: none
+- Words: 672
+
+<details><summary>Output</summary>
+
+**Recommendation:** Build **faster deploys (8)**, **better failure errors (11)**, and **preview environments per PR (3)**. The first two make your core action fast and trustworthy. The third builds on them and gives teams a reason to use the CLI every day. I don't have your usage data, so this rests on the assumptions below.
+
+## Why
+
+- **Deploying is the whole product.** A lighter Heroku wins on how deploying feels. At about 4 minutes, a deploy is long enough that people switch tabs. I'd set a target of a p50 under 90 seconds, and I'd first profile where the 4 minutes go (build, push, provision, health check). Layer caching and skipping unchanged steps usually take most of it.
+- **Failed deploys are where you lose users.** Someone who hits a cryptic failure on day one often never returns. Each error should say what failed, why, and the next step. For example: `Build failed: port 3000 never opened. Your app must listen on $PORT. Fix: app.listen(process.env.PORT). Logs: deploy logs --last`. Take your top 10 failure causes from deploy logs or support threads and write that text for each. This is small, high-leverage work.
+- **Preview environments depend on the first two.** One per PR means many more deploys, so they need to be fast and fail clearly. They put your product in the team's daily review loop and spread it from one developer to a team. I'd keep v1 narrow: a GitHub Action creates a URL per PR, comments it on the PR, and tears it down on merge or close.
+- **Capacity.** Three people can't ship more than about three real items in a quarter and still keep quality. Items 8 and 11 are the smaller ones, so previews fit alongside them.
+
+## Not now
+
+| Item | Reason | Signal to revisit |
+|---|---|---|
+| 1 Web dashboard | Large surface area, and the CLI is your identity | Users ask to see status or logs without a terminal |
+| 2 Kubernetes | Heavy to build and support, and it cuts against "lighter" | Several paying prospects name it as the blocker |
+| 4 Plugin system | Premature with 600 users, and it adds API stability promises | Repeated requests for the same extension points |
+| 5 Windows | Strong if users are being lost to it | Install or support data shows a significant share of Windows attempts |
+| 6 Terraform export | An escape hatch that matters to larger customers | Teams ask for it during security or procurement reviews |
+| 7 Teams and RBAC | Needed to charge teams, but it follows previews | Teams are sharing one login |
+| 9 Built-in Postgres | Valuable but operationally risky (backups, restores, upgrades) | A large share of apps ask for a database |
+| 10 AI config assistant | Fix the error messages first | Config mistakes remain the top failure after item 11 |
+| 12 Slack | Small, but only useful once teams are present | Add after previews, as a notification channel |
+
+## Risks
+
+- **No data behind this.** I assumed deploy speed and failures are your main friction. If your churn is really "I can't use it on Windows" or "I need a database," the order changes.
+- **Speed work can sprawl.** Time-box it. If profiling shows the time is mostly the underlying cloud provisioning, the fix is smarter reuse of existing infrastructure.
+- **Preview cost.** Idle environments cost money. Set an auto-teardown, such as after 7 days idle, from day one.
+
+## What would change it
+
+- If you can answer "why did people leave in the last 90 days?", use that answer over my ordering.
+- If paying customers are blocked on RBAC or Terraform, move those up, because revenue beats polish.
+- If Windows users are a large share of sign-ups, swap Windows in for previews.
+
+I can sketch the deploy-time profiling plan or draft the error-message catalog if you share your common failure causes.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/focus-and-strategy.md
 - Checks passed: 4/4 [True, True, True, True]

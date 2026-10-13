@@ -16,7 +16,11 @@ I'm preparing a talk on product simplicity. Give me 6 Steve Jobs quotes about si
 
 ## Rep 1
 
-Blind pairwise judgment: **skill**. A gives more accurate wording (e.g., the original 'It's not just what it looks like and feels like' rather than B's popular paraphrase), more precise citations, quotes that fit a simplicity talk better than B's off-topic iPad 2 line, and more useful misattribution warnings, though its 'verified' framing slightly overstates what it confirmed.
+Blind pairwise (baseline:skill): **skill**. A gives more precise, checkable citations, uses wording closer to the originals (for example the NYT 'It's not just what it looks like' line), and flags several common misattributions, though its claim that 'saying no to 1,000 things' has no primary source is questionable; B is accurate but has looser citations and wording and includes off-theme quotes like the iPad 2 liberal-arts line.
+
+Blind pairwise (baseline:v1): **v1**. A gives more accurate wording (e.g., the original 'It's not just what it looks like and feels like' rather than B's popular paraphrase), more precise citations, quotes that fit a simplicity talk better than B's off-topic iPad 2 line, and more useful misattribution warnings, though its 'verified' framing slightly overstates what it confirmed.
+
+Blind pairwise (v1:skill): **skill**. A gives six on-theme quotes and is consistent about which sources it could verify, whereas B's opening claim that every quote was checked contradicts its later admission that it couldn't reach the WWDC transcript, it mentions a Wired article it never uses, and its stylus quote is weaker for a simplicity talk.
 
 ### baseline
 
@@ -55,6 +59,48 @@ I can also group these into a slide flow, such as simplicity, then focus, then d
 </details>
 
 ### skill
+
+- Skill activated: True; references read: insanely-great/references/sources.md
+- Checks passed: 3/3 [True, True, True]
+- Judge note: none
+- Words: 461
+
+<details><summary>Output</summary>
+
+Here are six verified quotes, each worded as in the primary sources. I left out the popular "Simplicity is the ultimate sophistication" because it isn't Jobs's (see the note at the end).
+
+1. **"That's been one of my mantras — focus and simplicity. Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."**
+   Source: Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'," *BusinessWeek*, 25 May 1998.
+
+2. **"It's not just what it looks like and feels like. Design is how it works."**
+   Source: Rob Walker, "The Guts of a New Machine," *The New York Times Magazine*, 30 November 2003.
+
+3. **"Focusing is about saying no."**
+   Source: Q&A at Apple's Worldwide Developers Conference (WWDC), May 1997.
+   For a longer slide, the same session continues: "People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the hundred other good ideas that there are. You have to pick carefully." The wording varies slightly between transcripts.
+
+4. **"You've got to start with the customer experience and work backwards to the technology."**
+   Source: WWDC Q&A, May 1997.
+
+5. **"Design is the fundamental soul of a man-made creation that ends up expressing itself in successive outer layers of the product or service."**
+   Source: Brent Schlender, *Fortune*, 24 January 2000.
+
+6. **"When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."**
+   Source: *Playboy* interview by David Sheff, February 1985.
+
+**Notes for your slides**
+- **Length:** Quote 6 is long. For a slide, you could cut it after "...nobody will ever see it," but mark the cut with an ellipsis.
+- **Wording:** The WWDC 1997 text comes from consistent reproductions of the video, not a transcript I could check directly. Check it against the video if you want it letter-perfect.
+- **Misattributions to avoid:**
+  - "Simplicity is the ultimate sophistication" was a headline in Apple's 1977 Apple II brochure. Neither Jobs nor Leonardo da Vinci said it.
+  - "To be truly simple, you have to go really deep" is Jony Ive's line.
+  - "Innovation is saying no to 1,000 things" has no primary source. Quote 3 is the verified alternative.
+
+I can trim any of these for slide length or add a seventh on a specific theme.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/sources.md
 - Checks passed: 3/3 [True, True, True]
@@ -98,7 +144,11 @@ Here are six verified quotes. Each is checked against a transcript or a report t
 
 ## Rep 2
 
-Blind pairwise judgment: **skill**. B's quotes and attributions are more accurate (A wrongly credits the Fortune 2000 quote to Betsy Morris instead of Brent Schlender and alters 'man-made' to 'human-made'), and B gives more useful slide guidance with correct debunks, though its claim to have verified the quotes and its stray mention of a 1996 Wired article are overstatements.
+Blind pairwise (baseline:skill): **baseline**. Both answers contain a sourcing error: A credits the Fortune piece to Schlender instead of Betsy Morris, and B changes 'man-made' to 'human-made'. A is worse because it calls its quotes 'verified' and cites a Wired article it never uses, while B accurately says it wrote from memory and tells the user which quotes to check before they go on slides.
+
+Blind pairwise (baseline:v1): **v1**. B's quotes and attributions are more accurate (A wrongly credits the Fortune 2000 quote to Betsy Morris instead of Brent Schlender and alters 'man-made' to 'human-made'), and B gives more useful slide guidance with correct debunks, though its claim to have verified the quotes and its stray mention of a 1996 Wired article are overstatements.
+
+Blind pairwise (v1:skill): **skill**. Both give the same well-sourced quotes and the same misattribution warnings, but A is more concise and its slide-ready short forms (leading with 'Focusing is about saying no', using a marked ellipsis) serve the slide use case directly, while B adds length and a closing offer without adding substance.
 
 ### baseline
 
@@ -138,6 +188,44 @@ I can also trim these into shorter slide-length versions or group them by theme,
 </details>
 
 ### skill
+
+- Skill activated: True; references read: insanely-great/references/sources.md
+- Checks passed: 3/3 [True, True, True]
+- Judge note: none; the only flaw is the source caveat's reference to an 'original Wired article' that none of the six quotes cites, an unexplained inconsistency.
+- Words: 437
+
+<details><summary>Output</summary>
+
+Here are six verified quotes. Each one is quoted from the transcript or published text listed beside it.
+
+1. **"Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."**
+   Interview with Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'," *BusinessWeek*, 25 May 1998. It begins with "That's been one of my mantras — focus and simplicity."
+
+2. **"It's not just what it looks like and feels like. Design is how it works."**
+   Rob Walker, "The Guts of a New Machine," *The New York Times Magazine*, 30 November 2003.
+
+3. **"Focusing is about saying no."**
+   Q&A at Apple's Worldwide Developers Conference, May 1997. For a longer slide, he went on: "People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the hundred other good ideas that there are. You have to pick carefully." Transcripts of this talk vary slightly in wording.
+
+4. **"You've got to start with the customer experience and work backwards to the technology."**
+   The same WWDC Q&A, May 1997.
+
+5. **"Design is the fundamental soul of a man-made creation that ends up expressing itself in successive outer layers of the product or service."**
+   Brent Schlender, *Fortune*, 24 January 2000.
+
+6. **"When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it... For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."**
+   *Playboy* interview with David Sheff, February 1985. The ellipsis cuts the middle of the passage, so show it on the slide.
+
+**Quotes to leave out.** These circulate widely as Jobs quotes but aren't his:
+- **"Simplicity is the ultimate sophistication"** was a headline in Apple's 1977 Apple II brochure. It was marketing copy, and the attribution to Leonardo da Vinci has no support.
+- **"To be truly simple, you have to go really deep"** is Jony Ive, as quoted by Walter Isaacson.
+- **"Innovation is saying no to 1,000 things"** has no primary source. Quote 3 is the verified version of the idea.
+
+**Source caveat.** I couldn't reach the full WWDC 1997 transcript or the original *Wired* article. The WWDC wording comes from consistent reproductions, so it should be reliable but may not match a given transcript letter for letter. Quotes 1, 2, 5 and 6 come from published text.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/sources.md
 - Checks passed: 3/3 [True, True, True]
@@ -192,7 +280,11 @@ If you want, I can suggest a pairing or order for the six, such as opening with 
 
 ## Rep 3
 
-Blind pairwise judgment: **skill**. A gives six accurate, on-topic quotes with precise sources, practical slide-trimming advice and a fuller list of misattributions to avoid; B is honest that it worked from memory, but it slightly misquotes the NYT line and includes a weak-fit 'lick them' quote, though A's unexplained 'skill's source list' and its stray Wired/D8 mention are minor blemishes.
+Blind pairwise (baseline:skill): **skill**. B gives six better-fitting quotes from more varied sources, a more useful list of misattributions, and flags which items to recheck, though its opening claim that all quotes are 'verified from primary sources' is contradicted by its own closing caveat, while A draws three quotes from one interview and includes a weak-fit 'lick them' line.
+
+Blind pairwise (baseline:v1): **v1**. A gives six accurate, on-topic quotes with precise sources, practical slide-trimming advice and a fuller list of misattributions to avoid; B is honest that it worked from memory, but it slightly misquotes the NYT line and includes a weak-fit 'lick them' quote, though A's unexplained 'skill's source list' and its stray Wired/D8 mention are minor blemishes.
+
+Blind pairwise (v1:skill): **skill**. A gives the same six well-sourced quotes and debunks the same misattributions, and its caveats about unreachable sources match the quotes it actually lists; B's caveat cites sources it never used (Wired 1996, D8), refers to an unexplained 'skill's source list', and adds an off-topic Henry Ford debunk.
 
 ### baseline
 
@@ -230,6 +322,60 @@ Quotes 1, 2 and 5 all come from the same 1998 interview. If you want more variet
 </details>
 
 ### skill
+
+- Skill activated: True; references read: insanely-great/references/sources.md
+- Checks passed: 3/3 [True, True, True]
+- Judge note: none
+- Words: 540
+
+<details><summary>Output</summary>
+
+Here are six verified quotes. I took each one from a primary source, using the wording in the transcript or article.
+
+**1. On simplicity as hard work**
+> "That's been one of my mantras — focus and simplicity. Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple. But it's worth it in the end because once you get there, you can move mountains."
+
+Source: Andy Reinhardt, "Steve Jobs: 'There's Sanity Returning'," *BusinessWeek*, 25 May 1998.
+
+**2. On what design means**
+> "It's not just what it looks like and feels like. Design is how it works."
+
+Source: Rob Walker, "The Guts of a New Machine," *The New York Times Magazine*, 30 November 2003.
+
+**3. On focus as saying no**
+> "People think focus means saying yes to the thing you've got to focus on. But that's not what it means at all. It means saying no to the hundred other good ideas that there are. You have to pick carefully."
+
+Source: Q&A at Apple's Worldwide Developers Conference, May 1997. The wording varies slightly between transcripts.
+
+**4. On starting from the user**
+> "You've got to start with the customer experience and work backwards to the technology."
+
+Source: Apple's Worldwide Developers Conference, May 1997 (same Q&A as above).
+
+**5. On quality you can't see**
+> "When you're a carpenter making a beautiful chest of drawers, you're not going to use a piece of plywood on the back, even though it faces the wall and nobody will ever see it. You'll know it's there, so you're going to use a beautiful piece of wood on the back. For you to sleep well at night, the aesthetic, the quality, has to be carried all the way through."
+
+Source: David Sheff, *Playboy* interview, February 1985.
+
+**6. On design as the soul of a product**
+> "Design is the fundamental soul of a man-made creation that ends up expressing itself in successive outer layers of the product or service."
+
+Source: Brent Schlender, *Fortune*, 24 January 2000.
+
+**Quotes to leave off your slides**
+
+These are often credited to Jobs, but the evidence doesn't support it:
+- **"Simplicity is the ultimate sophistication."** This was the headline of Apple's 1977 Apple II brochure, so it is marketing copy and not something Jobs said. The Leonardo da Vinci attribution has no support either.
+- **"To be truly simple, you have to go really deep."** This is Jony Ive, as quoted by Walter Isaacson.
+- **"Innovation is saying no to 1,000 things."** I found no primary transcript for it. Quote #3 is the verified version of the same idea.
+
+**Backup quote.** If you want a seventh, there's one on early Mac ambitions: "What we want to do is we want to put an incredibly great computer in a book that you can carry around with you that you can learn how to use in 20 minutes." It comes from his talk at the International Design Conference in Aspen, June 1983.
+
+I couldn't reach the original *Fortune* article (#6) or the full WWDC transcript (#3, #4). Their wording comes from consistent reproductions, so it should be reliable, but check it against the original before you print it on a slide.
+
+</details>
+
+### v1
 
 - Skill activated: True; references read: insanely-great/references/sources.md
 - Checks passed: 3/3 [True, True, True]
